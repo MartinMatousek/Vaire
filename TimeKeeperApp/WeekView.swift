@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 import TimeKeeperKit
 
 struct DayColumn: Identifiable {
@@ -125,6 +126,7 @@ struct WeekView: View {
             try BlockEditor.move(db: AppEnvironment.db, blockId: blockId, byDays: dayDelta)
             registerUndo(reverseDays: -dayDelta, blockId: blockId)
             reload()
+            WidgetCenter.shared.reloadAllTimelines()
             return true
         } catch {
             errorMessage = "Přesun selhal: \(error.localizedDescription)"
@@ -136,6 +138,7 @@ struct WeekView: View {
         undoManager?.registerUndo(withTarget: UndoToken()) { [reload] _ in
             try? BlockEditor.move(db: AppEnvironment.db, blockId: blockId, byDays: reverseDays)
             reload()
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 
@@ -148,6 +151,7 @@ struct WeekView: View {
             try BlockEditor.split(db: AppEnvironment.db, blockId: blockId, at: midpoint)
             selectedBlockIds.removeAll()
             reload()
+            WidgetCenter.shared.reloadAllTimelines()
         } catch {
             errorMessage = "Rozdělení selhalo: \(error.localizedDescription)"
         }
@@ -158,6 +162,7 @@ struct WeekView: View {
             try BlockEditor.merge(db: AppEnvironment.db, blockIds: Array(selectedBlockIds))
             selectedBlockIds.removeAll()
             reload()
+            WidgetCenter.shared.reloadAllTimelines()
         } catch {
             errorMessage = "Sloučení selhalo: \(error.localizedDescription)"
         }

@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import WidgetKit
 import TimeKeeperKit
 
 struct SettingsView: View {
@@ -111,6 +112,7 @@ struct SettingsView: View {
             try ReimportGuard.reconcile(db: AppEnvironment.db, projectId: project.id, candidates: merged)
 
             importStatus = "Naimportováno \(commits.count) commitů, \(merged.count) bloků."
+            WidgetCenter.shared.reloadAllTimelines()
         } catch {
             importStatus = "Import selhal: \(error.localizedDescription)"
         }

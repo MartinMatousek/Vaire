@@ -13,6 +13,7 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.10"
+    DEVELOPMENT_TEAM: LG4P6Q3UG5
 
 targets:
   TimeKeeperApp:
@@ -31,6 +32,11 @@ targets:
         INFOPLIST_KEY_LSUIElement: "YES"
         ENABLE_APP_SANDBOX: "NO"
         CODE_SIGN_STYLE: Automatic
+    entitlements:
+      path: TimeKeeperApp/TimeKeeperApp.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.martinmatousek.timekeeper
     info:
       path: TimeKeeperApp/Info.plist
       properties:
@@ -54,6 +60,11 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.martinmatousek.timekeeper.app.widget
         CODE_SIGN_STYLE: Automatic
+    entitlements:
+      path: TimeKeeperWidget/TimeKeeperWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.martinmatousek.timekeeper
     info:
       path: TimeKeeperWidget/Info.plist
       properties:

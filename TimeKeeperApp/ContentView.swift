@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 import TimeKeeperKit
 
 struct ContentView: View {
@@ -78,6 +79,7 @@ struct ContentView: View {
         if timer.isRunning {
             try? timer.stop()
             refreshTodayHours()
+            WidgetCenter.shared.reloadAllTimelines()
         } else if let projectId = selectedProjectId {
             timer.start(projectId: projectId)
         }
