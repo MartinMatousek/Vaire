@@ -1,0 +1,52 @@
+name: TimeKeeper
+options:
+  bundleIdPrefix: com.martinmatousek.timekeeper
+  deploymentTarget:
+    macOS: "13.0"
+
+packages:
+  TimeKeeperKit:
+    path: TimeKeeperKit
+
+settings:
+  base:
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.10"
+
+targets:
+  TimeKeeperApp:
+    type: application
+    platform: macOS
+    sources:
+      - path: TimeKeeperApp
+    dependencies:
+      - package: TimeKeeperKit
+      - target: TimeKeeperWidgetExtension
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.martinmatousek.timekeeper.app
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_LSUIElement: "YES"
+        ENABLE_APP_SANDBOX: "NO"
+        CODE_SIGN_STYLE: Automatic
+
+  TimeKeeperWidgetExtension:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: TimeKeeperWidget
+    dependencies:
+      - package: TimeKeeperKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.martinmatousek.timekeeper.app.widget
+        CODE_SIGN_STYLE: Automatic
+    info:
+      path: TimeKeeperWidget/Info.plist
+      properties:
+        CFBundleDisplayName: TimeKeeper Widget
+        CFBundleShortVersionString: "0.1.0"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
