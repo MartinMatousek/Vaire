@@ -39,6 +39,11 @@ struct ContentView: View {
 
             Divider()
 
+            Button("Týden…") {
+                WeekWindowController.shared.show()
+            }
+            .buttonStyle(.link)
+
             Button("Nastavení…") {
                 openSettings()
             }

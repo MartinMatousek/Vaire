@@ -31,6 +31,17 @@ targets:
         INFOPLIST_KEY_LSUIElement: "YES"
         ENABLE_APP_SANDBOX: "NO"
         CODE_SIGN_STYLE: Automatic
+    info:
+      path: TimeKeeperApp/Info.plist
+      properties:
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.martinmatousek.timekeeper.block
+            UTTypeDescription: TimeKeeper Block Reference
+            UTTypeConformsTo:
+              - public.data
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - timekeeperblock
 
   TimeKeeperWidgetExtension:
     type: app-extension
