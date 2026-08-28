@@ -1,6 +1,7 @@
 import Foundation
+import GRDB
 
-public struct Block: Identifiable, Equatable, Sendable {
+public struct Block: Identifiable, Equatable, Sendable, Codable, FetchableRecord, PersistableRecord {
     public var id: UUID
     public var projectId: UUID
     public var start: Date
@@ -33,4 +34,6 @@ public struct Block: Identifiable, Equatable, Sendable {
     public var duration: TimeInterval {
         end.timeIntervalSince(start)
     }
+
+    public static let databaseTableName = "block"
 }

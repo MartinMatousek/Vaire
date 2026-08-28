@@ -1,6 +1,7 @@
 import Foundation
+import GRDB
 
-public struct Evidence: Identifiable, Equatable, Sendable {
+public struct Evidence: Identifiable, Equatable, Sendable, Codable, FetchableRecord, PersistableRecord {
     public enum Kind: String, Codable, Sendable {
         case claudeSessionId
         case commitSha
@@ -26,4 +27,6 @@ public struct Evidence: Identifiable, Equatable, Sendable {
         self.refId = refId
         self.payloadJSON = payloadJSON
     }
+
+    public static let databaseTableName = "evidence"
 }

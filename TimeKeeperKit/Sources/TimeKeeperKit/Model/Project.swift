@@ -1,6 +1,7 @@
 import Foundation
+import GRDB
 
-public struct Project: Identifiable, Equatable, Sendable {
+public struct Project: Identifiable, Equatable, Sendable, Codable, FetchableRecord, PersistableRecord {
     public var id: UUID
     public var name: String
     public var path: String
@@ -20,4 +21,6 @@ public struct Project: Identifiable, Equatable, Sendable {
         self.colorHex = colorHex
         self.mdHoursPerDay = mdHoursPerDay
     }
+
+    public static let databaseTableName = "project"
 }

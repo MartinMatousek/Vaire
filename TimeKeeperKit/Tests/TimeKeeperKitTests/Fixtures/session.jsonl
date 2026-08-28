@@ -1,0 +1,6 @@
+{"type":"user","timestamp":"2026-08-21T08:00:00.000Z","cwd":"/Users/martinmatousek/IdeaProjects/kvk-fe","gitBranch":"develop","sessionId":"abc"}
+{"type":"assistant","timestamp":"2026-08-21T08:00:05.123Z","cwd":"/Users/martinmatousek/IdeaProjects/kvk-fe","gitBranch":"develop","sessionId":"abc"}
+{"type":"assistant","timestamp":"2026-08-21T08:05:00.000Z","cwd":"/Users/martinmatousek/IdeaProjects/kvk-fe","gitBranch":"develop","sessionId":"abc","isSidechain":true}
+{"type":"mode","sessionId":"abc"}
+{"type":"user","timestamp":"2026-08-21T08:10:00.000Z","cwd":"/Users/martinmatousek/IdeaProjects/kvk-fe","gitBranch":"develop","sessionId":"abc"}
+{"type":"user","timestamp":"2026-08-21T09:30:00.000Z","cwd":"/Users/martinmatousek/IdeaProjects/kvk-fe","gitBranch":"feature/x","sessionId":"abc"}
