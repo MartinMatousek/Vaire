@@ -28,3 +28,15 @@ import Testing
     #expect(fetchedBlocks[0].id == block.id)
     #expect(fetchedBlocks[0].projectId == project.id)
 }
+
+@Test func findProjectByPathReturnsMatchOrNil() throws {
+    let db = try AppDatabase.inMemory()
+    let project = Project(name: "kvk-fe", path: "/Users/martinmatousek/IdeaProjects/kvk-fe")
+    try db.dbQueue.write { try project.insert($0) }
+
+    let found = try Project.find(byPath: "/Users/martinmatousek/IdeaProjects/kvk-fe", db: db)
+    #expect(found?.id == project.id)
+
+    let notFound = try Project.find(byPath: "/nonexistent", db: db)
+    #expect(notFound == nil)
+}

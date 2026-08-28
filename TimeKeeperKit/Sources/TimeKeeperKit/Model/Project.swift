@@ -23,4 +23,10 @@ public struct Project: Identifiable, Equatable, Sendable, Codable, FetchableReco
     }
 
     public static let databaseTableName = "project"
+
+    public static func find(byPath path: String, db: AppDatabase) throws -> Project? {
+        try db.dbQueue.read { conn in
+            try Project.filter(Column("path") == path).fetchOne(conn)
+        }
+    }
 }
