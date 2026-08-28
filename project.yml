@@ -2,7 +2,7 @@ name: TimeKeeper
 options:
   bundleIdPrefix: com.martinmatousek.timekeeper
   deploymentTarget:
-    macOS: "13.0"
+    macOS: "14.0"
 
 packages:
   TimeKeeperKit:
