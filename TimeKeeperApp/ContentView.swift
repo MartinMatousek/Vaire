@@ -8,6 +8,8 @@ struct ContentView: View {
     @State private var selectedProjectId: UUID?
     @State private var todayHours: Double = 0
     @State private var tick = 0
+    @State private var justStoppedBlock: Block?
+    @State private var noteDraft: String = ""
 
     private let refreshTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -36,6 +38,12 @@ struct ContentView: View {
                     toggleTimer()
                 }
                 .disabled(!timer.isRunning && selectedProjectId == nil)
+                .popover(isPresented: Binding(
+                    get: { justStoppedBlock != nil },
+                    set: { if !$0 { justStoppedBlock = nil } }
+                )) {
+                    noteEditorAfterStop
+                }
             }
 
             Divider()
@@ -75,14 +83,41 @@ struct ContentView: View {
         return "\(h)h \(m)m / 8h"
     }
 
+    private var noteEditorAfterStop: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Popis aktivity").font(.caption).bold()
+            TextField("Co jsi dělal…", text: $noteDraft, axis: .vertical)
+                .lineLimit(3...6)
+                .frame(minWidth: 220)
+            HStack {
+                Spacer()
+                Button("Přeskočit") { justStoppedBlock = nil }
+                Button("Uložit") { saveNoteForStoppedBlock() }
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding()
+    }
+
     private func toggleTimer() {
         if timer.isRunning {
-            try? timer.stop()
+            let stoppedBlock = try? timer.stop()
             refreshTodayHours()
             WidgetCenter.shared.reloadAllTimelines()
+            if let stoppedBlock {
+                noteDraft = ""
+                justStoppedBlock = stoppedBlock
+            }
         } else if let projectId = selectedProjectId {
             timer.start(projectId: projectId)
         }
+    }
+
+    private func saveNoteForStoppedBlock() {
+        guard let block = justStoppedBlock else { return }
+        _ = try? BlockEditor.setNote(db: AppEnvironment.db, blockId: block.id, note: noteDraft)
+        justStoppedBlock = nil
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     private func reload() {

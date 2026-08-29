@@ -99,3 +99,16 @@ private func makeProject(_ db: AppDatabase) throws -> Project {
     #expect(updated.projectId == projectB.id)
     #expect(updated.isManual)
 }
+
+@Test func setNoteUpdatesDescriptionOrClearsIt() throws {
+    let db = try AppDatabase.inMemory()
+    let project = try makeProject(db)
+    let block = Block(projectId: project.id, start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 3600), source: .manual)
+    try db.dbQueue.write { try block.insert($0) }
+
+    let withNote = try BlockEditor.setNote(db: db, blockId: block.id, note: "fixing batch update bug")
+    #expect(withNote.note == "fixing batch update bug")
+
+    let cleared = try BlockEditor.setNote(db: db, blockId: block.id, note: "")
+    #expect(cleared.note == nil)
+}

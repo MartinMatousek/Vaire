@@ -97,4 +97,15 @@ public enum BlockEditor {
             return block
         }
     }
+
+    public static func setNote(db: AppDatabase, blockId: UUID, note: String?) throws -> Block {
+        try db.dbQueue.write { conn in
+            guard var block = try Block.fetchOne(conn, key: blockId) else {
+                throw BlockEditorError.blockNotFound
+            }
+            block.note = (note?.isEmpty ?? true) ? nil : note
+            try block.update(conn)
+            return block
+        }
+    }
 }

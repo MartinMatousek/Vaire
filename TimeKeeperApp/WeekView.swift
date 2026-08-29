@@ -14,6 +14,8 @@ struct WeekView: View {
     @State private var projects: [UUID: Project] = [:]
     @State private var selectedBlockIds: Set<UUID> = []
     @State private var errorMessage: String?
+    @State private var editingBlock: Block?
+    @State private var noteDraft: String = ""
 
     private var weekStart: Date {
         Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
@@ -75,15 +77,61 @@ struct WeekView: View {
                 .font(.caption2).bold()
             Text(durationLabel(block))
                 .font(.caption2)
+            if let note = block.note, !note.isEmpty {
+                Text(note)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
         }
         .padding(4)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(selectedBlockIds.contains(block.id) ? Color.accentColor.opacity(0.3) : Color.secondary.opacity(0.15))
         .cornerRadius(4)
+        .onTapGesture(count: 2) {
+            beginEditingNote(block)
+        }
         .onTapGesture {
             toggleSelection(block.id)
         }
         .draggable(BlockTransfer(blockId: block.id))
+        .popover(isPresented: Binding(
+            get: { editingBlock?.id == block.id },
+            set: { if !$0 { editingBlock = nil } }
+        )) {
+            noteEditor(for: block)
+        }
+    }
+
+    private func noteEditor(for block: Block) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Popis aktivity").font(.caption).bold()
+            TextField("Co jsi dělal…", text: $noteDraft, axis: .vertical)
+                .lineLimit(3...6)
+                .frame(minWidth: 220)
+            HStack {
+                Spacer()
+                Button("Zrušit") { editingBlock = nil }
+                Button("Uložit") { saveNote(for: block) }
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding()
+    }
+
+    private func beginEditingNote(_ block: Block) {
+        noteDraft = block.note ?? ""
+        editingBlock = block
+    }
+
+    private func saveNote(for block: Block) {
+        do {
+            _ = try BlockEditor.setNote(db: AppEnvironment.db, blockId: block.id, note: noteDraft)
+            editingBlock = nil
+            reload()
+        } catch {
+            errorMessage = "Uložení popisu selhalo: \(error.localizedDescription)"
+        }
     }
 
     private func durationLabel(_ block: Block) -> String {
