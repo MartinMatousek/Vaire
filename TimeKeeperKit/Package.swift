@@ -10,6 +10,10 @@ let package = Package(
         .library(
             name: "TimeKeeperKit",
             targets: ["TimeKeeperKit"]
+        ),
+        .executable(
+            name: "timekeeper-cli",
+            targets: ["TimeKeeperCLI"]
         )
     ],
     dependencies: [
@@ -28,6 +32,10 @@ let package = Package(
             resources: [
                 .copy("Fixtures")
             ]
+        ),
+        .executableTarget(
+            name: "TimeKeeperCLI",
+            dependencies: ["TimeKeeperKit"]
         )
     ]
 )

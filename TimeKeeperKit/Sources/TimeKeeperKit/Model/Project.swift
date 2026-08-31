@@ -29,4 +29,19 @@ public struct Project: Identifiable, Equatable, Sendable, Codable, FetchableReco
             try Project.filter(Column("path") == path).fetchOne(conn)
         }
     }
+
+    /// Finds the project at `path`, creating one named after the path's last
+    /// component if none exists yet. Used by integrations (CLI, hooks) that
+    /// must never block on missing setup in the app.
+    public static func findOrCreate(byPath path: String, db: AppDatabase) throws -> Project {
+        if let existing = try find(byPath: path, db: db) {
+            return existing
+        }
+        let name = (path as NSString).lastPathComponent
+        let project = Project(name: name, path: path)
+        try db.dbQueue.write { conn in
+            try project.insert(conn)
+        }
+        return project
+    }
 }

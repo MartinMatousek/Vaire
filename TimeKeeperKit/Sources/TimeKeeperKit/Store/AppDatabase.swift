@@ -53,6 +53,20 @@ public struct AppDatabase: Sendable {
             try db.create(index: "evidence_blockId", on: "evidence", columns: ["blockId"])
         }
 
+        migrator.registerMigration("v2") { db in
+            // Tracks an in-progress timer started by an external agent (a
+            // Claude Code hook) keyed by its session id, so SessionEnd can
+            // look up where/when it started without the hook process itself
+            // holding any state between the two hook invocations.
+            try db.create(table: "agentSessionTracking") { t in
+                t.column("sessionId", .text).primaryKey()
+                t.column("projectId", .text).notNull()
+                    .references("project", onDelete: .cascade)
+                t.column("start", .datetime).notNull()
+                t.column("note", .text)
+            }
+        }
+
         return migrator
     }
 }

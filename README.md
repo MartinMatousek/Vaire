@@ -14,8 +14,30 @@ ringem.
   ```
 - `TimeKeeperApp/` — menu bar aplikace (`MenuBarExtra`)
 - `TimeKeeperWidget/` — WidgetKit extension
+- `TimeKeeperKit/Sources/TimeKeeperCLI/` — `timekeeper-cli`, CLI most mezi
+  Claude Code hooky a sdílenou App Group databází
+- `hooks/` — `SessionStart`/`SessionEnd` hook skripty pro automatické
+  logování času Claude Code sessions (viz níže)
 - `project.yml` — [XcodeGen](https://github.com/yonaskolb/XcodeGen) manifest;
   `TimeKeeper.xcodeproj` se generuje z něj a není verzovaný
+
+## Claude Code integrace
+
+`timekeeper-cli` čte/zapisuje přímo do sdílené App Group SQLite databáze
+(stejná, kterou používá app i widget). Hook skripty v `hooks/` ho volají ze
+`SessionStart`/`SessionEnd` Claude Code hooků a používají `osascript` dialogy
+pro synchronní dotazy na poznámku a úpravu času.
+
+Instalace CLI (nutná po každé změně `TimeKeeperCLI`):
+
+```
+./scripts/install_cli.sh
+```
+
+Nainstaluje `timekeeper-cli` do `~/.local/bin/`. Hook skripty musí být
+zaregistrované v `~/.claude/settings.json` pod `SessionStart`/`SessionEnd`
+s dostatečným `timeout` (dialogy čekají na interakci — 120 s je bezpečná
+rezerva).
 
 ## Vývoj
 

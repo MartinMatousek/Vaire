@@ -1,0 +1,60 @@
+import Foundation
+import Testing
+@testable import TimeKeeperKit
+
+@Test func startCreatesProjectIfMissingAndTracksSession() throws {
+    let db = try AppDatabase.inMemory()
+    let project = try AgentSessionRecorder.start(db: db, sessionId: "sess-1", cwd: "/tmp/new-repo", note: "fixing bug")
+
+    #expect(project.name == "new-repo")
+    #expect(try AgentSessionRecorder.isTracking(db: db, sessionId: "sess-1"))
+}
+
+@Test func startReusesExistingProjectForSameCwd() throws {
+    let db = try AppDatabase.inMemory()
+    let existing = Project(name: "kvk-fe", path: "/tmp/kvk-fe")
+    try db.dbQueue.write { try existing.insert($0) }
+
+    let project = try AgentSessionRecorder.start(db: db, sessionId: "sess-1", cwd: "/tmp/kvk-fe", note: nil)
+    #expect(project.id == existing.id)
+
+    let allProjects = try db.dbQueue.read { try Project.fetchAll($0) }
+    #expect(allProjects.count == 1)
+}
+
+@Test func startTwiceForSameSessionDoesNotResetClock() throws {
+    let db = try AppDatabase.inMemory()
+    let start = Date(timeIntervalSince1970: 1000)
+
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-1", cwd: "/tmp/repo", note: nil, now: start)
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-1", cwd: "/tmp/repo", note: nil, now: start.addingTimeInterval(600))
+
+    let result = try AgentSessionRecorder.stop(db: db, sessionId: "sess-1", now: start.addingTimeInterval(1200))
+    #expect(result?.block.duration == 1200) // from the FIRST start, not the second
+}
+
+@Test func stopPersistsBlockWithNoteAndClaudeSessionSource() throws {
+    let db = try AppDatabase.inMemory()
+    let start = Date(timeIntervalSince1970: 1000)
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-1", cwd: "/tmp/repo", note: "fixing batch update bug", now: start)
+
+    let result = try AgentSessionRecorder.stop(db: db, sessionId: "sess-1", now: start.addingTimeInterval(1800))
+
+    #expect(result?.block.note == "fixing batch update bug")
+    #expect(result?.block.source == .claudeSession)
+    #expect(result?.block.isManual == false)
+    #expect(result?.project.path == "/tmp/repo")
+
+    #expect(!(try AgentSessionRecorder.isTracking(db: db, sessionId: "sess-1")))
+}
+
+@Test func stopUntrackedSessionReturnsNil() throws {
+    let db = try AppDatabase.inMemory()
+    let result = try AgentSessionRecorder.stop(db: db, sessionId: "never-started")
+    #expect(result == nil)
+}
+
+@Test func isTrackingReflectsOptOut() throws {
+    let db = try AppDatabase.inMemory()
+    #expect(!(try AgentSessionRecorder.isTracking(db: db, sessionId: "sess-1")))
+}

@@ -40,3 +40,26 @@ import Testing
     let notFound = try Project.find(byPath: "/nonexistent", db: db)
     #expect(notFound == nil)
 }
+
+@Test func findOrCreateReturnsExistingProjectWithoutDuplicating() throws {
+    let db = try AppDatabase.inMemory()
+    let project = Project(name: "kvk-fe", path: "/tmp/kvk-fe")
+    try db.dbQueue.write { try project.insert($0) }
+
+    let found = try Project.findOrCreate(byPath: "/tmp/kvk-fe", db: db)
+    #expect(found.id == project.id)
+
+    let all = try db.dbQueue.read { try Project.fetchAll($0) }
+    #expect(all.count == 1)
+}
+
+@Test func findOrCreateMakesNewProjectNamedAfterLastPathComponent() throws {
+    let db = try AppDatabase.inMemory()
+    let created = try Project.findOrCreate(byPath: "/Users/martinmatousek/IdeaProjects/new-repo", db: db)
+
+    #expect(created.name == "new-repo")
+    #expect(created.path == "/Users/martinmatousek/IdeaProjects/new-repo")
+
+    let all = try db.dbQueue.read { try Project.fetchAll($0) }
+    #expect(all.count == 1)
+}
