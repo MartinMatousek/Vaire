@@ -1,17 +1,16 @@
 import SwiftUI
-import TimeKeeperKit
+
+extension Notification.Name {
+    static let timeKeeperDataChanged = Notification.Name("com.martinmatousek.timekeeper.dataChanged.local")
+}
 
 @main
 struct TimeKeeperApp: App {
-    init() {
-        LiveImportCoordinator.shared.start()
-        DailyReviewScheduler.shared.start()
-    }
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        MenuBarExtra("TimeKeeper", systemImage: "clock") {
-            ContentView()
+        Settings {
+            EmptyView()
         }
-        .menuBarExtraStyle(.window)
     }
 }

@@ -9,12 +9,14 @@ public struct AgentSessionTracking: Equatable, Sendable, Codable, FetchableRecor
     public var projectId: UUID
     public var start: Date
     public var note: String?
+    public var estimatedHoursWithoutAI: Double?
 
-    public init(sessionId: String, projectId: UUID, start: Date, note: String? = nil) {
+    public init(sessionId: String, projectId: UUID, start: Date, note: String? = nil, estimatedHoursWithoutAI: Double? = nil) {
         self.sessionId = sessionId
         self.projectId = projectId
         self.start = start
         self.note = note
+        self.estimatedHoursWithoutAI = estimatedHoursWithoutAI
     }
 
     public static let databaseTableName = "agentSessionTracking"

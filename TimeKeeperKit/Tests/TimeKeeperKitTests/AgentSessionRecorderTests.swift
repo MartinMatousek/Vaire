@@ -93,3 +93,30 @@ import Testing
     try AgentSessionRecorder.continueTracking(db: db, oldSessionId: "never-existed", newSessionId: "sess-new")
     #expect(!(try AgentSessionRecorder.isTracking(db: db, sessionId: "sess-new")))
 }
+
+@Test func setEstimateCarriesThroughToTheStoppedBlock() throws {
+    let db = try AppDatabase.inMemory()
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-1", cwd: "/tmp/repo", note: "tricky bug")
+
+    try AgentSessionRecorder.setEstimate(db: db, sessionId: "sess-1", hours: 4.0)
+    let result = try AgentSessionRecorder.stop(db: db, sessionId: "sess-1")
+
+    #expect(result?.block.estimatedHoursWithoutAI == 4.0)
+}
+
+@Test func setEstimateOnUntrackedSessionIsANoOp() throws {
+    let db = try AppDatabase.inMemory()
+    try AgentSessionRecorder.setEstimate(db: db, sessionId: "never-started", hours: 4.0)
+    // No crash, and nothing to assert on — the session was never tracked.
+}
+
+@Test func continueTrackingPreservesEstimate() throws {
+    let db = try AppDatabase.inMemory()
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-old", cwd: "/tmp/repo", note: nil)
+    try AgentSessionRecorder.setEstimate(db: db, sessionId: "sess-old", hours: 2.5)
+
+    try AgentSessionRecorder.continueTracking(db: db, oldSessionId: "sess-old", newSessionId: "sess-new")
+    let result = try AgentSessionRecorder.stop(db: db, sessionId: "sess-new")
+
+    #expect(result?.block.estimatedHoursWithoutAI == 2.5)
+}

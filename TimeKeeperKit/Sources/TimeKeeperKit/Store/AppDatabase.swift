@@ -67,6 +67,20 @@ public struct AppDatabase: Sendable {
             }
         }
 
+        migrator.registerMigration("v3") { db in
+            // Claude's own estimate of how long a task would normally take
+            // without AI assistance, so the SessionEnd summary can show the
+            // "added value" (estimate minus actual logged time). Set by the
+            // agent itself via `timekeeper-cli set-estimate` before ending
+            // the session; nil for blocks where no estimate was recorded.
+            try db.alter(table: "agentSessionTracking") { t in
+                t.add(column: "estimatedHoursWithoutAI", .double)
+            }
+            try db.alter(table: "block") { t in
+                t.add(column: "estimatedHoursWithoutAI", .double)
+            }
+        }
+
         return migrator
     }
 }

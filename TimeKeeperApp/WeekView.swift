@@ -10,26 +10,83 @@ struct DayColumn: Identifiable {
 
 struct WeekView: View {
     @Environment(\.weekUndoManager) private var undoManager
+    @State private var weekOffset = 0
     @State private var days: [DayColumn] = []
     @State private var projects: [UUID: Project] = [:]
     @State private var selectedBlockIds: Set<UUID> = []
     @State private var errorMessage: String?
     @State private var editingBlock: Block?
     @State private var noteDraft: String = ""
+    @State private var showingTimeSaved = false
+
+    private let targetHours: Double = 8
+    private let pixelsPerHour: CGFloat = 30
 
     private var weekStart: Date {
-        Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
+        let thisWeekStart = Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
+        return Calendar.current.date(byAdding: .weekOfYear, value: weekOffset, to: thisWeekStart) ?? thisWeekStart
+    }
+
+    private var weekRangeLabel: String {
+        let calendar = Calendar.current
+        guard let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) else { return "" }
+        let formatter = Date.FormatStyle.dateTime.day().month(.abbreviated)
+        return "\(weekStart.formatted(formatter)) – \(weekEnd.formatted(formatter))"
     }
 
     var body: some View {
         VStack(alignment: .leading) {
+            HStack {
+                Button {
+                    weekOffset -= 1
+                    reload()
+                } label: {
+                    Image(systemName: "chevron.left")
+                }
+                .buttonStyle(.borderless)
+
+                Text(weekRangeLabel)
+                    .font(.headline)
+                    .frame(minWidth: 140)
+
+                Button {
+                    weekOffset += 1
+                    reload()
+                } label: {
+                    Image(systemName: "chevron.right")
+                }
+                .buttonStyle(.borderless)
+
+                if weekOffset != 0 {
+                    Button("Dnes") {
+                        weekOffset = 0
+                        reload()
+                    }
+                    .buttonStyle(.link)
+                }
+
+                Spacer()
+
+                Button("Úspory") {
+                    showingTimeSaved = true
+                }
+                .popover(isPresented: $showingTimeSaved) {
+                    TimeSavedView(weekStart: weekStart)
+                }
+            }
+
             if let errorMessage {
                 Text(errorMessage).font(.caption).foregroundStyle(.red)
             }
 
             HStack(alignment: .top, spacing: 8) {
-                ForEach(days) { day in
-                    dayColumn(day)
+                hourLegend
+                    .padding(.top, dayColumnHeaderHeight)
+
+                HStack(alignment: .top, spacing: 8) {
+                    ForEach(days) { day in
+                        dayColumn(day)
+                    }
                 }
             }
 
@@ -48,22 +105,91 @@ struct WeekView: View {
             }
         }
         .padding()
-        .frame(minWidth: 700, minHeight: 400)
+        .frame(minWidth: 820, minHeight: 560)
         .onAppear(perform: reload)
+        .onReceive(NotificationCenter.default.publisher(for: .timeKeeperDataChanged)) { _ in
+            reload()
+        }
+    }
+
+    private var scaleHeight: CGFloat {
+        targetHours * pixelsPerHour
+    }
+
+    /// The grid extends past the 8h workday target to cover evening hours
+    /// too, so blocks logged outside 8:00-16:00 still land on a ruled line.
+    private let gridHours = 12
+    private var gridHeight: CGFloat {
+        CGFloat(gridHours) * pixelsPerHour
+    }
+
+    private let dayColumnHeaderHeight: CGFloat = 20
+    private let workdayStartHour = 8
+
+    private var hourLegend: some View {
+        ZStack(alignment: .topTrailing) {
+            ForEach(0...gridHours, id: \.self) { hourOffset in
+                Text("\(workdayStartHour + hourOffset):00")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .offset(y: CGFloat(hourOffset) * pixelsPerHour - 6)
+            }
+        }
+        .frame(width: 44, height: gridHeight, alignment: .topTrailing)
+    }
+
+    private var hourGridLines: some View {
+        ForEach(0...gridHours, id: \.self) { hourOffset in
+            Rectangle()
+                .fill(Color.secondary.opacity(0.15))
+                .frame(height: 1)
+                .offset(y: CGFloat(hourOffset) * pixelsPerHour)
+        }
     }
 
     private func dayColumn(_ day: DayColumn) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(day.date, format: .dateTime.weekday(.abbreviated).day())
-                .font(.caption).bold()
+        let totalHours = day.blocks.reduce(0.0) { $0 + $1.duration / 3600 }
+        let isWorkday = !Calendar.current.isDateInWeekend(day.date)
+        let metTarget = totalHours >= targetHours
 
-            ForEach(day.blocks) { block in
-                blockRow(block)
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(day.date, format: .dateTime.weekday(.abbreviated).day())
+                    .font(.caption).bold()
+                if isWorkday {
+                    Text(String(format: "%.1fh", totalHours))
+                        .font(.caption2)
+                        .foregroundStyle(metTarget ? .green : .secondary)
+                }
             }
 
-            Spacer(minLength: 40)
+            ZStack(alignment: .top) {
+                hourGridLines
+
+                // 8h scale: a filled track up to the target, so a day's
+                // blocks visually show how much of the workday they cover.
+                if isWorkday {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.green.opacity(0.08))
+                        .frame(height: scaleHeight)
+
+                    Rectangle()
+                        .fill(Color.green.opacity(0.4))
+                        .frame(height: 1)
+                        .offset(y: scaleHeight)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(day.blocks) { block in
+                        blockRow(block)
+                    }
+                }
+            }
+            .frame(minHeight: gridHeight, alignment: .top)
+
+            Spacer(minLength: 8)
         }
-        .frame(minWidth: 90, maxWidth: .infinity, minHeight: 300, alignment: .top)
+        .frame(minWidth: 90, maxWidth: .infinity, alignment: .top)
         .padding(4)
         .background(.quaternary.opacity(0.3))
         .cornerRadius(6)
@@ -74,9 +200,13 @@ struct WeekView: View {
     }
 
     private func blockRow(_ block: Block) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        let hours = block.duration / 3600
+        let barHeight = max(20, hours * pixelsPerHour)
+
+        return VStack(alignment: .leading, spacing: 2) {
             Text(projects[block.projectId]?.name ?? "?")
                 .font(.caption2).bold()
+                .lineLimit(1)
             Text(durationLabel(block))
                 .font(.caption2)
             if let note = block.note, !note.isEmpty {
@@ -87,14 +217,14 @@ struct WeekView: View {
             }
         }
         .padding(4)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: barHeight, alignment: .topLeading)
         .background(selectedBlockIds.contains(block.id) ? Color.accentColor.opacity(0.3) : Color.secondary.opacity(0.15))
         .cornerRadius(4)
-        .onTapGesture(count: 2) {
-            beginEditingNote(block)
-        }
         .onTapGesture {
             toggleSelection(block.id)
+        }
+        .contextMenu {
+            Button("Upravit popis…") { beginEditingNote(block) }
         }
         .draggable(BlockTransfer(blockId: block.id))
         .popover(isPresented: Binding(

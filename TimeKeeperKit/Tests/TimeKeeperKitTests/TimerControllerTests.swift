@@ -106,3 +106,23 @@ import Testing
 
     #expect(block?.note == nil)
 }
+
+@Test func resumeRestartsTimerFromAnEarlierStartTime() throws {
+    let db = try AppDatabase.inMemory()
+    let project = Project(name: "a", path: "/tmp/a")
+    try db.dbQueue.write { try project.insert($0) }
+
+    let earlierStart = Date(timeIntervalSince1970: 1000)
+    var currentTime = earlierStart.addingTimeInterval(300)
+    let controller = TimerController(db: db, now: { currentTime })
+
+    controller.resume(projectId: project.id, from: earlierStart, note: "picking back up")
+    #expect(controller.isRunning(projectId: project.id))
+    #expect(controller.elapsed(projectId: project.id) == 300)
+
+    currentTime = currentTime.addingTimeInterval(600)
+    let block = try controller.stop(projectId: project.id)
+
+    #expect(block?.duration == 900) // 300 already elapsed + 600 more
+    #expect(block?.note == "picking back up")
+}

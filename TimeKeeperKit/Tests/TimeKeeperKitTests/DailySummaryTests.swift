@@ -67,3 +67,50 @@ private func day(_ dateString: String) -> Date {
     #expect(totals[0].project.id == active.id)
     #expect(totals[0].hours == 1.0)
 }
+
+@Test func todaysBlocksReturnsMostRecentFirst() throws {
+    let db = try AppDatabase.inMemory()
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "UTC")!
+
+    let project = Project(name: "p", path: "/tmp/p")
+    try db.dbQueue.write { try project.insert($0) }
+
+    let earlier = Block(projectId: project.id, start: day("2026-08-21 08:00"), end: day("2026-08-21 09:00"), source: .manual, note: "morning work")
+    let later = Block(projectId: project.id, start: day("2026-08-21 13:00"), end: day("2026-08-21 14:00"), source: .manual, note: "afternoon work")
+    try db.dbQueue.write {
+        try earlier.insert($0)
+        try later.insert($0)
+    }
+
+    let blocks = try DailySummary.todaysBlocks(db: db, projectId: project.id, day: day("2026-08-21 15:00"), calendar: calendar)
+    #expect(blocks.count == 2)
+    #expect(blocks[0].note == "afternoon work")
+    #expect(blocks[1].note == "morning work")
+}
+
+@Test func todaysBlocksExcludesOtherProjectsAndOtherDays() throws {
+    let db = try AppDatabase.inMemory()
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "UTC")!
+
+    let projectA = Project(name: "a", path: "/tmp/a")
+    let projectB = Project(name: "b", path: "/tmp/b")
+    try db.dbQueue.write {
+        try projectA.insert($0)
+        try projectB.insert($0)
+    }
+
+    let todayA = Block(projectId: projectA.id, start: day("2026-08-21 08:00"), end: day("2026-08-21 09:00"), source: .manual)
+    let todayB = Block(projectId: projectB.id, start: day("2026-08-21 08:00"), end: day("2026-08-21 09:00"), source: .manual)
+    let yesterdayA = Block(projectId: projectA.id, start: day("2026-08-20 08:00"), end: day("2026-08-20 09:00"), source: .manual)
+    try db.dbQueue.write {
+        try todayA.insert($0)
+        try todayB.insert($0)
+        try yesterdayA.insert($0)
+    }
+
+    let blocks = try DailySummary.todaysBlocks(db: db, projectId: projectA.id, day: day("2026-08-21 15:00"), calendar: calendar)
+    #expect(blocks.count == 1)
+    #expect(blocks[0].id == todayA.id)
+}

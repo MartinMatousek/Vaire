@@ -44,7 +44,8 @@ public enum AgentSessionRecorder {
                 end: now,
                 source: .claudeSession,
                 note: tracking.note,
-                isManual: false
+                isManual: false,
+                estimatedHoursWithoutAI: tracking.estimatedHoursWithoutAI
             )
             try block.insert(conn)
             try tracking.delete(conn)
@@ -91,9 +92,25 @@ public enum AgentSessionRecorder {
                 sessionId: newSessionId,
                 projectId: tracking.projectId,
                 start: tracking.start,
-                note: tracking.note
+                note: tracking.note,
+                estimatedHoursWithoutAI: tracking.estimatedHoursWithoutAI
             )
             try moved.insert(conn)
+        }
+    }
+
+    /// Records Claude's own estimate of how long this task would normally
+    /// take without AI help, so SessionEnd can show the "added value" vs.
+    /// the actual logged time. Called by the agent itself (via
+    /// `timekeeper-cli set-estimate`) before ending the session. A no-op if
+    /// the session isn't being tracked (e.g. the user opted out).
+    public static func setEstimate(db: AppDatabase, sessionId: String, hours: Double) throws {
+        try db.dbQueue.write { conn in
+            guard var tracking = try AgentSessionTracking.fetchOne(conn, key: sessionId) else {
+                return
+            }
+            tracking.estimatedHoursWithoutAI = hours
+            try tracking.update(conn)
         }
     }
 }

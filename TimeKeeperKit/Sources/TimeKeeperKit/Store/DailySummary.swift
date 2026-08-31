@@ -52,6 +52,21 @@ public enum DailySummary {
         }
     }
 
+    /// Today's blocks for a single project, most recent first — used to
+    /// offer "resume this one" when starting a timer on a project that
+    /// already has entries today, instead of always creating a new block.
+    public static func todaysBlocks(db: AppDatabase, projectId: UUID, day: Date = .now, calendar: Calendar = .current) throws -> [Block] {
+        let (dayStart, dayEnd) = dayBounds(for: day, calendar: calendar)
+
+        return try db.dbQueue.read { conn in
+            try Block
+                .filter(Column("projectId") == projectId)
+                .filter(Column("start") < dayEnd && Column("end") > dayStart)
+                .order(Column("start").desc)
+                .fetchAll(conn)
+        }
+    }
+
     private static func dayBounds(for day: Date, calendar: Calendar) -> (Date, Date) {
         let start = calendar.startOfDay(for: day)
         let end = calendar.date(byAdding: .day, value: 1, to: start)!

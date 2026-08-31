@@ -10,6 +10,7 @@ public struct Block: Identifiable, Equatable, Sendable, Codable, FetchableRecord
     public var note: String?
     public var isManual: Bool
     public var confidence: Double
+    public var estimatedHoursWithoutAI: Double?
 
     public init(
         id: UUID = UUID(),
@@ -19,7 +20,8 @@ public struct Block: Identifiable, Equatable, Sendable, Codable, FetchableRecord
         source: Source,
         note: String? = nil,
         isManual: Bool = false,
-        confidence: Double = 1.0
+        confidence: Double = 1.0,
+        estimatedHoursWithoutAI: Double? = nil
     ) {
         self.id = id
         self.projectId = projectId
@@ -29,6 +31,7 @@ public struct Block: Identifiable, Equatable, Sendable, Codable, FetchableRecord
         self.note = note
         self.isManual = isManual
         self.confidence = confidence
+        self.estimatedHoursWithoutAI = estimatedHoursWithoutAI
     }
 
     public var duration: TimeInterval {

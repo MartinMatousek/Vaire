@@ -62,4 +62,14 @@ public final class TimerController {
         guard let start = runningStarts[projectId] else { return 0 }
         return now().timeIntervalSince(start)
     }
+
+    /// Restarts a timer at a specific `start` time rather than now — used
+    /// when the user stops a timer, then decides they cut it off too early
+    /// and wants to pick up where the (now-deleted) block left off.
+    public func resume(projectId: UUID, from start: Date, note: String?) {
+        runningStarts[projectId] = start
+        if let note, !note.isEmpty {
+            runningNotes[projectId] = note
+        }
+    }
 }

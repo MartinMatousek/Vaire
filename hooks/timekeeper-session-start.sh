@@ -26,32 +26,70 @@ project_name=$(basename "$cwd")
 
 active=""
 active_session_id=""
+active_note=""
+active_elapsed_human=""
 case "$matcher_value" in
 resume | clear | compact)
     active=$(timekeeper-cli find-active "$cwd" 2>/dev/null)
     if [ "$active" != "none" ] && [ -n "$active" ]; then
         active_session_id=$(echo "$active" | grep '^session_id=' | cut -d= -f2-)
+        active_note=$(echo "$active" | grep '^note=' | cut -d= -f2-)
+        elapsed_seconds=$(echo "$active" | grep '^elapsed_seconds=' | cut -d= -f2-)
+        active_elapsed_human="$((elapsed_seconds / 3600))h $(((elapsed_seconds % 3600) / 60))m"
     fi
     ;;
 esac
 
 if [ -n "$active_session_id" ]; then
-    choice=$(osascript - "$project_name" <<'APPLESCRIPT' 2>/dev/null
+    note_line=""
+    [ -n "$active_note" ] && note_line="Poznámka: $active_note"
+
+    # "Dokončit" only makes sense on /clear: that's usually when a task
+    # actually wraps up, well before the Claude Code process itself ends
+    # (which is when SessionEnd would otherwise show this same summary).
+    # /compact and /resume are mid-task continuations, not endpoints.
+    if [ "$matcher_value" = "clear" ]; then
+        choice=$(osascript - "$project_name" "$active_elapsed_human" "$note_line" <<'APPLESCRIPT' 2>/dev/null
 on run argv
     set proj to item 1 of argv
+    set elapsed to item 2 of argv
+    set noteLine to item 3 of argv
+    set msg to "Rozjetý task na " & proj & " už běží " & elapsed & "." & return & noteLine & return & "Pokračovat?"
     try
-        display dialog "Pokračovat v rozjetém tasku na " & proj & "?" buttons {"Ne (nový task)", "Ne (bez logování)", "Pokračovat"} default button "Pokračovat" with title "TimeKeeper"
+        display dialog msg buttons {"Ne (nový task)", "Dokončit", "Pokračovat"} default button "Pokračovat" with title "TimeKeeper"
         return button returned of result
     on error
         return "Pokračovat"
     end try
 end run
 APPLESCRIPT
-    )
+        )
+    else
+        choice=$(osascript - "$project_name" "$active_elapsed_human" "$note_line" <<'APPLESCRIPT' 2>/dev/null
+on run argv
+    set proj to item 1 of argv
+    set elapsed to item 2 of argv
+    set noteLine to item 3 of argv
+    set msg to "Rozjetý task na " & proj & " už běží " & elapsed & "." & return & noteLine & return & "Pokračovat?"
+    try
+        display dialog msg buttons {"Ne (nový task)", "Ne (bez logování)", "Pokračovat"} default button "Pokračovat" with title "TimeKeeper"
+        return button returned of result
+    on error
+        return "Pokračovat"
+    end try
+end run
+APPLESCRIPT
+        )
+    fi
 
     case "$choice" in
     "Pokračovat")
         timekeeper-cli continue-session "$active_session_id" "$session_id" >/dev/null 2>&1
+        exit 0
+        ;;
+    "Dokončit")
+        source "$(dirname "$0")/timekeeper-stop-and-review.sh"
+        stop_and_review "$active_session_id"
         exit 0
         ;;
     "Ne (nový task)")

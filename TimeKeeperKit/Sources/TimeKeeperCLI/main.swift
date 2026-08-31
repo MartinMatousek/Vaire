@@ -33,6 +33,8 @@ func run() throws {
         try runFindActive(db: db, args: rest)
     case "continue-session":
         try runContinueSession(db: db, args: rest)
+    case "set-estimate":
+        try runSetEstimate(db: db, args: rest)
     default:
         throw CLIError.usage("unknown command: \(command)")
     }
@@ -48,6 +50,7 @@ func runStartSession(db: AppDatabase, args: [String]) throws {
 
     let project = try AgentSessionRecorder.start(db: db, sessionId: sessionId, cwd: cwd, note: note)
     print("started tracking session \(sessionId) on project \(project.name)")
+    DataChangeNotifier.post()
 }
 
 func runStopSession(db: AppDatabase, args: [String]) throws {
@@ -68,6 +71,10 @@ func runStopSession(db: AppDatabase, args: [String]) throws {
     print("duration_human=\(h)h \(m)m")
     print("note=\(result.block.note ?? "")")
     print("block_id=\(result.block.id.uuidString)")
+    if let estimate = result.block.estimatedHoursWithoutAI {
+        print("estimated_hours_without_ai=\(estimate)")
+    }
+    DataChangeNotifier.post()
 }
 
 func runIsTracking(db: AppDatabase, args: [String]) throws {
@@ -99,6 +106,7 @@ func runAdjustBlock(db: AppDatabase, args: [String]) throws {
     }
 
     print("adjusted")
+    DataChangeNotifier.post()
 }
 
 func runFindActive(db: AppDatabase, args: [String]) throws {
@@ -121,6 +129,15 @@ func runContinueSession(db: AppDatabase, args: [String]) throws {
     }
     try AgentSessionRecorder.continueTracking(db: db, oldSessionId: args[0], newSessionId: args[1])
     print("continued")
+    DataChangeNotifier.post()
+}
+
+func runSetEstimate(db: AppDatabase, args: [String]) throws {
+    guard args.count >= 2, let hours = Double(args[1]) else {
+        throw CLIError.usage("usage: set-estimate <session_id> <hours>")
+    }
+    try AgentSessionRecorder.setEstimate(db: db, sessionId: args[0], hours: hours)
+    print("estimate set")
 }
 
 do {
