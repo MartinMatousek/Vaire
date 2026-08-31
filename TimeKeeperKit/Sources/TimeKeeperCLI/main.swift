@@ -29,6 +29,10 @@ func run() throws {
         try runIsTracking(db: db, args: rest)
     case "adjust-block":
         try runAdjustBlock(db: db, args: rest)
+    case "find-active":
+        try runFindActive(db: db, args: rest)
+    case "continue-session":
+        try runContinueSession(db: db, args: rest)
     default:
         throw CLIError.usage("unknown command: \(command)")
     }
@@ -95,6 +99,28 @@ func runAdjustBlock(db: AppDatabase, args: [String]) throws {
     }
 
     print("adjusted")
+}
+
+func runFindActive(db: AppDatabase, args: [String]) throws {
+    guard let cwd = args.first else {
+        throw CLIError.usage("usage: find-active <cwd>")
+    }
+    guard let tracking = try AgentSessionRecorder.findActiveTracking(db: db, cwd: cwd) else {
+        print("none")
+        return
+    }
+    let elapsedSeconds = Int(Date().timeIntervalSince(tracking.start))
+    print("session_id=\(tracking.sessionId)")
+    print("note=\(tracking.note ?? "")")
+    print("elapsed_seconds=\(elapsedSeconds)")
+}
+
+func runContinueSession(db: AppDatabase, args: [String]) throws {
+    guard args.count >= 2 else {
+        throw CLIError.usage("usage: continue-session <old_session_id> <new_session_id>")
+    }
+    try AgentSessionRecorder.continueTracking(db: db, oldSessionId: args[0], newSessionId: args[1])
+    print("continued")
 }
 
 do {

@@ -58,3 +58,38 @@ import Testing
     let db = try AppDatabase.inMemory()
     #expect(!(try AgentSessionRecorder.isTracking(db: db, sessionId: "sess-1")))
 }
+
+@Test func findActiveTrackingLocatesRunningTimerByCwd() throws {
+    let db = try AppDatabase.inMemory()
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-old", cwd: "/tmp/repo", note: "fixing bug")
+
+    let found = try AgentSessionRecorder.findActiveTracking(db: db, cwd: "/tmp/repo")
+    #expect(found?.sessionId == "sess-old")
+    #expect(found?.note == "fixing bug")
+}
+
+@Test func findActiveTrackingReturnsNilWhenNothingRunning() throws {
+    let db = try AppDatabase.inMemory()
+    #expect(try AgentSessionRecorder.findActiveTracking(db: db, cwd: "/tmp/repo") == nil)
+}
+
+@Test func continueTrackingPreservesStartTimeAcrossSessionIdChange() throws {
+    let db = try AppDatabase.inMemory()
+    let start = Date(timeIntervalSince1970: 1000)
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-old", cwd: "/tmp/repo", note: "fixing bug", now: start)
+
+    try AgentSessionRecorder.continueTracking(db: db, oldSessionId: "sess-old", newSessionId: "sess-new")
+
+    #expect(!(try AgentSessionRecorder.isTracking(db: db, sessionId: "sess-old")))
+    #expect(try AgentSessionRecorder.isTracking(db: db, sessionId: "sess-new"))
+
+    let result = try AgentSessionRecorder.stop(db: db, sessionId: "sess-new", now: start.addingTimeInterval(1800))
+    #expect(result?.block.duration == 1800) // preserved from the original start, across the /clear
+    #expect(result?.block.note == "fixing bug")
+}
+
+@Test func continueTrackingWithMissingOldSessionIsANoOp() throws {
+    let db = try AppDatabase.inMemory()
+    try AgentSessionRecorder.continueTracking(db: db, oldSessionId: "never-existed", newSessionId: "sess-new")
+    #expect(!(try AgentSessionRecorder.isTracking(db: db, sessionId: "sess-new")))
+}

@@ -60,4 +60,40 @@ public enum AgentSessionRecorder {
             try AgentSessionTracking.fetchOne(conn, key: sessionId) != nil
         }
     }
+
+    /// Finds an in-progress tracking row for `cwd`, if any. `/clear` and
+    /// `/compact` mint a brand new session_id on SessionStart, so a running
+    /// timer from before the reset can't be found by session_id anymore —
+    /// this is how SessionStart offers "continue the running task" instead
+    /// of starting a second, overlapping timer for the same work.
+    public static func findActiveTracking(db: AppDatabase, cwd: String) throws -> AgentSessionTracking? {
+        try db.dbQueue.read { conn in
+            guard let project = try Project.filter(Column("path") == cwd).fetchOne(conn) else {
+                return nil
+            }
+            return try AgentSessionTracking
+                .filter(Column("projectId") == project.id)
+                .fetchOne(conn)
+        }
+    }
+
+    /// Re-keys an existing tracking row to `newSessionId`, preserving its
+    /// original start time and note. Used when the user chooses to
+    /// continue a running task across a /clear or /compact reset.
+    public static func continueTracking(db: AppDatabase, oldSessionId: String, newSessionId: String) throws {
+        guard oldSessionId != newSessionId else { return }
+        try db.dbQueue.write { conn in
+            guard let tracking = try AgentSessionTracking.fetchOne(conn, key: oldSessionId) else {
+                return
+            }
+            try tracking.delete(conn)
+            let moved = AgentSessionTracking(
+                sessionId: newSessionId,
+                projectId: tracking.projectId,
+                start: tracking.start,
+                note: tracking.note
+            )
+            try moved.insert(conn)
+        }
+    }
 }
