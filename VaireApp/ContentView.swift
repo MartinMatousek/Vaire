@@ -15,6 +15,9 @@ struct ContentView: View {
     @State private var hoursDraft: Int = 0
     @State private var minutesDraft: Int = 0
     @State private var estimateDraft: String = ""
+    @State private var estimateHoursDraft: Int = 0
+    @State private var estimateMinutesDraft: Int = 0
+    @State private var hasEstimateDraft: Bool = false
 
     private let refreshTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -187,12 +190,6 @@ struct ContentView: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 
-                if let estimate = stoppedBlock.estimatedHoursWithoutAI {
-                    let editedHours = Double(hoursDraft) + Double(minutesDraft) / 60
-                    Text("Odhad bez AI: \(String(format: "%.1f", estimate))h")
-                        .font(.caption2)
-                        .foregroundStyle(estimate < editedHours ? .red : .secondary)
-                }
             }
 
             HoursMinutesField(hours: $hoursDraft, minutes: $minutesDraft)
@@ -200,6 +197,19 @@ struct ContentView: View {
             TextField("Co jsi dělal…", text: $noteDraft, axis: .vertical)
                 .lineLimit(3...6)
                 .frame(minWidth: 240)
+
+            Toggle("Odhad bez AI", isOn: $hasEstimateDraft)
+                .font(.caption)
+            if hasEstimateDraft {
+                HoursMinutesField(hours: $estimateHoursDraft, minutes: $estimateMinutesDraft)
+                let editedHours = Double(hoursDraft) + Double(minutesDraft) / 60
+                let estimateHours = Double(estimateHoursDraft) + Double(estimateMinutesDraft) / 60
+                if estimateHours < editedHours {
+                    Text("Odhad je nižší než naměřený čas")
+                        .font(.caption2)
+                        .foregroundStyle(.red)
+                }
+            }
 
             HStack {
                 Spacer()
@@ -247,6 +257,16 @@ struct ContentView: View {
             let totalMinutes = Int(block.duration / 60)
             hoursDraft = totalMinutes / 60
             minutesDraft = totalMinutes % 60
+            if let estimate = block.estimatedHoursWithoutAI {
+                let estimateMinutes = Int((estimate * 60).rounded())
+                estimateHoursDraft = estimateMinutes / 60
+                estimateMinutesDraft = estimateMinutes % 60
+                hasEstimateDraft = true
+            } else {
+                estimateHoursDraft = 0
+                estimateMinutesDraft = 0
+                hasEstimateDraft = false
+            }
             stoppedBlock = block
         }
     }
@@ -257,6 +277,12 @@ struct ContentView: View {
         do {
             _ = try BlockEditor.setTimes(db: AppEnvironment.db, blockId: block.id, start: block.start, end: newEnd)
             _ = try BlockEditor.setNote(db: AppEnvironment.db, blockId: block.id, note: noteDraft)
+            let newEstimate: Double? = hasEstimateDraft
+                ? Double(estimateHoursDraft * 60 + estimateMinutesDraft) / 60
+                : nil
+            if newEstimate != block.estimatedHoursWithoutAI {
+                _ = try BlockEditor.setEstimate(db: AppEnvironment.db, blockId: block.id, hours: newEstimate)
+            }
         } catch {
             // Block was already persisted by stop(); a failed correction
             // just means the raw times/no note stand — not worth surfacing
