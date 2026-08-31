@@ -132,3 +132,23 @@ import Testing
     try AgentSessionRecorder.setEstimate(db: db, sessionId: "sess-1", hours: 1.0)
     #expect(try AgentSessionRecorder.hasEstimate(db: db, sessionId: "sess-1")) // tracking, has estimate
 }
+
+@Test func allActiveTrackingsReturnsEveryRunningSessionOldestFirst() throws {
+    let db = try AppDatabase.inMemory()
+    let earlier = Date(timeIntervalSince1970: 1000)
+    let later = Date(timeIntervalSince1970: 2000)
+
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-later", cwd: "/tmp/a", note: nil, now: later)
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-earlier", cwd: "/tmp/b", note: nil, now: earlier)
+
+    let all = try AgentSessionRecorder.allActiveTrackings(db: db)
+    #expect(all.map(\.sessionId) == ["sess-earlier", "sess-later"])
+}
+
+@Test func allActiveTrackingsExcludesStoppedSessions() throws {
+    let db = try AppDatabase.inMemory()
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-1", cwd: "/tmp/a", note: nil)
+    _ = try AgentSessionRecorder.stop(db: db, sessionId: "sess-1")
+
+    #expect(try AgentSessionRecorder.allActiveTrackings(db: db).isEmpty)
+}

@@ -126,4 +126,14 @@ public enum AgentSessionRecorder {
             return tracking.estimatedHoursWithoutAI != nil
         }
     }
+
+    /// All in-progress Claude session timers across every project, oldest
+    /// first. Used by the UI to show live/running work alongside completed
+    /// blocks — these rows never appear in the `block` table until stopped,
+    /// so callers that only read `Block` never see them.
+    public static func allActiveTrackings(db: AppDatabase) throws -> [AgentSessionTracking] {
+        try db.dbQueue.read { conn in
+            try AgentSessionTracking.order(Column("start")).fetchAll(conn)
+        }
+    }
 }
