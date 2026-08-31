@@ -1,12 +1,12 @@
-name: TimeKeeper
+name: Vaire
 options:
-  bundleIdPrefix: com.martinmatousek.timekeeper
+  bundleIdPrefix: com.martinmatousek.vaire
   deploymentTarget:
     macOS: "14.0"
 
 packages:
-  TimeKeeperKit:
-    path: TimeKeeperKit
+  VaireKit:
+    path: VaireKit
 
 settings:
   base:
@@ -16,60 +16,60 @@ settings:
     DEVELOPMENT_TEAM: LG4P6Q3UG5
 
 targets:
-  TimeKeeperApp:
+  VaireApp:
     type: application
     platform: macOS
     sources:
-      - path: TimeKeeperApp
+      - path: VaireApp
     dependencies:
-      - package: TimeKeeperKit
-      - target: TimeKeeperWidgetExtension
+      - package: VaireKit
+      - target: VaireWidgetExtension
         embed: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.martinmatousek.timekeeper.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.martinmatousek.vaire.app
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_LSUIElement: "YES"
         ENABLE_APP_SANDBOX: "NO"
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     entitlements:
-      path: TimeKeeperApp/TimeKeeperApp.entitlements
+      path: VaireApp/VaireApp.entitlements
       properties:
         com.apple.security.application-groups:
-          - group.com.martinmatousek.timekeeper
+          - group.com.martinmatousek.vaire
     info:
-      path: TimeKeeperApp/Info.plist
+      path: VaireApp/Info.plist
       properties:
         UTExportedTypeDeclarations:
-          - UTTypeIdentifier: com.martinmatousek.timekeeper.block
-            UTTypeDescription: TimeKeeper Block Reference
+          - UTTypeIdentifier: com.martinmatousek.vaire.block
+            UTTypeDescription: Vaire Block Reference
             UTTypeConformsTo:
               - public.data
             UTTypeTagSpecification:
               public.filename-extension:
-                - timekeeperblock
+                - vaireblock
 
-  TimeKeeperWidgetExtension:
+  VaireWidgetExtension:
     type: app-extension
     platform: macOS
     sources:
-      - path: TimeKeeperWidget
+      - path: VaireWidget
     dependencies:
-      - package: TimeKeeperKit
+      - package: VaireKit
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.martinmatousek.timekeeper.app.widget
+        PRODUCT_BUNDLE_IDENTIFIER: com.martinmatousek.vaire.app.widget
         CODE_SIGN_STYLE: Automatic
     entitlements:
-      path: TimeKeeperWidget/TimeKeeperWidget.entitlements
+      path: VaireWidget/VaireWidget.entitlements
       properties:
         com.apple.security.application-groups:
-          - group.com.martinmatousek.timekeeper
+          - group.com.martinmatousek.vaire
     info:
-      path: TimeKeeperWidget/Info.plist
+      path: VaireWidget/Info.plist
       properties:
-        CFBundleDisplayName: TimeKeeper Widget
+        CFBundleDisplayName: Vaire Widget
         CFBundleShortVersionString: "0.1.0"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
