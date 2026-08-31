@@ -112,3 +112,48 @@ private func makeProject(_ db: AppDatabase) throws -> Project {
     let cleared = try BlockEditor.setNote(db: db, blockId: block.id, note: "")
     #expect(cleared.note == nil)
 }
+
+@Test func setTimesUpdatesRangeAndMarksManual() throws {
+    let db = try AppDatabase.inMemory()
+    let project = try makeProject(db)
+    let block = Block(projectId: project.id, start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 3600), source: .claudeSession)
+    try db.dbQueue.write { try block.insert($0) }
+
+    let newStart = Date(timeIntervalSince1970: 900)
+    let newEnd = Date(timeIntervalSince1970: 3600)
+    let updated = try BlockEditor.setTimes(db: db, blockId: block.id, start: newStart, end: newEnd)
+
+    #expect(updated.start == newStart)
+    #expect(updated.end == newEnd)
+    #expect(updated.isManual)
+}
+
+@Test func setTimesWithEndBeforeStartThrows() throws {
+    let db = try AppDatabase.inMemory()
+    let project = try makeProject(db)
+    let block = Block(projectId: project.id, start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 3600), source: .manual)
+    try db.dbQueue.write { try block.insert($0) }
+
+    #expect(throws: BlockEditorError.self) {
+        try BlockEditor.setTimes(db: db, blockId: block.id, start: Date(timeIntervalSince1970: 3600), end: Date(timeIntervalSince1970: 0))
+    }
+}
+
+@Test func deleteRemovesBlock() throws {
+    let db = try AppDatabase.inMemory()
+    let project = try makeProject(db)
+    let block = Block(projectId: project.id, start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 3600), source: .manual)
+    try db.dbQueue.write { try block.insert($0) }
+
+    try BlockEditor.delete(db: db, blockId: block.id)
+
+    let remaining = try db.dbQueue.read { try Block.fetchAll($0) }
+    #expect(remaining.isEmpty)
+}
+
+@Test func deleteNonexistentBlockThrows() throws {
+    let db = try AppDatabase.inMemory()
+    #expect(throws: BlockEditorError.self) {
+        try BlockEditor.delete(db: db, blockId: UUID())
+    }
+}

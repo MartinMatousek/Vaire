@@ -4,6 +4,7 @@ import Observation
 @Observable
 public final class TimerController {
     public private(set) var runningStarts: [UUID: Date] = [:]
+    public private(set) var runningNotes: [UUID: String] = [:]
 
     private let db: AppDatabase
     private let now: () -> Date
@@ -21,13 +22,18 @@ public final class TimerController {
         !runningStarts.isEmpty
     }
 
-    /// Starts a timer for `projectId`. Multiple projects can run at once —
-    /// e.g. a long-running build or agent on one project while you're
-    /// actively working another. Starting an already-running project is a
-    /// no-op; its start time doesn't reset.
-    public func start(projectId: UUID) {
+    /// Starts a timer for `projectId`, optionally with a note captured up
+    /// front (e.g. "so I don't forget") that's attached to the block once
+    /// stopped. Multiple projects can run at once — e.g. a long-running
+    /// build or agent on one project while you're actively working another.
+    /// Starting an already-running project is a no-op; its start time and
+    /// note don't reset.
+    public func start(projectId: UUID, note: String? = nil) {
         guard runningStarts[projectId] == nil else { return }
         runningStarts[projectId] = now()
+        if let note, !note.isEmpty {
+            runningNotes[projectId] = note
+        }
     }
 
     @discardableResult
@@ -39,6 +45,7 @@ public final class TimerController {
             start: start,
             end: now(),
             source: .manual,
+            note: runningNotes[projectId],
             isManual: true
         )
         try db.dbQueue.write { conn in
@@ -46,6 +53,7 @@ public final class TimerController {
         }
 
         runningStarts.removeValue(forKey: projectId)
+        runningNotes.removeValue(forKey: projectId)
         return block
     }
 

@@ -82,3 +82,27 @@ import Testing
     #expect(!controller.isRunning(projectId: projectA.id))
     #expect(controller.isRunning(projectId: projectB.id))
 }
+
+@Test func noteCapturedAtStartLandsOnTheStoppedBlock() throws {
+    let db = try AppDatabase.inMemory()
+    let project = Project(name: "a", path: "/tmp/a")
+    try db.dbQueue.write { try project.insert($0) }
+
+    let controller = TimerController(db: db)
+    controller.start(projectId: project.id, note: "fixing batch update bug")
+    let block = try controller.stop(projectId: project.id)
+
+    #expect(block?.note == "fixing batch update bug")
+}
+
+@Test func startingWithoutNoteLeavesBlockNoteNil() throws {
+    let db = try AppDatabase.inMemory()
+    let project = Project(name: "a", path: "/tmp/a")
+    try db.dbQueue.write { try project.insert($0) }
+
+    let controller = TimerController(db: db)
+    controller.start(projectId: project.id)
+    let block = try controller.stop(projectId: project.id)
+
+    #expect(block?.note == nil)
+}

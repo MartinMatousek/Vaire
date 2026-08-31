@@ -5,6 +5,7 @@ public enum BlockEditorError: Error {
     case blockNotFound
     case blocksNotAdjacent
     case splitTimeOutOfRange
+    case invalidTimeRange
 }
 
 public enum BlockEditor {
@@ -106,6 +107,31 @@ public enum BlockEditor {
             block.note = (note?.isEmpty ?? true) ? nil : note
             try block.update(conn)
             return block
+        }
+    }
+
+    /// Overwrites a block's start/end, e.g. rounding a just-stopped timer to
+    /// the nearest quarter hour. Marks the block manual so reimport won't
+    /// clobber the correction.
+    public static func setTimes(db: AppDatabase, blockId: UUID, start: Date, end: Date) throws -> Block {
+        guard start < end else { throw BlockEditorError.invalidTimeRange }
+        return try db.dbQueue.write { conn in
+            guard var block = try Block.fetchOne(conn, key: blockId) else {
+                throw BlockEditorError.blockNotFound
+            }
+            block.start = start
+            block.end = end
+            block.isManual = true
+            try block.update(conn)
+            return block
+        }
+    }
+
+    public static func delete(db: AppDatabase, blockId: UUID) throws {
+        try db.dbQueue.write { conn in
+            guard try Block.deleteOne(conn, key: blockId) else {
+                throw BlockEditorError.blockNotFound
+            }
         }
     }
 }

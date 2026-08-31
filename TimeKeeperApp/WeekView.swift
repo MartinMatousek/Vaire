@@ -38,6 +38,8 @@ struct WeekView: View {
                     .disabled(selectedBlockIds.count != 1)
                 Button("Merge") { mergeSelected() }
                     .disabled(selectedBlockIds.count < 2)
+                Button("Delete") { deleteSelected() }
+                    .disabled(selectedBlockIds.isEmpty)
                 Spacer()
                 Button("Undo") { undoManager?.undo() }
                     .disabled(undoManager?.canUndo != true)
@@ -213,6 +215,35 @@ struct WeekView: View {
             WidgetCenter.shared.reloadAllTimelines()
         } catch {
             errorMessage = "Sloučení selhalo: \(error.localizedDescription)"
+        }
+    }
+
+    private func deleteSelected() {
+        let blocksToDelete = days.flatMap(\.blocks).filter { selectedBlockIds.contains($0.id) }
+        guard !blocksToDelete.isEmpty else { return }
+
+        do {
+            for block in blocksToDelete {
+                try BlockEditor.delete(db: AppEnvironment.db, blockId: block.id)
+            }
+            registerUndoForDelete(blocksToDelete)
+            selectedBlockIds.removeAll()
+            reload()
+            WidgetCenter.shared.reloadAllTimelines()
+        } catch {
+            errorMessage = "Smazání selhalo: \(error.localizedDescription)"
+        }
+    }
+
+    private func registerUndoForDelete(_ blocks: [Block]) {
+        undoManager?.registerUndo(withTarget: UndoToken()) { [reload] _ in
+            try? AppEnvironment.db.dbQueue.write { conn in
+                for block in blocks {
+                    try block.insert(conn)
+                }
+            }
+            reload()
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 }

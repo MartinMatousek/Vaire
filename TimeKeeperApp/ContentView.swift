@@ -7,8 +7,11 @@ struct ContentView: View {
     @State private var projects: [Project] = []
     @State private var todayHours: Double = 0
     @State private var tick = 0
-    @State private var justStoppedBlock: Block?
+    @State private var startingProjectId: UUID?
+    @State private var stoppedBlock: Block?
     @State private var noteDraft: String = ""
+    @State private var startDraft: Date = .now
+    @State private var endDraft: Date = .now
 
     private let refreshTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -71,13 +74,19 @@ struct ContentView: View {
             }
             Spacer()
             Button(timer.isRunning(projectId: project.id) ? "Stop" : "Start") {
-                toggleTimer(for: project.id)
+                handleTap(for: project.id)
             }
             .popover(isPresented: Binding(
-                get: { justStoppedBlock?.projectId == project.id },
-                set: { if !$0 { justStoppedBlock = nil } }
+                get: { startingProjectId == project.id },
+                set: { if !$0 { startingProjectId = nil } }
             )) {
-                noteEditorAfterStop
+                noteEditorBeforeStart(projectId: project.id)
+            }
+            .popover(isPresented: Binding(
+                get: { stoppedBlock?.projectId == project.id },
+                set: { if !$0 { stoppedBlock = nil } }
+            )) {
+                editorAfterStop
             }
         }
     }
@@ -100,40 +109,88 @@ struct ContentView: View {
         return "\(h)h \(m)m / 8h"
     }
 
-    private var noteEditorAfterStop: some View {
+    private func noteEditorBeforeStart(projectId: UUID) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Popis aktivity").font(.caption).bold()
-            TextField("Co jsi dělal…", text: $noteDraft, axis: .vertical)
+            Text("Popis aktivity (než zapomeneš)").font(.caption).bold()
+            TextField("Co budeš dělat…", text: $noteDraft, axis: .vertical)
                 .lineLimit(3...6)
                 .frame(minWidth: 220)
             HStack {
                 Spacer()
-                Button("Přeskočit") { justStoppedBlock = nil }
-                Button("Uložit") { saveNoteForStoppedBlock() }
+                Button("Bez poznámky") { startTimer(for: projectId, note: nil) }
+                Button("Start") { startTimer(for: projectId, note: noteDraft) }
                     .keyboardShortcut(.defaultAction)
             }
         }
         .padding()
     }
 
-    private func toggleTimer(for projectId: UUID) {
-        if timer.isRunning(projectId: projectId) {
-            let stoppedBlock = try? timer.stop(projectId: projectId)
-            refreshTodayHours()
-            WidgetCenter.shared.reloadAllTimelines()
-            if let stoppedBlock {
-                noteDraft = ""
-                justStoppedBlock = stoppedBlock
+    private var editorAfterStop: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Uprav čas a popis").font(.caption).bold()
+
+            DatePicker("Start", selection: $startDraft, displayedComponents: [.hourAndMinute])
+            DatePicker("Konec", selection: $endDraft, displayedComponents: [.hourAndMinute])
+
+            TextField("Co jsi dělal…", text: $noteDraft, axis: .vertical)
+                .lineLimit(3...6)
+                .frame(minWidth: 240)
+
+            HStack {
+                roundingButton("−15 min") { endDraft.addTimeInterval(-15 * 60) }
+                roundingButton("+15 min") { endDraft.addTimeInterval(15 * 60) }
+                Spacer()
+                Button("Zahodit") { stoppedBlock = nil }
+                Button("Uložit") { saveStoppedBlock() }
+                    .keyboardShortcut(.defaultAction)
             }
+        }
+        .padding()
+    }
+
+    private func roundingButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(title, action: action)
+            .font(.caption2)
+    }
+
+    private func handleTap(for projectId: UUID) {
+        if timer.isRunning(projectId: projectId) {
+            stopTimer(for: projectId)
         } else {
-            timer.start(projectId: projectId)
+            noteDraft = ""
+            startingProjectId = projectId
         }
     }
 
-    private func saveNoteForStoppedBlock() {
-        guard let block = justStoppedBlock else { return }
-        _ = try? BlockEditor.setNote(db: AppEnvironment.db, blockId: block.id, note: noteDraft)
-        justStoppedBlock = nil
+    private func startTimer(for projectId: UUID, note: String?) {
+        timer.start(projectId: projectId, note: note)
+        startingProjectId = nil
+    }
+
+    private func stopTimer(for projectId: UUID) {
+        let block = try? timer.stop(projectId: projectId)
+        refreshTodayHours()
+        WidgetCenter.shared.reloadAllTimelines()
+        if let block {
+            noteDraft = block.note ?? ""
+            startDraft = block.start
+            endDraft = block.end
+            stoppedBlock = block
+        }
+    }
+
+    private func saveStoppedBlock() {
+        guard let block = stoppedBlock else { return }
+        do {
+            _ = try BlockEditor.setTimes(db: AppEnvironment.db, blockId: block.id, start: startDraft, end: endDraft)
+            _ = try BlockEditor.setNote(db: AppEnvironment.db, blockId: block.id, note: noteDraft)
+        } catch {
+            // Block was already persisted by stop(); a failed correction
+            // just means the raw times/no note stand — not worth surfacing
+            // a menu-bar error for.
+        }
+        stoppedBlock = nil
+        refreshTodayHours()
         WidgetCenter.shared.reloadAllTimelines()
     }
 
