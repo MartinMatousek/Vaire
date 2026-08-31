@@ -35,6 +35,8 @@ func run() throws {
         try runContinueSession(db: db, args: rest)
     case "set-estimate":
         try runSetEstimate(db: db, args: rest)
+    case "has-estimate":
+        try runHasEstimate(db: db, args: rest)
     default:
         throw CLIError.usage("unknown command: \(command)")
     }
@@ -136,8 +138,19 @@ func runSetEstimate(db: AppDatabase, args: [String]) throws {
     guard args.count >= 2, let hours = Double(args[1]) else {
         throw CLIError.usage("usage: set-estimate <session_id> <hours>")
     }
+    guard try AgentSessionRecorder.isTracking(db: db, sessionId: args[0]) else {
+        print("not-tracking")
+        return
+    }
     try AgentSessionRecorder.setEstimate(db: db, sessionId: args[0], hours: hours)
     print("estimate set")
+}
+
+func runHasEstimate(db: AppDatabase, args: [String]) throws {
+    guard let sessionId = args.first else {
+        throw CLIError.usage("usage: has-estimate <session_id>")
+    }
+    print(try AgentSessionRecorder.hasEstimate(db: db, sessionId: sessionId) ? "true" : "false")
 }
 
 do {

@@ -120,3 +120,15 @@ import Testing
 
     #expect(result?.block.estimatedHoursWithoutAI == 2.5)
 }
+
+@Test func hasEstimateReflectsTrackingAndEstimateState() throws {
+    let db = try AppDatabase.inMemory()
+
+    #expect(!(try AgentSessionRecorder.hasEstimate(db: db, sessionId: "sess-1"))) // not tracking
+
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-1", cwd: "/tmp/repo", note: nil)
+    #expect(!(try AgentSessionRecorder.hasEstimate(db: db, sessionId: "sess-1"))) // tracking, no estimate
+
+    try AgentSessionRecorder.setEstimate(db: db, sessionId: "sess-1", hours: 1.0)
+    #expect(try AgentSessionRecorder.hasEstimate(db: db, sessionId: "sess-1")) // tracking, has estimate
+}

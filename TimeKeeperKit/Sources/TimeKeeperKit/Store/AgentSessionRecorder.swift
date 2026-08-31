@@ -113,4 +113,17 @@ public enum AgentSessionRecorder {
             try tracking.update(conn)
         }
     }
+
+    /// Whether `sessionId` has both an active tracking row AND a recorded
+    /// estimate. False if either the session isn't tracking or is tracking
+    /// without an estimate yet — callers distinguish those cases via
+    /// `isTracking` separately when it matters.
+    public static func hasEstimate(db: AppDatabase, sessionId: String) throws -> Bool {
+        try db.dbQueue.read { conn in
+            guard let tracking = try AgentSessionTracking.fetchOne(conn, key: sessionId) else {
+                return false
+            }
+            return tracking.estimatedHoursWithoutAI != nil
+        }
+    }
 }
