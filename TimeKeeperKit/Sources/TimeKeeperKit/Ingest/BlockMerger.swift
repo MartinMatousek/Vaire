@@ -30,9 +30,10 @@ public enum BlockMerger {
     /// the SAME project that overlap in time are unioned into one block
     /// (you can't double-count time spent in one project just because two
     /// sources both observed it). Blocks from DIFFERENT projects that overlap
-    /// are kept separate but flagged via `overlapsOtherProject`, since you
-    /// can't really work on two things at once — a human has to resolve
-    /// which one actually happened.
+    /// are kept separate and flagged via `overlapsOtherProject` — this is
+    /// informational, not an error: concurrent tracking (e.g. a long build
+    /// or agent running on one project while actively working another) is
+    /// supported and produces legitimate overlaps.
     public static func merge(_ candidates: [CandidateBlock]) -> [MergedBlock] {
         guard !candidates.isEmpty else { return [] }
 

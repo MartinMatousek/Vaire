@@ -5,7 +5,6 @@ import TimeKeeperKit
 struct ContentView: View {
     @State private var timer = AppEnvironment.timer
     @State private var projects: [Project] = []
-    @State private var selectedProjectId: UUID?
     @State private var todayHours: Double = 0
     @State private var tick = 0
     @State private var justStoppedBlock: Block?
@@ -15,7 +14,7 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            DayProgressRing(hoursWorked: todayHours + runningHours, targetHours: 8)
+            DayProgressRing(hoursWorked: todayHours + runningHoursAcrossAllProjects, targetHours: 8)
                 .frame(width: 72, height: 72)
 
             Text(formattedTotal)
@@ -26,23 +25,10 @@ struct ContentView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                Picker("Projekt", selection: $selectedProjectId) {
+                VStack(spacing: 6) {
                     ForEach(projects) { project in
-                        Text(project.name).tag(Optional(project.id))
+                        projectRow(project)
                     }
-                }
-                .labelsHidden()
-                .disabled(timer.isRunning)
-
-                Button(timer.isRunning ? "Stop" : "Start") {
-                    toggleTimer()
-                }
-                .disabled(!timer.isRunning && selectedProjectId == nil)
-                .popover(isPresented: Binding(
-                    get: { justStoppedBlock != nil },
-                    set: { if !$0 { justStoppedBlock = nil } }
-                )) {
-                    noteEditorAfterStop
                 }
             }
 
@@ -64,7 +50,7 @@ struct ContentView: View {
             .buttonStyle(.link)
         }
         .padding()
-        .frame(width: 240)
+        .frame(width: 260)
         .onAppear(perform: reload)
         .onReceive(refreshTimer) { _ in
             tick += 1
@@ -72,12 +58,43 @@ struct ContentView: View {
         }
     }
 
-    private var runningHours: Double {
-        timer.isRunning ? timer.elapsed() / 3600 : 0
+    private func projectRow(_ project: Project) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(project.name)
+                    .font(.callout)
+                if timer.isRunning(projectId: project.id) {
+                    Text(elapsedLabel(project))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            Button(timer.isRunning(projectId: project.id) ? "Stop" : "Start") {
+                toggleTimer(for: project.id)
+            }
+            .popover(isPresented: Binding(
+                get: { justStoppedBlock?.projectId == project.id },
+                set: { if !$0 { justStoppedBlock = nil } }
+            )) {
+                noteEditorAfterStop
+            }
+        }
+    }
+
+    private func elapsedLabel(_ project: Project) -> String {
+        let hours = timer.elapsed(projectId: project.id) / 3600
+        let h = Int(hours)
+        let m = Int((hours - Double(h)) * 60)
+        return "\(h)h \(m)m"
+    }
+
+    private var runningHoursAcrossAllProjects: Double {
+        projects.reduce(0.0) { $0 + timer.elapsed(projectId: $1.id) / 3600 }
     }
 
     private var formattedTotal: String {
-        let hours = todayHours + runningHours
+        let hours = todayHours + runningHoursAcrossAllProjects
         let h = Int(hours)
         let m = Int((hours - Double(h)) * 60)
         return "\(h)h \(m)m / 8h"
@@ -99,16 +116,16 @@ struct ContentView: View {
         .padding()
     }
 
-    private func toggleTimer() {
-        if timer.isRunning {
-            let stoppedBlock = try? timer.stop()
+    private func toggleTimer(for projectId: UUID) {
+        if timer.isRunning(projectId: projectId) {
+            let stoppedBlock = try? timer.stop(projectId: projectId)
             refreshTodayHours()
             WidgetCenter.shared.reloadAllTimelines()
             if let stoppedBlock {
                 noteDraft = ""
                 justStoppedBlock = stoppedBlock
             }
-        } else if let projectId = selectedProjectId {
+        } else {
             timer.start(projectId: projectId)
         }
     }
@@ -122,9 +139,6 @@ struct ContentView: View {
 
     private func reload() {
         projects = (try? AppEnvironment.db.dbQueue.read { try Project.fetchAll($0) }) ?? []
-        if selectedProjectId == nil {
-            selectedProjectId = projects.first?.id
-        }
         refreshTodayHours()
     }
 
