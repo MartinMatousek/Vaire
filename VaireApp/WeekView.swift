@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import WidgetKit
 import VaireKit
@@ -5,6 +6,7 @@ import VaireKit
 struct DayColumn: Identifiable {
     let date: Date
     var blocks: [Block]
+    var liveTrackings: [AgentSessionTracking]
     var id: Date { date }
 }
 
@@ -17,10 +19,32 @@ struct WeekView: View {
     @State private var errorMessage: String?
     @State private var editingBlock: Block?
     @State private var noteDraft: String = ""
+    @State private var hoursDraft: Int = 0
+    @State private var minutesDraft: Int = 0
+    @State private var estimateHoursDraft: Int = 0
+    @State private var estimateMinutesDraft: Int = 0
+    @State private var hasEstimateDraft: Bool = false
     @State private var showingTimeSaved = false
 
     private let targetHours: Double = 8
-    private let pixelsPerHour: CGFloat = 30
+    private let defaultPixelsPerHour: CGFloat = 30
+    private let minBlockHours: Double = 0.25 // 15 min floor so short entries stay visible without dwarfing the hour scale
+    @State private var timelineHeight: CGFloat = 0
+
+    private let minPixelsPerHour: CGFloat = 12
+    private let maxPixelsPerHour: CGFloat = 45
+
+    /// Scales with the window: the timeline area reports its available
+    /// height via GeometryReader, and hour rows stretch/shrink to fill it
+    /// so resizing the week window actually resizes the grid instead of
+    /// just adding empty space or getting clipped. Clamped to a narrow
+    /// band around the default (12-45px/hour) — this is meant to absorb
+    /// modest window resizing, not to make an hour block visually balloon
+    /// just because the window got taller.
+    private var pixelsPerHour: CGFloat {
+        guard timelineHeight > 0 else { return defaultPixelsPerHour }
+        return min(maxPixelsPerHour, max(minPixelsPerHour, timelineHeight / CGFloat(gridHours)))
+    }
 
     private var weekStart: Date {
         let thisWeekStart = Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
@@ -67,6 +91,11 @@ struct WeekView: View {
 
                 Spacer()
 
+                Button("Nahlásit bug") {
+                    reportBug()
+                }
+                .buttonStyle(.link)
+
                 Button("Úspory") {
                     showingTimeSaved = true
                 }
@@ -79,22 +108,24 @@ struct WeekView: View {
                 Text(errorMessage).font(.caption).foregroundStyle(.red)
             }
 
-            HStack(alignment: .top, spacing: 8) {
-                hourLegend
-                    .padding(.top, dayColumnHeaderHeight)
-
+            GeometryReader { geometry in
                 HStack(alignment: .top, spacing: 8) {
-                    ForEach(days) { day in
-                        dayColumn(day)
+                    hourLegend
+                        .padding(.top, dayColumnHeaderHeight)
+
+                    HStack(alignment: .top, spacing: 8) {
+                        ForEach(days) { day in
+                            dayColumn(day)
+                        }
                     }
+                }
+                .onAppear { timelineHeight = geometry.size.height - dayColumnHeaderHeight }
+                .onChange(of: geometry.size.height) { _, newValue in
+                    timelineHeight = newValue - dayColumnHeaderHeight
                 }
             }
 
             HStack {
-                Button("Split") { splitSelected() }
-                    .disabled(selectedBlockIds.count != 1)
-                Button("Merge") { mergeSelected() }
-                    .disabled(selectedBlockIds.count < 2)
                 Button("Delete") { deleteSelected() }
                     .disabled(selectedBlockIds.isEmpty)
                 Spacer()
@@ -105,9 +136,15 @@ struct WeekView: View {
             }
         }
         .padding()
-        .frame(minWidth: 820, minHeight: 560)
+        .frame(minWidth: 590, minHeight: 320)
         .onAppear(perform: reload)
         .onReceive(NotificationCenter.default.publisher(for: .vaireDataChanged)) { _ in
+            reload()
+        }
+        .onReceive(Timer.publish(every: 30, on: .main, in: .common).autoconnect()) { _ in
+            // Live blocks grow with elapsed time even without a data
+            // change — a slow poll keeps their bar height/hours roughly
+            // current without re-querying on every tick.
             reload()
         }
     }
@@ -116,20 +153,44 @@ struct WeekView: View {
         targetHours * pixelsPerHour
     }
 
-    /// The grid extends past the 8h workday target to cover evening hours
-    /// too, so blocks logged outside 8:00-16:00 still land on a ruled line.
-    private let gridHours = 12
+    private let minGridHours = 10
+    private let maxGridHours = 24
+
+    /// The stacked height of a day's blocks (rounded the same way as
+    /// `blockRow`/`liveBlockRow`) plus its live trackings — the tallest day
+    /// determines how many hour-marks the ruler needs to cover.
+    private func stackedHours(for day: DayColumn) -> Double {
+        let blockHours = day.blocks.reduce(0.0) { $0 + displayHours(for: $1.duration / 3600) }
+        let liveHours = day.liveTrackings.reduce(0.0) { total, tracking in
+            total + max(Date().timeIntervalSince(tracking.start) / 3600, minBlockHours)
+        }
+        return blockHours + liveHours
+    }
+
+    /// Grows past the default 12h grid as logged time approaches it, so a
+    /// busy day's stacked blocks always land inside ruled lines instead of
+    /// overflowing past the last mark. Grows in whole hours with 2h of
+    /// headroom above the tallest day, capped at 24h.
+    private var gridHours: Int {
+        let tallestDay = days.map(stackedHours).max() ?? 0
+        let needed = Int(tallestDay.rounded(.up)) + 2
+        return min(maxGridHours, max(minGridHours, needed))
+    }
+
     private var gridHeight: CGFloat {
         CGFloat(gridHours) * pixelsPerHour
     }
 
     private let dayColumnHeaderHeight: CGFloat = 20
-    private let workdayStartHour = 8
 
+    /// Blocks stack sequentially by logged order, not by clock time — so
+    /// this ruler marks accumulated length (0h, 1h, 2h...) from the top of
+    /// the column, not times of day. Labeling it 8:00/9:00/etc. would imply
+    /// a real calendar timeline, which the stacked layout doesn't provide.
     private var hourLegend: some View {
         ZStack(alignment: .topTrailing) {
             ForEach(0...gridHours, id: \.self) { hourOffset in
-                Text("\(workdayStartHour + hourOffset):00")
+                Text("\(hourOffset)h")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .offset(y: CGFloat(hourOffset) * pixelsPerHour - 6)
@@ -183,13 +244,16 @@ struct WeekView: View {
                     ForEach(day.blocks) { block in
                         blockRow(block)
                     }
+                    ForEach(day.liveTrackings, id: \.sessionId) { tracking in
+                        liveBlockRow(tracking)
+                    }
                 }
             }
             .frame(minHeight: gridHeight, alignment: .top)
 
             Spacer(minLength: 8)
         }
-        .frame(minWidth: 90, maxWidth: .infinity, alignment: .top)
+        .frame(minWidth: 64, maxWidth: .infinity, alignment: .top)
         .padding(4)
         .background(.quaternary.opacity(0.3))
         .cornerRadius(6)
@@ -199,32 +263,65 @@ struct WeekView: View {
         }
     }
 
+    /// Rounds a duration up to the nearest `minBlockHours` (15 min) — so a
+    /// 3-minute task is both shown and treated as 15 minutes, not just
+    /// visually padded while the label still says "0.1h". Keeps the bar
+    /// height and the printed duration consistent with each other.
+    private func displayHours(for actualHours: Double) -> Double {
+        guard minBlockHours > 0 else { return actualHours }
+        return (actualHours / minBlockHours).rounded(.up) * minBlockHours
+    }
+
+    /// Approximate height of one caption2 text line including its VStack
+    /// spacing — used to decide how many EXTRA label lines fit above the
+    /// always-shown compact summary line.
+    private let lineHeight: CGFloat = 13
+
+    /// How many extra lines fit in `height` after the compact summary line
+    /// and 8pt (4+4) padding, clamped to [0, maxLines].
+    private func linesThatFit(in height: CGFloat, maxLines: Int) -> Int {
+        let available = height - 8 - 9 // 9pt for the always-shown tiny summary line
+        guard available > 0 else { return 0 }
+        return min(maxLines, max(0, Int(available / lineHeight)))
+    }
+
     private func blockRow(_ block: Block) -> some View {
-        let hours = block.duration / 3600
-        let barHeight = max(20, hours * pixelsPerHour)
+        let hours = displayHours(for: block.duration / 3600)
+        let barHeight = hours * pixelsPerHour
+        let hasNote = !(block.note?.isEmpty ?? true)
+        let extraLines = linesThatFit(in: barHeight, maxLines: hasNote ? 8 : 0)
+        let projectName = projects[block.projectId]?.name ?? "?"
 
         return VStack(alignment: .leading, spacing: 2) {
-            Text(projects[block.projectId]?.name ?? "?")
-                .font(.caption2).bold()
+            // Always visible, even on the smallest (15 min) blocks — a
+            // system-size-8 single line beats a hover tooltip that macOS
+            // wasn't reliably showing over the draggable/popover stack.
+            Text("\(projectName) — \(durationLabel(block))")
+                .font(.system(size: 8))
+                .bold()
                 .lineLimit(1)
-            Text(durationLabel(block))
-                .font(.caption2)
-            if let note = block.note, !note.isEmpty {
+            if extraLines >= 1, let note = block.note, !note.isEmpty {
                 Text(note)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    .lineLimit(extraLines)
             }
         }
         .padding(4)
-        .frame(maxWidth: .infinity, minHeight: barHeight, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(height: barHeight, alignment: .top)
+        .clipped()
         .background(selectedBlockIds.contains(block.id) ? Color.accentColor.opacity(0.3) : Color.secondary.opacity(0.15))
         .cornerRadius(4)
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) {
+            beginEditingNote(block)
+        }
         .onTapGesture {
             toggleSelection(block.id)
         }
         .contextMenu {
-            Button("Upravit popis…") { beginEditingNote(block) }
+            Button("Upravit…") { beginEditingNote(block) }
         }
         .draggable(BlockTransfer(blockId: block.id))
         .popover(isPresented: Binding(
@@ -235,16 +332,64 @@ struct WeekView: View {
         }
     }
 
+    /// Live blocks (Claude sessions still tracking, or a manually-started
+    /// timer) never appear in `Block` — they're drawn from
+    /// AgentSessionTracking/TimerController so a running task is visibly
+    /// distinct from finished, editable ones: a pulsing green border and a
+    /// "Běží" badge instead of the neutral gray background, and no
+    /// tap/drag/context-menu since there's no Block to act on yet.
+    private func liveBlockRow(_ tracking: AgentSessionTracking) -> some View {
+        let elapsedHours = Date().timeIntervalSince(tracking.start) / 3600
+        let barHeight = max(elapsedHours, minBlockHours) * pixelsPerHour
+        let hasNote = !(tracking.note?.isEmpty ?? true)
+        let extraLines = linesThatFit(in: barHeight, maxLines: hasNote ? 8 : 0)
+        let projectName = projects[tracking.projectId]?.name ?? "?"
+
+        return VStack(alignment: .leading, spacing: 2) {
+            Text("● Běží: \(projectName) — \(String(format: "%.1fh", elapsedHours))")
+                .font(.system(size: 8))
+                .bold()
+                .foregroundStyle(.green)
+                .lineLimit(1)
+            if extraLines >= 1, let note = tracking.note, !note.isEmpty {
+                Text(note)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(extraLines)
+            }
+        }
+        .padding(4)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(height: barHeight, alignment: .top)
+        .clipped()
+        .background(Color.green.opacity(0.12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(Color.green, lineWidth: 1.5)
+        )
+        .cornerRadius(4)
+    }
+
     private func noteEditor(for block: Block) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Popis aktivity").font(.caption).bold()
             TextField("Co jsi dělal…", text: $noteDraft, axis: .vertical)
                 .lineLimit(3...6)
                 .frame(minWidth: 220)
+
+            Text("Čas").font(.caption).bold()
+            HoursMinutesField(hours: $hoursDraft, minutes: $minutesDraft)
+
+            Toggle("Odhad bez AI", isOn: $hasEstimateDraft)
+                .font(.caption)
+            if hasEstimateDraft {
+                HoursMinutesField(hours: $estimateHoursDraft, minutes: $estimateMinutesDraft)
+            }
+
             HStack {
                 Spacer()
                 Button("Zrušit") { editingBlock = nil }
-                Button("Uložit") { saveNote(for: block) }
+                Button("Uložit") { saveBlockEdits(for: block) }
                     .keyboardShortcut(.defaultAction)
             }
         }
@@ -253,30 +398,59 @@ struct WeekView: View {
 
     private func beginEditingNote(_ block: Block) {
         noteDraft = block.note ?? ""
+        let totalMinutes = Int((block.duration / 60).rounded())
+        hoursDraft = totalMinutes / 60
+        minutesDraft = totalMinutes % 60
+
+        if let estimate = block.estimatedHoursWithoutAI {
+            let estimateMinutes = Int((estimate * 60).rounded())
+            estimateHoursDraft = estimateMinutes / 60
+            estimateMinutesDraft = estimateMinutes % 60
+            hasEstimateDraft = true
+        } else {
+            estimateHoursDraft = 0
+            estimateMinutesDraft = 0
+            hasEstimateDraft = false
+        }
+
         editingBlock = block
     }
 
-    private func saveNote(for block: Block) {
+    private func saveBlockEdits(for block: Block) {
         do {
             _ = try BlockEditor.setNote(db: AppEnvironment.db, blockId: block.id, note: noteDraft)
+
+            let newDuration = TimeInterval(hoursDraft * 3600 + minutesDraft * 60)
+            if newDuration != block.duration {
+                let newEnd = block.start.addingTimeInterval(newDuration)
+                _ = try BlockEditor.setTimes(db: AppEnvironment.db, blockId: block.id, start: block.start, end: newEnd)
+            }
+
+            let newEstimate: Double? = hasEstimateDraft
+                ? Double(estimateHoursDraft * 60 + estimateMinutesDraft) / 60
+                : nil
+            if newEstimate != block.estimatedHoursWithoutAI {
+                _ = try BlockEditor.setEstimate(db: AppEnvironment.db, blockId: block.id, hours: newEstimate)
+            }
+
             editingBlock = nil
             reload()
         } catch {
-            errorMessage = "Uložení popisu selhalo: \(error.localizedDescription)"
+            handleStaleBlockError(error, actionDescription: "Uložení úprav")
         }
     }
 
     private func durationLabel(_ block: Block) -> String {
-        let hours = block.duration / 3600
-        return String(format: "%.1fh", hours)
+        String(format: "%.1fh", displayHours(for: block.duration / 3600))
+    }
+
+    private func reportBug() {
+        guard let url = URL(string: "https://github.com/MartinMatousek/Vaire/issues/new") else { return }
+        NSWorkspace.shared.open(url)
     }
 
     private func toggleSelection(_ id: UUID) {
-        if selectedBlockIds.contains(id) {
-            selectedBlockIds.remove(id)
-        } else {
-            selectedBlockIds.insert(id)
-        }
+        selectedBlockIds = selectedBlockIds == [id] ? [] : [id]
     }
 
     private func reload() {
@@ -287,11 +461,24 @@ struct WeekView: View {
                 .map { ($0.id, $0) }
         )
 
+        // Running work — Claude session timers (in agentSessionTracking,
+        // not yet a Block) and manually-started timers (in-memory on
+        // AppEnvironment.timer) — never appear in the block table until
+        // stopped. Surface both here so the week view shows what's
+        // currently in progress, not just what's already finished.
+        let claudeTrackings = (try? AgentSessionRecorder.allActiveTrackings(db: AppEnvironment.db)) ?? []
+        let manualTrackings = AppEnvironment.timer.runningStarts.map { projectId, start in
+            AgentSessionTracking(sessionId: "manual-\(projectId)", projectId: projectId, start: start, note: AppEnvironment.timer.runningNotes[projectId])
+        }
+        let allLive = claudeTrackings + manualTrackings
+
         days = (0..<7).map { offset in
             let date = calendar.date(byAdding: .day, value: offset, to: weekStart)!
             let dayBlocks = allBlocks.filter { calendar.isDate($0.start, inSameDayAs: date) }
                 .sorted { $0.start < $1.start }
-            return DayColumn(date: date, blocks: dayBlocks)
+            let dayLive = allLive.filter { calendar.isDate($0.start, inSameDayAs: date) }
+                .sorted { $0.start < $1.start }
+            return DayColumn(date: date, blocks: dayBlocks, liveTrackings: dayLive)
         }
     }
 
@@ -335,32 +522,6 @@ struct WeekView: View {
             try? BlockEditor.move(db: AppEnvironment.db, blockId: blockId, byDays: reverseDays)
             reload()
             WidgetCenter.shared.reloadAllTimelines()
-        }
-    }
-
-    private func splitSelected() {
-        guard let blockId = selectedBlockIds.first,
-              let block = days.flatMap(\.blocks).first(where: { $0.id == blockId }) else { return }
-        let midpoint = block.start.addingTimeInterval(block.duration / 2)
-
-        do {
-            try BlockEditor.split(db: AppEnvironment.db, blockId: blockId, at: midpoint)
-            selectedBlockIds.removeAll()
-            reload()
-            WidgetCenter.shared.reloadAllTimelines()
-        } catch {
-            handleStaleBlockError(error, actionDescription: "Rozdělení")
-        }
-    }
-
-    private func mergeSelected() {
-        do {
-            try BlockEditor.merge(db: AppEnvironment.db, blockIds: Array(selectedBlockIds))
-            selectedBlockIds.removeAll()
-            reload()
-            WidgetCenter.shared.reloadAllTimelines()
-        } catch {
-            handleStaleBlockError(error, actionDescription: "Sloučení")
         }
     }
 
