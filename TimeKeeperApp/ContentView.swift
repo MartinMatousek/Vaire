@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var noteDraft: String = ""
     @State private var hoursDraft: Int = 0
     @State private var minutesDraft: Int = 0
+    @State private var estimateDraft: String = ""
 
     private let refreshTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -133,10 +134,20 @@ struct ContentView: View {
             TextField("Co budeš dělat…", text: $noteDraft, axis: .vertical)
                 .lineLimit(3...6)
                 .frame(minWidth: 220)
+
+            if resumeSelection == nil {
+                HStack {
+                    Text("Odhad pracnosti (h):").font(.caption)
+                    TextField("např. 2", text: $estimateDraft)
+                        .frame(width: 50)
+                        .multilineTextAlignment(.trailing)
+                }
+            }
+
             HStack {
                 Spacer()
                 if resumeSelection == nil {
-                    Button("Bez poznámky") { startTimer(for: projectId, note: nil) }
+                    Button("Bez poznámky") { startTimer(for: projectId, note: nil, estimate: nil) }
                 }
                 Button(resumeSelection == nil ? "Start" : "Navázat") {
                     if let blockId = resumeSelection,
@@ -144,7 +155,7 @@ struct ContentView: View {
                         resumeTimer(for: block)
                         startingProjectId = nil
                     } else {
-                        startTimer(for: projectId, note: noteDraft)
+                        startTimer(for: projectId, note: noteDraft, estimate: Double(estimateDraft.replacingOccurrences(of: ",", with: ".")))
                     }
                 }
                 .keyboardShortcut(.defaultAction)
@@ -175,6 +186,13 @@ struct ContentView: View {
                 Text("Naměřeno na timeru: \(realElapsedLabel(stoppedBlock))")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+
+                if let estimate = stoppedBlock.estimatedHoursWithoutAI {
+                    let editedHours = Double(hoursDraft) + Double(minutesDraft) / 60
+                    Text("Odhad bez AI: \(String(format: "%.1f", estimate))h")
+                        .font(.caption2)
+                        .foregroundStyle(estimate < editedHours ? .red : .secondary)
+                }
             }
 
             HoursMinutesField(hours: $hoursDraft, minutes: $minutesDraft)
@@ -208,14 +226,15 @@ struct ContentView: View {
             stopTimer(for: projectId)
         } else {
             noteDraft = ""
+            estimateDraft = ""
             resumeSelection = nil
             todaysBlocksForStartingProject = (try? DailySummary.todaysBlocks(db: AppEnvironment.db, projectId: projectId)) ?? []
             startingProjectId = projectId
         }
     }
 
-    private func startTimer(for projectId: UUID, note: String?) {
-        timer.start(projectId: projectId, note: note)
+    private func startTimer(for projectId: UUID, note: String?, estimate: Double?) {
+        timer.start(projectId: projectId, note: note, estimatedHours: estimate)
         startingProjectId = nil
     }
 

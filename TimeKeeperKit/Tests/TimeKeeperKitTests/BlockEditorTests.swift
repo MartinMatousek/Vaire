@@ -157,3 +157,16 @@ private func makeProject(_ db: AppDatabase) throws -> Project {
         try BlockEditor.delete(db: db, blockId: UUID())
     }
 }
+
+@Test func setEstimateUpdatesOrClearsTheEstimate() throws {
+    let db = try AppDatabase.inMemory()
+    let project = try makeProject(db)
+    let block = Block(projectId: project.id, start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 3600), source: .claudeSession, estimatedHoursWithoutAI: 2.0)
+    try db.dbQueue.write { try block.insert($0) }
+
+    let updated = try BlockEditor.setEstimate(db: db, blockId: block.id, hours: 4.0)
+    #expect(updated.estimatedHoursWithoutAI == 4.0)
+
+    let cleared = try BlockEditor.setEstimate(db: db, blockId: block.id, hours: nil)
+    #expect(cleared.estimatedHoursWithoutAI == nil)
+}

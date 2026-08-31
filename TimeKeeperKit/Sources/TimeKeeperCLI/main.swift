@@ -37,6 +37,8 @@ func run() throws {
         try runSetEstimate(db: db, args: rest)
     case "has-estimate":
         try runHasEstimate(db: db, args: rest)
+    case "adjust-estimate":
+        try runAdjustEstimate(db: db, args: rest)
     default:
         throw CLIError.usage("unknown command: \(command)")
     }
@@ -151,6 +153,16 @@ func runHasEstimate(db: AppDatabase, args: [String]) throws {
         throw CLIError.usage("usage: has-estimate <session_id>")
     }
     print(try AgentSessionRecorder.hasEstimate(db: db, sessionId: sessionId) ? "true" : "false")
+}
+
+func runAdjustEstimate(db: AppDatabase, args: [String]) throws {
+    guard args.count >= 1, let blockId = UUID(uuidString: args[0]) else {
+        throw CLIError.usage("usage: adjust-estimate <block_id> [hours]")
+    }
+    let hours = args.count >= 2 ? Double(args[1]) : nil
+    _ = try BlockEditor.setEstimate(db: db, blockId: blockId, hours: hours)
+    print("estimate adjusted")
+    DataChangeNotifier.post()
 }
 
 do {

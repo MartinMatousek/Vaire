@@ -295,6 +295,22 @@ struct WeekView: View {
         }
     }
 
+    /// Auto-imported blocks (isManual == false, e.g. from a live Claude
+    /// session import) get deleted and re-inserted with a fresh id every
+    /// time the background importer reconciles them. If the user clicks an
+    /// action between that reconcile and this call, the id they have is
+    /// stale — BlockEditorError.blockNotFound. Reloading recovers the
+    /// current state; the friendly message explains why the action didn't
+    /// "do nothing" silently.
+    private func handleStaleBlockError(_ error: Error, actionDescription: String) {
+        if case BlockEditorError.blockNotFound = error {
+            errorMessage = "\(actionDescription) se nepodařilo — záznam se mezitím aktualizoval (např. živým importem). Zkus to prosím znovu."
+            reload()
+        } else {
+            errorMessage = "\(actionDescription) selhalo: \(error.localizedDescription)"
+        }
+    }
+
     private func moveBlock(_ blockId: UUID, to targetDay: Date) -> Bool {
         guard let block = days.flatMap(\.blocks).first(where: { $0.id == blockId }) else { return false }
         let calendar = Calendar.current
@@ -309,7 +325,7 @@ struct WeekView: View {
             WidgetCenter.shared.reloadAllTimelines()
             return true
         } catch {
-            errorMessage = "Přesun selhal: \(error.localizedDescription)"
+            handleStaleBlockError(error, actionDescription: "Přesun")
             return false
         }
     }
@@ -333,7 +349,7 @@ struct WeekView: View {
             reload()
             WidgetCenter.shared.reloadAllTimelines()
         } catch {
-            errorMessage = "Rozdělení selhalo: \(error.localizedDescription)"
+            handleStaleBlockError(error, actionDescription: "Rozdělení")
         }
     }
 
@@ -344,7 +360,7 @@ struct WeekView: View {
             reload()
             WidgetCenter.shared.reloadAllTimelines()
         } catch {
-            errorMessage = "Sloučení selhalo: \(error.localizedDescription)"
+            handleStaleBlockError(error, actionDescription: "Sloučení")
         }
     }
 
@@ -361,7 +377,7 @@ struct WeekView: View {
             reload()
             WidgetCenter.shared.reloadAllTimelines()
         } catch {
-            errorMessage = "Smazání selhalo: \(error.localizedDescription)"
+            handleStaleBlockError(error, actionDescription: "Smazání")
         }
     }
 

@@ -134,4 +134,18 @@ public enum BlockEditor {
             }
         }
     }
+
+    /// Overwrites a block's "estimated hours without AI" — lets the user
+    /// correct Claude's own estimate after the fact, e.g. from the
+    /// SessionEnd review dialog or the Úspory view. Pass nil to clear it.
+    public static func setEstimate(db: AppDatabase, blockId: UUID, hours: Double?) throws -> Block {
+        try db.dbQueue.write { conn in
+            guard var block = try Block.fetchOne(conn, key: blockId) else {
+                throw BlockEditorError.blockNotFound
+            }
+            block.estimatedHoursWithoutAI = hours
+            try block.update(conn)
+            return block
+        }
+    }
 }

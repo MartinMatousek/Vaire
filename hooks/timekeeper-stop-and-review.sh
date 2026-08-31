@@ -75,6 +75,12 @@ APPLESCRIPT
         elif [ -n "$new_note" ] && [ -n "$block_id" ]; then
             timekeeper-cli adjust-block "$block_id" "" "$new_note" >/dev/null 2>&1
         fi
+
+        if [ -n "$block_id" ]; then
+            default_estimate="${estimated_hours:-0}"
+            new_estimate=$(prompt_for_decimal "Odhad bez AI (hodiny):" "$default_estimate")
+            [ -n "$new_estimate" ] && timekeeper-cli adjust-estimate "$block_id" "$new_estimate" >/dev/null 2>&1
+        fi
     fi
 }
 
@@ -112,5 +118,39 @@ APPLESCRIPT
         # silently falling back to the default, so a typo doesn't silently
         # save the wrong time.
         osascript -e 'display alert "Zadej prosím jen číslo." as warning' >/dev/null 2>&1
+    done
+}
+
+# Like prompt_for_number but accepts decimals (e.g. "2.5") for hour
+# estimates. Returns empty string on cancel — callers treat that as
+# "leave the estimate unchanged" rather than clearing it.
+prompt_for_decimal() {
+    local label="$1"
+    local default_value="$2"
+    local value="$default_value"
+
+    while true; do
+        value=$(osascript - "$label" "$value" <<'APPLESCRIPT' 2>/dev/null
+on run argv
+    set labelText to item 1 of argv
+    set defaultVal to item 2 of argv
+    try
+        display dialog labelText default answer defaultVal with title "TimeKeeper"
+        return text returned of result
+    on error
+        return ""
+    end try
+end run
+APPLESCRIPT
+        )
+
+        [ -z "$value" ] && { echo ""; return; }
+
+        if [[ "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "$value"
+            return
+        fi
+
+        osascript -e 'display alert "Zadej prosím číslo (např. 2.5)." as warning' >/dev/null 2>&1
     done
 }

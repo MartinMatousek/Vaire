@@ -4,6 +4,8 @@ import TimeKeeperKit
 struct TimeSavedView: View {
     let weekStart: Date
     @State private var summary: TimeSavedWeekSummary?
+    @State private var editingEntry: TimeSavedEntry?
+    @State private var estimateEditDraft: String = ""
 
     private var weekRangeLabel: String {
         let calendar = Calendar.current
@@ -43,34 +45,79 @@ struct TimeSavedView: View {
         HStack(spacing: 20) {
             statTile(label: "Odhad bez AI", value: hoursLabel(summary.totalEstimatedHours))
             statTile(label: "Reálný čas", value: hoursLabel(summary.totalActualHours))
-            statTile(label: "Ušetřeno", value: hoursLabel(summary.totalSavedHours), highlight: true)
+            statTile(
+                label: "Ušetřeno",
+                value: hoursLabel(summary.totalSavedHours),
+                color: summary.totalSavedHours < 0 ? .red : .green
+            )
         }
     }
 
-    private func statTile(label: String, value: String, highlight: Bool = false) -> some View {
+    private func statTile(label: String, value: String, color: Color = .primary) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.caption2).foregroundStyle(.secondary)
-            Text(value).font(.title3).bold().foregroundStyle(highlight ? .green : .primary)
+            Text(value).font(.title3).bold().foregroundStyle(color)
         }
     }
 
     private func entryRow(_ entry: TimeSavedEntry) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        let overEstimate = entry.savedHours < 0
+
+        return VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(entry.project.name).font(.callout).bold()
                 Spacer()
-                Text("+\(hoursLabel(entry.savedHours))")
+                Text("\(overEstimate ? "" : "+")\(hoursLabel(entry.savedHours))")
                     .font(.callout)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(overEstimate ? .red : .green)
             }
             if let note = entry.block.note, !note.isEmpty {
                 Text(note).font(.caption).foregroundStyle(.secondary).lineLimit(2)
             }
             Text("Reálně \(hoursLabel(entry.actualHours)) · Odhad \(hoursLabel(entry.estimatedHours))")
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(overEstimate ? .red : .secondary)
         }
         .padding(.vertical, 2)
+        .contentShape(Rectangle())
+        .contextMenu {
+            Button("Upravit odhad…") { beginEditingEstimate(entry) }
+        }
+        .popover(isPresented: Binding(
+            get: { editingEntry?.block.id == entry.block.id },
+            set: { if !$0 { editingEntry = nil } }
+        )) {
+            estimateEditor(for: entry)
+        }
+    }
+
+    private func estimateEditor(for entry: TimeSavedEntry) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Odhad bez AI (hodiny)").font(.caption).bold()
+            TextField("např. 2.5", text: $estimateEditDraft)
+                .frame(width: 80)
+            HStack {
+                Spacer()
+                Button("Zrušit") { editingEntry = nil }
+                Button("Uložit") { saveEstimateEdit(for: entry) }
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding()
+    }
+
+    private func beginEditingEstimate(_ entry: TimeSavedEntry) {
+        estimateEditDraft = String(format: "%.1f", entry.estimatedHours)
+        editingEntry = entry
+    }
+
+    private func saveEstimateEdit(for entry: TimeSavedEntry) {
+        let normalized = estimateEditDraft.replacingOccurrences(of: ",", with: ".")
+        if let hours = Double(normalized) {
+            _ = try? BlockEditor.setEstimate(db: AppEnvironment.db, blockId: entry.block.id, hours: hours)
+            reload()
+        }
+        editingEntry = nil
     }
 
     private func hoursLabel(_ hours: Double) -> String {

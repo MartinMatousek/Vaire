@@ -126,3 +126,27 @@ import Testing
     #expect(block?.duration == 900) // 300 already elapsed + 600 more
     #expect(block?.note == "picking back up")
 }
+
+@Test func startWithUpfrontEstimateCarriesThroughToTheStoppedBlock() throws {
+    let db = try AppDatabase.inMemory()
+    let project = Project(name: "a", path: "/tmp/a")
+    try db.dbQueue.write { try project.insert($0) }
+
+    let controller = TimerController(db: db)
+    controller.start(projectId: project.id, estimatedHours: 3.0)
+    let block = try controller.stop(projectId: project.id)
+
+    #expect(block?.estimatedHoursWithoutAI == 3.0)
+}
+
+@Test func startWithZeroOrNilEstimateLeavesBlockEstimateNil() throws {
+    let db = try AppDatabase.inMemory()
+    let project = Project(name: "a", path: "/tmp/a")
+    try db.dbQueue.write { try project.insert($0) }
+
+    let controller = TimerController(db: db)
+    controller.start(projectId: project.id, estimatedHours: 0)
+    let block = try controller.stop(projectId: project.id)
+
+    #expect(block?.estimatedHoursWithoutAI == nil)
+}
