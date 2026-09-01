@@ -15,7 +15,6 @@ struct ContentView: View {
     @State private var noteDraft: String = ""
     @State private var hoursDraft: Int = 0
     @State private var minutesDraft: Int = 0
-    @State private var estimateDraft: String = ""
     @State private var estimateHoursDraft: Int = 0
     @State private var estimateMinutesDraft: Int = 0
     @State private var hasEstimateDraft: Bool = false
@@ -149,12 +148,8 @@ struct ContentView: View {
                 .frame(minWidth: 220)
 
             if resumeSelection == nil {
-                HStack {
-                    Text(Strings.effortEstimateHours).font(.caption)
-                    TextField(Strings.effortExample, text: $estimateDraft)
-                        .frame(width: 50)
-                        .multilineTextAlignment(.trailing)
-                }
+                Text(Strings.effortEstimateHours).font(.caption)
+                HoursMinutesField(hours: $estimateHoursDraft, minutes: $estimateMinutesDraft)
             }
 
             HStack {
@@ -168,7 +163,8 @@ struct ContentView: View {
                         resumeTimer(for: block)
                         startingProjectId = nil
                     } else {
-                        startTimer(for: projectId, note: noteDraft, estimate: Double(estimateDraft.replacingOccurrences(of: ",", with: ".")))
+                        let estimateHours = Double(estimateHoursDraft * 60 + estimateMinutesDraft) / 60
+                        startTimer(for: projectId, note: noteDraft, estimate: estimateHours > 0 ? estimateHours : nil)
                     }
                 }
                 .keyboardShortcut(.defaultAction)
@@ -246,7 +242,8 @@ struct ContentView: View {
             stopTimer(for: projectId)
         } else {
             noteDraft = ""
-            estimateDraft = ""
+            estimateHoursDraft = 0
+            estimateMinutesDraft = 0
             resumeSelection = nil
             todaysBlocksForStartingProject = (try? DailySummary.todaysBlocks(db: AppEnvironment.db, projectId: projectId)) ?? []
             startingProjectId = projectId

@@ -5,7 +5,8 @@ struct TimeSavedView: View {
     let weekStart: Date
     @State private var summary: TimeSavedWeekSummary?
     @State private var editingEntry: TimeSavedEntry?
-    @State private var estimateEditDraft: String = ""
+    @State private var estimateHoursDraft: Int = 0
+    @State private var estimateMinutesDraft: Int = 0
 
     private var weekRangeLabel: String {
         let calendar = Calendar.current
@@ -94,8 +95,7 @@ struct TimeSavedView: View {
     private func estimateEditor(for entry: TimeSavedEntry) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(Strings.estimateWithoutAIHours).font(.caption).bold()
-            TextField(Strings.estimateExample, text: $estimateEditDraft)
-                .frame(width: 80)
+            HoursMinutesField(hours: $estimateHoursDraft, minutes: $estimateMinutesDraft)
             HStack {
                 Spacer()
                 Button(Strings.cancel) { editingEntry = nil }
@@ -107,16 +107,16 @@ struct TimeSavedView: View {
     }
 
     private func beginEditingEstimate(_ entry: TimeSavedEntry) {
-        estimateEditDraft = String(format: "%.1f", entry.estimatedHours)
+        let totalMinutes = Int((entry.estimatedHours * 60).rounded())
+        estimateHoursDraft = totalMinutes / 60
+        estimateMinutesDraft = totalMinutes % 60
         editingEntry = entry
     }
 
     private func saveEstimateEdit(for entry: TimeSavedEntry) {
-        let normalized = estimateEditDraft.replacingOccurrences(of: ",", with: ".")
-        if let hours = Double(normalized) {
-            _ = try? BlockEditor.setEstimate(db: AppEnvironment.db, blockId: entry.block.id, hours: hours)
-            reload()
-        }
+        let hours = Double(estimateHoursDraft * 60 + estimateMinutesDraft) / 60
+        _ = try? BlockEditor.setEstimate(db: AppEnvironment.db, blockId: entry.block.id, hours: hours)
+        reload()
         editingEntry = nil
     }
 

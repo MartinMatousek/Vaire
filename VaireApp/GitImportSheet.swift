@@ -92,11 +92,9 @@ struct GitImportSheet: View {
                     .disabled(!candidate.wrappedValue.included)
 
                 HStack {
-                    DatePicker("", selection: candidate.start, displayedComponents: [.hourAndMinute])
-                        .labelsHidden()
+                    HoursMinutesField(hours: hourBinding(candidate.start), minutes: minuteBinding(candidate.start))
                     Text("–")
-                    DatePicker("", selection: candidate.end, displayedComponents: [.hourAndMinute])
-                        .labelsHidden()
+                    HoursMinutesField(hours: hourBinding(candidate.end), minutes: minuteBinding(candidate.end))
                     Text(durationLabel(candidate.wrappedValue))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -111,6 +109,28 @@ struct GitImportSheet: View {
     private func durationLabel(_ candidate: GitImportCandidate) -> String {
         let minutes = Int(candidate.end.timeIntervalSince(candidate.start) / 60)
         return "\(minutes / 60)h \(minutes % 60)m"
+    }
+
+    /// Exposes a Date's hour-of-day as a plain Int binding so
+    /// HoursMinutesField (used everywhere else for time entry in the app)
+    /// can edit a clock time too, keeping every date component but the
+    /// hour fixed.
+    private func hourBinding(_ date: Binding<Date>) -> Binding<Int> {
+        Binding(
+            get: { Calendar.current.component(.hour, from: date.wrappedValue) },
+            set: { newHour in
+                date.wrappedValue = Calendar.current.date(bySettingHour: newHour, minute: Calendar.current.component(.minute, from: date.wrappedValue), second: 0, of: date.wrappedValue) ?? date.wrappedValue
+            }
+        )
+    }
+
+    private func minuteBinding(_ date: Binding<Date>) -> Binding<Int> {
+        Binding(
+            get: { Calendar.current.component(.minute, from: date.wrappedValue) },
+            set: { newMinute in
+                date.wrappedValue = Calendar.current.date(bySettingHour: Calendar.current.component(.hour, from: date.wrappedValue), minute: newMinute, second: 0, of: date.wrappedValue) ?? date.wrappedValue
+            }
+        )
     }
 
     private func loadCommits() {
