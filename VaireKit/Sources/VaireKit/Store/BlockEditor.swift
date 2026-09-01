@@ -127,11 +127,19 @@ public enum BlockEditor {
         }
     }
 
+    /// Deletes a block. For an auto-sourced block (isManual == false) this
+    /// also records a tombstone of its time range — otherwise the next
+    /// live reimport of the same source transcript would re-derive and
+    /// re-insert the exact same block, making the delete not stick.
     public static func delete(db: AppDatabase, blockId: UUID) throws {
         try db.dbQueue.write { conn in
-            guard try Block.deleteOne(conn, key: blockId) else {
+            guard let block = try Block.fetchOne(conn, key: blockId) else {
                 throw BlockEditorError.blockNotFound
             }
+            if !block.isManual {
+                try DeletedBlockRange(projectId: block.projectId, start: block.start, end: block.end).insert(conn)
+            }
+            try block.delete(conn)
         }
     }
 

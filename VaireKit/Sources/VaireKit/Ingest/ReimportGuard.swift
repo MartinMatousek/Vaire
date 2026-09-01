@@ -8,9 +8,13 @@ public enum ReimportGuard {
     /// are replaced wholesale for the affected time range.
     ///
     /// Strategy: delete existing non-manual blocks that overlap the
-    /// candidates' time range for this project, then insert the new ones.
-    /// Manual blocks in that same range are left untouched, so a corrected
-    /// block never gets silently overwritten by the next import.
+    /// candidates' time range for this project, then insert the new ones —
+    /// except candidates that overlap a tombstone the user left by
+    /// explicitly deleting a block there (see DeletedBlockRange), which
+    /// are skipped so a delete sticks instead of reappearing on the next
+    /// reimport of the same source transcript. Manual blocks in that same
+    /// range are left untouched, so a corrected block never gets silently
+    /// overwritten by the next import.
     public static func reconcile(db: AppDatabase, projectId: UUID, candidates: [MergedBlock]) throws {
         guard !candidates.isEmpty else { return }
 
@@ -24,7 +28,17 @@ public enum ReimportGuard {
                 .filter(Column("start") < rangeEnd && Column("end") > rangeStart)
                 .deleteAll(conn)
 
+            let tombstones = try DeletedBlockRange
+                .filter(Column("projectId") == projectId)
+                .filter(Column("start") < rangeEnd && Column("end") > rangeStart)
+                .fetchAll(conn)
+
             for candidate in candidates {
+                let isTombstoned = tombstones.contains {
+                    $0.start < candidate.end && $0.end > candidate.start
+                }
+                guard !isTombstoned else { continue }
+
                 let block = Block(
                     projectId: candidate.projectId,
                     start: candidate.start,

@@ -91,6 +91,23 @@ public struct AppDatabase: Sendable {
             }
         }
 
+        migrator.registerMigration("v5") { db in
+            // Deleting an auto-imported block only removed the row — the
+            // next live reimport of the same Claude Code session file
+            // would re-derive and re-insert it, since the source
+            // transcript still has those turns. A tombstone of the
+            // deleted time range lets ReimportGuard.reconcile skip
+            // re-creating anything that overlaps it, so a delete sticks.
+            try db.create(table: "deletedBlockRange") { t in
+                t.column("id", .text).primaryKey()
+                t.column("projectId", .text).notNull()
+                    .references("project", onDelete: .cascade)
+                t.column("start", .datetime).notNull()
+                t.column("end", .datetime).notNull()
+            }
+            try db.create(index: "deletedBlockRange_projectId", on: "deletedBlockRange", columns: ["projectId"])
+        }
+
         return migrator
     }
 }

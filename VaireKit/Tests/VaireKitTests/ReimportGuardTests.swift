@@ -46,6 +46,39 @@ import Testing
     #expect(!remaining.contains { $0.id == autoBlock.id })
 }
 
+@Test func deletedBlockDoesNotReappearOnReimport() throws {
+    let db = try AppDatabase.inMemory()
+    let project = Project(name: "p", path: "/tmp/p")
+    try db.dbQueue.write { try project.insert($0) }
+
+    let strayBlock = Block(
+        projectId: project.id,
+        start: Date(timeIntervalSince1970: 0),
+        end: Date(timeIntervalSince1970: 180),
+        source: .claudeSession,
+        isManual: false
+    )
+    try db.dbQueue.write { try strayBlock.insert($0) }
+
+    try BlockEditor.delete(db: db, blockId: strayBlock.id)
+
+    // Same transcript reimported again (e.g. a later live-import fires for
+    // the same session file) produces the same candidate — it must not
+    // come back after being explicitly deleted.
+    let sameCandidateAgain = MergedBlock(
+        projectId: project.id,
+        start: strayBlock.start,
+        end: strayBlock.end,
+        sources: [.claudeSession],
+        evidenceRefs: [],
+        overlapsOtherProject: false
+    )
+    try ReimportGuard.reconcile(db: db, projectId: project.id, candidates: [sameCandidateAgain])
+
+    let remaining = try db.dbQueue.read { try Block.fetchAll($0) }
+    #expect(remaining.isEmpty)
+}
+
 @Test func reimportWithNoCandidatesLeavesExistingBlocksUntouched() throws {
     let db = try AppDatabase.inMemory()
     let project = Project(name: "p", path: "/tmp/p")
