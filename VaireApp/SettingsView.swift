@@ -12,7 +12,18 @@ struct SettingsView: View {
     @State private var selectedLanguage: AppLanguage = AppLanguage.current()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                content
+            }
+            .padding()
+        }
+        .frame(width: 520, height: 480)
+        .onAppear(perform: reload)
+    }
+
+    private var content: some View {
+        Group {
             Text(Strings.projects)
                 .font(.headline)
 
@@ -28,7 +39,7 @@ struct SettingsView: View {
                     Button(Strings.importFromGit) { importGitHistory(for: project) }
                 }
             }
-            .frame(minHeight: 120)
+            .frame(minHeight: 120, maxHeight: 200)
 
             if let importStatus {
                 Text(importStatus).font(.caption).foregroundStyle(.secondary)
@@ -71,9 +82,6 @@ struct SettingsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .padding()
-        .frame(width: 520, height: 360)
-        .onAppear(perform: reload)
     }
 
     private enum ExportFormat { case csv, json }
@@ -89,6 +97,7 @@ struct SettingsView: View {
             newProjectName = ""
             newProjectPath = ""
             reload()
+            DataChangeNotifier.post()
         } catch {
             exportError = Strings.addProjectFailed(error.localizedDescription)
         }
@@ -121,6 +130,7 @@ struct SettingsView: View {
         do {
             try AppEnvironment.db.dbQueue.write { try updated.update($0) }
             reload()
+            DataChangeNotifier.post()
         } catch {
             exportError = Strings.trackToggleFailed(error.localizedDescription)
         }
