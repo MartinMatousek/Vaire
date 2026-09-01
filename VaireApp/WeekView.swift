@@ -15,7 +15,7 @@ struct WeekView: View {
     @State private var weekOffset = 0
     @State private var days: [DayColumn] = []
     @State private var projects: [UUID: Project] = [:]
-    @State private var selectedBlockIds: Set<UUID> = []
+    @State private var selectedBlockId: UUID?
     @State private var errorMessage: String?
     @State private var editingBlock: Block?
     @State private var noteDraft: String = ""
@@ -25,6 +25,7 @@ struct WeekView: View {
     @State private var estimateMinutesDraft: Int = 0
     @State private var hasEstimateDraft: Bool = false
     @State private var showingTimeSaved = false
+    @State private var showingDeleteConfirmation = false
 
     private let targetHours: Double = 8
     private let defaultPixelsPerHour: CGFloat = 30
@@ -126,8 +127,8 @@ struct WeekView: View {
             }
 
             HStack {
-                Button(Strings.delete) { deleteSelected() }
-                    .disabled(selectedBlockIds.isEmpty)
+                Button(Strings.delete) { confirmDeleteSelected() }
+                    .disabled(selectedBlockId == nil)
                 Spacer()
                 Button(Strings.undo) { undoManager?.undo() }
                     .disabled(undoManager?.canUndo != true)
@@ -146,6 +147,16 @@ struct WeekView: View {
             // change — a slow poll keeps their bar height/hours roughly
             // current without re-querying on every tick.
             reload()
+        }
+        .confirmationDialog(
+            Strings.deleteBlockConfirmTitle,
+            isPresented: $showingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(Strings.delete, role: .destructive) { deleteSelected() }
+            Button(Strings.cancel, role: .cancel) {}
+        } message: {
+            Text(Strings.deleteBlockConfirmMessage)
         }
     }
 
@@ -311,7 +322,7 @@ struct WeekView: View {
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .frame(height: barHeight, alignment: .top)
         .clipped()
-        .background(selectedBlockIds.contains(block.id) ? Color.accentColor.opacity(0.3) : Color.secondary.opacity(0.15))
+        .background(selectedBlockId == block.id ? Color.accentColor.opacity(0.3) : Color.secondary.opacity(0.15))
         .cornerRadius(4)
         .contentShape(Rectangle())
         .onTapGesture(count: 2) {
@@ -387,6 +398,8 @@ struct WeekView: View {
             }
 
             HStack {
+                Button(Strings.delete) { deleteEditingBlock(block) }
+                    .foregroundStyle(.red)
                 Spacer()
                 Button(Strings.cancel) { editingBlock = nil }
                 Button(Strings.save) { saveBlockEdits(for: block) }
@@ -394,6 +407,18 @@ struct WeekView: View {
             }
         }
         .padding()
+    }
+
+    private func deleteEditingBlock(_ block: Block) {
+        do {
+            try BlockEditor.delete(db: AppEnvironment.db, blockId: block.id)
+            registerUndoForDelete([block])
+            editingBlock = nil
+            reload()
+            WidgetCenter.shared.reloadAllTimelines()
+        } catch {
+            handleStaleBlockError(error, actionDescription: Strings.actionDelete)
+        }
     }
 
     private func beginEditingNote(_ block: Block) {
@@ -450,7 +475,7 @@ struct WeekView: View {
     }
 
     private func toggleSelection(_ id: UUID) {
-        selectedBlockIds = selectedBlockIds == [id] ? [] : [id]
+        selectedBlockId = selectedBlockId == id ? nil : id
     }
 
     private func reload() {
@@ -525,16 +550,18 @@ struct WeekView: View {
         }
     }
 
+    private func confirmDeleteSelected() {
+        guard selectedBlockId != nil else { return }
+        showingDeleteConfirmation = true
+    }
+
     private func deleteSelected() {
-        let blocksToDelete = days.flatMap(\.blocks).filter { selectedBlockIds.contains($0.id) }
-        guard !blocksToDelete.isEmpty else { return }
+        guard let selectedBlockId, let block = days.flatMap(\.blocks).first(where: { $0.id == selectedBlockId }) else { return }
 
         do {
-            for block in blocksToDelete {
-                try BlockEditor.delete(db: AppEnvironment.db, blockId: block.id)
-            }
-            registerUndoForDelete(blocksToDelete)
-            selectedBlockIds.removeAll()
+            try BlockEditor.delete(db: AppEnvironment.db, blockId: block.id)
+            registerUndoForDelete([block])
+            self.selectedBlockId = nil
             reload()
             WidgetCenter.shared.reloadAllTimelines()
         } catch {

@@ -104,6 +104,8 @@ public enum Strings {
     public static func actionFailedStale(_ action: String) -> String { pick(cs: "\(action) se nepodařilo — záznam se mezitím aktualizoval (např. živým importem). Zkus to prosím znovu.", en: "\(action) failed — the record was updated in the meantime (e.g. by a live import). Please try again.") }
     public static func actionFailed(action: String, message: String) -> String { pick(cs: "\(action) selhalo: \(message)", en: "\(action) failed: \(message)") }
     public static var actionSaveEdits: String { pick(cs: "Uložení úprav", en: "Saving edits") }
+    public static var deleteBlockConfirmTitle: String { pick(cs: "Smazat záznam?", en: "Delete this entry?") }
+    public static var deleteBlockConfirmMessage: String { pick(cs: "Tuto akci lze vzít zpět tlačítkem Zpět.", en: "You can undo this with the Undo button.") }
     public static var actionMove: String { pick(cs: "Přesun", en: "Move") }
     public static var actionDelete: String { pick(cs: "Smazání", en: "Delete") }
 
