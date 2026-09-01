@@ -110,11 +110,6 @@ struct WeekView: View {
                     GitImportSheet(weekStart: weekStart, projects: allProjectsSorted, onImported: reload)
                 }
 
-                Button(Strings.reportBug) {
-                    reportBug()
-                }
-                .buttonStyle(.link)
-
                 Button(Strings.savings) {
                     showingTimeSaved = true
                 }
@@ -145,6 +140,11 @@ struct WeekView: View {
             }
 
             HStack {
+                Button(Strings.reportBug) {
+                    reportBug()
+                }
+                .buttonStyle(.link)
+
                 Button(Strings.delete) { confirmDeleteSelected() }
                     .disabled(selectedBlockId == nil)
                 Spacer()
