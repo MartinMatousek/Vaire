@@ -66,6 +66,9 @@ struct ContentView: View {
             tick += 1
             refreshTodayHours()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .vaireDataChanged)) { _ in
+            reload()
+        }
     }
 
     private func projectRow(_ project: Project) -> some View {
@@ -319,6 +322,7 @@ struct ContentView: View {
         updated.hooksEnabled = false
         try? AppEnvironment.db.dbQueue.write { try updated.update($0) }
         reload()
+        DataChangeNotifier.post()
     }
 
     private func reload() {
