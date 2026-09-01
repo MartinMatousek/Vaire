@@ -107,14 +107,15 @@ struct TimeSavedView: View {
     }
 
     private func beginEditingEstimate(_ entry: TimeSavedEntry) {
-        let totalMinutes = Int((entry.estimatedHours * 60).rounded())
-        estimateHoursDraft = totalMinutes / 60
-        estimateMinutesDraft = totalMinutes % 60
+        let estimateRounded = HoursMinutesField.roundedUp(totalMinutes: Int((entry.estimatedHours * 60).rounded()))
+        estimateHoursDraft = estimateRounded.hours
+        estimateMinutesDraft = estimateRounded.minutes
         editingEntry = entry
     }
 
     private func saveEstimateEdit(for entry: TimeSavedEntry) {
-        let hours = Double(estimateHoursDraft * 60 + estimateMinutesDraft) / 60
+        let rounded = HoursMinutesField.roundedUp(totalMinutes: estimateHoursDraft * 60 + estimateMinutesDraft)
+        let hours = Double(rounded.hours * 60 + rounded.minutes) / 60
         _ = try? BlockEditor.setEstimate(db: AppEnvironment.db, blockId: entry.block.id, hours: hours)
         reload()
         editingEntry = nil

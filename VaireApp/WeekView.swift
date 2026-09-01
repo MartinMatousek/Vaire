@@ -441,14 +441,14 @@ struct WeekView: View {
 
     private func beginEditingNote(_ block: Block) {
         noteDraft = block.note ?? ""
-        let totalMinutes = Int((block.duration / 60).rounded())
-        hoursDraft = totalMinutes / 60
-        minutesDraft = totalMinutes % 60
+        let measured = HoursMinutesField.roundedUp(totalMinutes: Int((block.duration / 60).rounded()))
+        hoursDraft = measured.hours
+        minutesDraft = measured.minutes
 
         if let estimate = block.estimatedHoursWithoutAI {
-            let estimateMinutes = Int((estimate * 60).rounded())
-            estimateHoursDraft = estimateMinutes / 60
-            estimateMinutesDraft = estimateMinutes % 60
+            let estimateRounded = HoursMinutesField.roundedUp(totalMinutes: Int((estimate * 60).rounded()))
+            estimateHoursDraft = estimateRounded.hours
+            estimateMinutesDraft = estimateRounded.minutes
             hasEstimateDraft = true
         } else {
             estimateHoursDraft = 0
@@ -463,14 +463,18 @@ struct WeekView: View {
         do {
             _ = try BlockEditor.setNote(db: AppEnvironment.db, blockId: block.id, note: noteDraft)
 
-            let newDuration = TimeInterval(hoursDraft * 3600 + minutesDraft * 60)
+            let duration = HoursMinutesField.roundedUp(totalMinutes: hoursDraft * 60 + minutesDraft)
+            let newDuration = TimeInterval((duration.hours * 60 + duration.minutes) * 60)
             if newDuration != block.duration {
                 let newEnd = block.start.addingTimeInterval(newDuration)
                 _ = try BlockEditor.setTimes(db: AppEnvironment.db, blockId: block.id, start: block.start, end: newEnd)
             }
 
             let newEstimate: Double? = hasEstimateDraft
-                ? Double(estimateHoursDraft * 60 + estimateMinutesDraft) / 60
+                ? {
+                    let rounded = HoursMinutesField.roundedUp(totalMinutes: estimateHoursDraft * 60 + estimateMinutesDraft)
+                    return Double(rounded.hours * 60 + rounded.minutes) / 60
+                }()
                 : nil
             if newEstimate != block.estimatedHoursWithoutAI {
                 _ = try BlockEditor.setEstimate(db: AppEnvironment.db, blockId: block.id, hours: newEstimate)

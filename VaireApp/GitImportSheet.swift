@@ -156,11 +156,18 @@ struct GitImportSheet: View {
 
     private func commit() {
         guard let selectedProjectId else { return }
+        let roundedCandidates = candidates.map { candidate -> GitImportCandidate in
+            var candidate = candidate
+            let totalMinutes = Int(candidate.end.timeIntervalSince(candidate.start) / 60)
+            let rounded = HoursMinutesField.roundedUp(totalMinutes: totalMinutes)
+            candidate.end = candidate.start.addingTimeInterval(TimeInterval((rounded.hours * 60 + rounded.minutes) * 60))
+            return candidate
+        }
         do {
             try GitImportReviewer.commit(
                 db: AppEnvironment.db,
                 projectId: selectedProjectId,
-                candidates: candidates,
+                candidates: roundedCandidates,
                 weekStart: weekStart,
                 replacingExisting: replaceExisting
             )
