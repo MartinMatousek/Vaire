@@ -9,10 +9,11 @@ struct SettingsView: View {
     @State private var newProjectPath = ""
     @State private var exportError: String?
     @State private var importStatus: String?
+    @State private var selectedLanguage: AppLanguage = AppLanguage.current()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Projekty")
+            Text(Strings.projects)
                 .font(.headline)
 
             List(projects) { project in
@@ -22,9 +23,9 @@ struct SettingsView: View {
                         Text(project.path).font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Toggle("Sledovat", isOn: hooksEnabledBinding(for: project))
+                    Toggle(Strings.track, isOn: hooksEnabledBinding(for: project))
                         .toggleStyle(.checkbox)
-                    Button("Import z gitu") { importGitHistory(for: project) }
+                    Button(Strings.importFromGit) { importGitHistory(for: project) }
                 }
             }
             .frame(minHeight: 120)
@@ -34,27 +35,41 @@ struct SettingsView: View {
             }
 
             HStack {
-                TextField("Název", text: $newProjectName)
-                TextField("Cesta", text: $newProjectPath)
-                Button("Vybrat…") { pickProjectPath() }
-                Button("Přidat") { addProject() }
+                TextField(Strings.name, text: $newProjectName)
+                TextField(Strings.path, text: $newProjectPath)
+                Button(Strings.choose) { pickProjectPath() }
+                Button(Strings.add) { addProject() }
                     .disabled(newProjectName.isEmpty || newProjectPath.isEmpty)
             }
 
-            Text("Nově přidaný projekt se rovnou sleduje pomocí Claude Code hooků. Zaškrtnutí „Sledovat“ zapíná/vypíná sledování pro existující projekty.")
+            Text(Strings.addProjectHint)
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             Divider()
 
             HStack {
-                Button("Export CSV") { export(format: .csv) }
-                Button("Export JSON") { export(format: .json) }
+                Button(Strings.exportCSV) { export(format: .csv) }
+                Button(Strings.exportJSON) { export(format: .json) }
             }
 
             if let exportError {
                 Text(exportError).font(.caption).foregroundStyle(.red)
             }
+
+            Divider()
+
+            Picker(Strings.languageLabel, selection: $selectedLanguage) {
+                Text(Strings.languageCzech).tag(AppLanguage.cs)
+                Text(Strings.languageEnglish).tag(AppLanguage.en)
+            }
+            .onChange(of: selectedLanguage) { _, newValue in
+                try? AppLanguage.set(newValue)
+            }
+
+            Text(Strings.languageRestartHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         .padding()
         .frame(width: 520, height: 360)
@@ -75,7 +90,7 @@ struct SettingsView: View {
             newProjectPath = ""
             reload()
         } catch {
-            exportError = "Nepodařilo se přidat projekt: \(error.localizedDescription)"
+            exportError = Strings.addProjectFailed(error.localizedDescription)
         }
     }
 
@@ -107,7 +122,7 @@ struct SettingsView: View {
             try AppEnvironment.db.dbQueue.write { try updated.update($0) }
             reload()
         } catch {
-            exportError = "Nepodařilo se změnit sledování: \(error.localizedDescription)"
+            exportError = Strings.trackToggleFailed(error.localizedDescription)
         }
     }
 
@@ -132,12 +147,12 @@ struct SettingsView: View {
                 try BlockExporter.json(rows: rows).write(to: url)
             }
         } catch {
-            exportError = "Export selhal: \(error.localizedDescription)"
+            exportError = Strings.exportFailed(error.localizedDescription)
         }
     }
 
     private func importGitHistory(for project: Project) {
-        importStatus = "Importuji…"
+        importStatus = Strings.importing
         do {
             let author = try gitConfigValue(key: "user.email", repoPath: project.path)
             let since = Calendar.current.date(byAdding: .day, value: -90, to: .now) ?? .distantPast
@@ -150,10 +165,10 @@ struct SettingsView: View {
             let merged = BlockMerger.merge(candidates)
             try ReimportGuard.reconcile(db: AppEnvironment.db, projectId: project.id, candidates: merged)
 
-            importStatus = "Naimportováno \(commits.count) commitů, \(merged.count) bloků."
+            importStatus = Strings.importSummary(commits: commits.count, blocks: merged.count)
             WidgetCenter.shared.reloadAllTimelines()
         } catch {
-            importStatus = "Import selhal: \(error.localizedDescription)"
+            importStatus = Strings.importFailed(error.localizedDescription)
         }
     }
 

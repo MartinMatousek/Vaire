@@ -31,8 +31,8 @@ final class DailyReviewScheduler: NSObject {
     /// shows the real numbers.
     private func scheduleDailyReminder(hour: Int, minute: Int) {
         let content = UNMutableNotificationContent()
-        content.title = "Vaire — denní shrnutí"
-        content.body = "Zkontroluj a uprav dnešní bloky."
+        content.title = Strings.dailySummaryTitle
+        content.body = Strings.dailySummaryBody
         content.categoryIdentifier = reviewCategoryId
         content.sound = .default
 

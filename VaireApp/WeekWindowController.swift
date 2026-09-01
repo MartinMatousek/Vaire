@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import VaireKit
 
 @MainActor
 final class WeekWindowController {
@@ -21,7 +22,7 @@ final class WeekWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "Vaire — Týden"
+        window.title = Strings.weekWindowTitle
         let hostedView = WeekView().environment(\.weekUndoManager, windowUndoManager)
         window.contentView = NSHostingView(rootView: hostedView)
         window.center()

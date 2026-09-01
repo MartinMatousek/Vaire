@@ -1,6 +1,7 @@
 import SwiftUI
 import WidgetKit
 import VaireKit
+import GRDB
 
 struct ContentView: View {
     @State private var timer = AppEnvironment.timer
@@ -30,7 +31,7 @@ struct ContentView: View {
                 .font(.headline)
 
             if projects.isEmpty {
-                Text("Žádné projekty. Přidej je v nastavení.")
+                Text(Strings.noProjects)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
@@ -43,17 +44,17 @@ struct ContentView: View {
 
             Divider()
 
-            Button("Týden…") {
+            Button(Strings.week) {
                 WeekWindowController.shared.show()
             }
             .buttonStyle(.link)
 
-            Button("Nastavení…") {
+            Button(Strings.settings) {
                 openSettings()
             }
             .buttonStyle(.link)
 
-            Button("Ukončit") {
+            Button(Strings.quit) {
                 NSApplication.shared.terminate(nil)
             }
             .buttonStyle(.link)
@@ -79,7 +80,7 @@ struct ContentView: View {
                 }
             }
             Spacer()
-            Button(timer.isRunning(projectId: project.id) ? "Stop" : "Start") {
+            Button(timer.isRunning(projectId: project.id) ? Strings.stop : Strings.start) {
                 handleTap(for: project.id)
             }
             .popover(isPresented: Binding(
@@ -94,6 +95,12 @@ struct ContentView: View {
             )) {
                 editorAfterStop
             }
+            Button(Strings.unfollow) {
+                unfollow(project)
+            }
+            .buttonStyle(.link)
+            .foregroundStyle(.secondary)
+            .disabled(timer.isRunning(projectId: project.id))
         }
     }
 
@@ -118,9 +125,9 @@ struct ContentView: View {
     private func noteEditorBeforeStart(projectId: UUID) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             if !todaysBlocksForStartingProject.isEmpty {
-                Text("Navázat na dnešní záznam?").font(.caption).bold()
+                Text(Strings.resumeTodaysEntry).font(.caption).bold()
                 Picker("", selection: $resumeSelection) {
-                    Text("Nový záznam").tag(UUID?.none)
+                    Text(Strings.newEntry).tag(UUID?.none)
                     ForEach(todaysBlocksForStartingProject) { block in
                         Text(resumeOptionLabel(block)).tag(Optional(block.id))
                     }
@@ -133,15 +140,15 @@ struct ContentView: View {
                 }
             }
 
-            Text("Popis aktivity (než zapomeneš)").font(.caption).bold()
-            TextField("Co budeš dělat…", text: $noteDraft, axis: .vertical)
+            Text(Strings.activityDescription).font(.caption).bold()
+            TextField(Strings.whatWillYouDoPlaceholder, text: $noteDraft, axis: .vertical)
                 .lineLimit(3...6)
                 .frame(minWidth: 220)
 
             if resumeSelection == nil {
                 HStack {
-                    Text("Odhad pracnosti (h):").font(.caption)
-                    TextField("např. 2", text: $estimateDraft)
+                    Text(Strings.effortEstimateHours).font(.caption)
+                    TextField(Strings.effortExample, text: $estimateDraft)
                         .frame(width: 50)
                         .multilineTextAlignment(.trailing)
                 }
@@ -150,9 +157,9 @@ struct ContentView: View {
             HStack {
                 Spacer()
                 if resumeSelection == nil {
-                    Button("Bez poznámky") { startTimer(for: projectId, note: nil, estimate: nil) }
+                    Button(Strings.withoutNote) { startTimer(for: projectId, note: nil, estimate: nil) }
                 }
-                Button(resumeSelection == nil ? "Start" : "Navázat") {
+                Button(resumeSelection == nil ? Strings.start : Strings.resume) {
                     if let blockId = resumeSelection,
                        let block = todaysBlocksForStartingProject.first(where: { $0.id == blockId }) {
                         resumeTimer(for: block)
@@ -183,10 +190,10 @@ struct ContentView: View {
 
     private var editorAfterStop: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Uprav čas a popis").font(.caption).bold()
+            Text(Strings.editTimeAndDescription).font(.caption).bold()
 
             if let stoppedBlock {
-                Text("Naměřeno na timeru: \(realElapsedLabel(stoppedBlock))")
+                Text(Strings.measuredOnTimer(realElapsedLabel(stoppedBlock)))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 
@@ -194,18 +201,18 @@ struct ContentView: View {
 
             HoursMinutesField(hours: $hoursDraft, minutes: $minutesDraft)
 
-            TextField("Co jsi dělal…", text: $noteDraft, axis: .vertical)
+            TextField(Strings.whatDidYouDoPlaceholder, text: $noteDraft, axis: .vertical)
                 .lineLimit(3...6)
                 .frame(minWidth: 240)
 
-            Toggle("Odhad bez AI", isOn: $hasEstimateDraft)
+            Toggle(Strings.estimateWithoutAI, isOn: $hasEstimateDraft)
                 .font(.caption)
             if hasEstimateDraft {
                 HoursMinutesField(hours: $estimateHoursDraft, minutes: $estimateMinutesDraft)
                 let editedHours = Double(hoursDraft) + Double(minutesDraft) / 60
                 let estimateHours = Double(estimateHoursDraft) + Double(estimateMinutesDraft) / 60
                 if estimateHours < editedHours {
-                    Text("Odhad je nižší než naměřený čas")
+                    Text(Strings.estimateLowerThanMeasured)
                         .font(.caption2)
                         .foregroundStyle(.red)
                 }
@@ -213,11 +220,11 @@ struct ContentView: View {
 
             HStack {
                 Spacer()
-                Button("Zahodit") { stoppedBlock = nil }
+                Button(Strings.discard) { stoppedBlock = nil }
                 if let stoppedBlock {
-                    Button("Pokračovat") { resumeTimer(for: stoppedBlock) }
+                    Button(Strings.`continue`) { resumeTimer(for: stoppedBlock) }
                 }
-                Button("Uložit") { saveStoppedBlock() }
+                Button(Strings.save) { saveStoppedBlock() }
                     .keyboardShortcut(.defaultAction)
             }
         }
@@ -307,8 +314,17 @@ struct ContentView: View {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
+    private func unfollow(_ project: Project) {
+        var updated = project
+        updated.hooksEnabled = false
+        try? AppEnvironment.db.dbQueue.write { try updated.update($0) }
+        reload()
+    }
+
     private func reload() {
-        projects = (try? AppEnvironment.db.dbQueue.read { try Project.fetchAll($0) }) ?? []
+        projects = (try? AppEnvironment.db.dbQueue.read {
+            try Project.filter(Column("hooksEnabled") == true).fetchAll($0)
+        }) ?? []
         refreshTodayHours()
     }
 

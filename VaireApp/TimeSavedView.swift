@@ -16,7 +16,7 @@ struct TimeSavedView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Úspora času — \(weekRangeLabel)")
+            Text(Strings.timeSavedTitle(weekRangeLabel))
                 .font(.headline)
 
             if let summary, !summary.entries.isEmpty {
@@ -26,7 +26,7 @@ struct TimeSavedView: View {
                     entryRow(entry)
                 }
             } else {
-                Text("Žádné odhady tento týden. Claude si je zapisuje sám na konci session s netriviální prací.")
+                Text(Strings.noEstimatesThisWeek)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -43,10 +43,10 @@ struct TimeSavedView: View {
 
     private func totalsRow(_ summary: TimeSavedWeekSummary) -> some View {
         HStack(spacing: 20) {
-            statTile(label: "Odhad bez AI", value: hoursLabel(summary.totalEstimatedHours))
-            statTile(label: "Reálný čas", value: hoursLabel(summary.totalActualHours))
+            statTile(label: Strings.estimateWithoutAI, value: hoursLabel(summary.totalEstimatedHours))
+            statTile(label: Strings.actualTime, value: hoursLabel(summary.totalActualHours))
             statTile(
-                label: "Ušetřeno",
+                label: Strings.saved,
                 value: hoursLabel(summary.totalSavedHours),
                 color: summary.totalSavedHours < 0 ? .red : .green
             )
@@ -74,14 +74,14 @@ struct TimeSavedView: View {
             if let note = entry.block.note, !note.isEmpty {
                 Text(note).font(.caption).foregroundStyle(.secondary).lineLimit(2)
             }
-            Text("Reálně \(hoursLabel(entry.actualHours)) · Odhad \(hoursLabel(entry.estimatedHours))")
+            Text(Strings.actualVsEstimate(actual: hoursLabel(entry.actualHours), estimate: hoursLabel(entry.estimatedHours)))
                 .font(.caption2)
                 .foregroundStyle(overEstimate ? .red : .secondary)
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
         .contextMenu {
-            Button("Upravit odhad…") { beginEditingEstimate(entry) }
+            Button(Strings.editEstimate) { beginEditingEstimate(entry) }
         }
         .popover(isPresented: Binding(
             get: { editingEntry?.block.id == entry.block.id },
@@ -93,13 +93,13 @@ struct TimeSavedView: View {
 
     private func estimateEditor(for entry: TimeSavedEntry) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Odhad bez AI (hodiny)").font(.caption).bold()
-            TextField("např. 2.5", text: $estimateEditDraft)
+            Text(Strings.estimateWithoutAIHours).font(.caption).bold()
+            TextField(Strings.estimateExample, text: $estimateEditDraft)
                 .frame(width: 80)
             HStack {
                 Spacer()
-                Button("Zrušit") { editingEntry = nil }
-                Button("Uložit") { saveEstimateEdit(for: entry) }
+                Button(Strings.cancel) { editingEntry = nil }
+                Button(Strings.save) { saveEstimateEdit(for: entry) }
                     .keyboardShortcut(.defaultAction)
             }
         }

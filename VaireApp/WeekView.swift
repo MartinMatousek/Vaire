@@ -82,7 +82,7 @@ struct WeekView: View {
                 .buttonStyle(.borderless)
 
                 if weekOffset != 0 {
-                    Button("Dnes") {
+                    Button(Strings.today) {
                         weekOffset = 0
                         reload()
                     }
@@ -91,12 +91,12 @@ struct WeekView: View {
 
                 Spacer()
 
-                Button("Nahlásit bug") {
+                Button(Strings.reportBug) {
                     reportBug()
                 }
                 .buttonStyle(.link)
 
-                Button("Úspory") {
+                Button(Strings.savings) {
                     showingTimeSaved = true
                 }
                 .popover(isPresented: $showingTimeSaved) {
@@ -126,12 +126,12 @@ struct WeekView: View {
             }
 
             HStack {
-                Button("Smazat") { deleteSelected() }
+                Button(Strings.delete) { deleteSelected() }
                     .disabled(selectedBlockIds.isEmpty)
                 Spacer()
-                Button("Zpět") { undoManager?.undo() }
+                Button(Strings.undo) { undoManager?.undo() }
                     .disabled(undoManager?.canUndo != true)
-                Button("Znovu") { undoManager?.redo() }
+                Button(Strings.redo) { undoManager?.redo() }
                     .disabled(undoManager?.canRedo != true)
             }
         }
@@ -296,7 +296,7 @@ struct WeekView: View {
             // Always visible, even on the smallest (15 min) blocks — a
             // system-size-8 single line beats a hover tooltip that macOS
             // wasn't reliably showing over the draggable/popover stack.
-            Text("\(projectName) — \(durationLabel(block))")
+            Text(Strings.blockLabel(project: projectName, duration: durationLabel(block)))
                 .font(.system(size: 8))
                 .bold()
                 .lineLimit(1)
@@ -321,7 +321,7 @@ struct WeekView: View {
             toggleSelection(block.id)
         }
         .contextMenu {
-            Button("Upravit…") { beginEditingNote(block) }
+            Button(Strings.edit) { beginEditingNote(block) }
         }
         .draggable(BlockTransfer(blockId: block.id))
         .popover(isPresented: Binding(
@@ -346,7 +346,7 @@ struct WeekView: View {
         let projectName = projects[tracking.projectId]?.name ?? "?"
 
         return VStack(alignment: .leading, spacing: 2) {
-            Text("● Běží: \(projectName) — \(String(format: "%.1fh", elapsedHours))")
+            Text(Strings.runningLabel(project: projectName, hours: String(format: "%.1fh", elapsedHours)))
                 .font(.system(size: 8))
                 .bold()
                 .foregroundStyle(.green)
@@ -372,15 +372,15 @@ struct WeekView: View {
 
     private func noteEditor(for block: Block) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Popis aktivity").font(.caption).bold()
-            TextField("Co jsi dělal…", text: $noteDraft, axis: .vertical)
+            Text(Strings.activityDescriptionLabel).font(.caption).bold()
+            TextField(Strings.whatDidYouDoPlaceholder, text: $noteDraft, axis: .vertical)
                 .lineLimit(3...6)
                 .frame(minWidth: 220)
 
-            Text("Čas").font(.caption).bold()
+            Text(Strings.timeLabel).font(.caption).bold()
             HoursMinutesField(hours: $hoursDraft, minutes: $minutesDraft)
 
-            Toggle("Odhad bez AI", isOn: $hasEstimateDraft)
+            Toggle(Strings.estimateWithoutAI, isOn: $hasEstimateDraft)
                 .font(.caption)
             if hasEstimateDraft {
                 HoursMinutesField(hours: $estimateHoursDraft, minutes: $estimateMinutesDraft)
@@ -388,8 +388,8 @@ struct WeekView: View {
 
             HStack {
                 Spacer()
-                Button("Zrušit") { editingBlock = nil }
-                Button("Uložit") { saveBlockEdits(for: block) }
+                Button(Strings.cancel) { editingBlock = nil }
+                Button(Strings.save) { saveBlockEdits(for: block) }
                     .keyboardShortcut(.defaultAction)
             }
         }
@@ -436,7 +436,7 @@ struct WeekView: View {
             editingBlock = nil
             reload()
         } catch {
-            handleStaleBlockError(error, actionDescription: "Uložení úprav")
+            handleStaleBlockError(error, actionDescription: Strings.actionSaveEdits)
         }
     }
 
@@ -491,10 +491,10 @@ struct WeekView: View {
     /// "do nothing" silently.
     private func handleStaleBlockError(_ error: Error, actionDescription: String) {
         if case BlockEditorError.blockNotFound = error {
-            errorMessage = "\(actionDescription) se nepodařilo — záznam se mezitím aktualizoval (např. živým importem). Zkus to prosím znovu."
+            errorMessage = Strings.actionFailedStale(actionDescription)
             reload()
         } else {
-            errorMessage = "\(actionDescription) selhalo: \(error.localizedDescription)"
+            errorMessage = Strings.actionFailed(action: actionDescription, message: error.localizedDescription)
         }
     }
 
@@ -512,7 +512,7 @@ struct WeekView: View {
             WidgetCenter.shared.reloadAllTimelines()
             return true
         } catch {
-            handleStaleBlockError(error, actionDescription: "Přesun")
+            handleStaleBlockError(error, actionDescription: Strings.actionMove)
             return false
         }
     }
@@ -538,7 +538,7 @@ struct WeekView: View {
             reload()
             WidgetCenter.shared.reloadAllTimelines()
         } catch {
-            handleStaleBlockError(error, actionDescription: "Smazání")
+            handleStaleBlockError(error, actionDescription: Strings.actionDelete)
         }
     }
 

@@ -45,7 +45,7 @@ struct VaireWidgetEntryView: View {
                 ringAndTotal
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(entry.projectTotals.prefix(4), id: \.project.id) { total in
-                        Text("\(total.project.name): \(String(format: "%.1fh", total.hours))")
+                        Text(Strings.widgetProjectLine(project: total.project.name, hours: String(format: "%.1fh", total.hours)))
                             .font(.caption2)
                             .lineLimit(1)
                     }
@@ -64,7 +64,7 @@ struct VaireWidgetEntryView: View {
                 .frame(width: 56, height: 56)
             Text(String(format: "%.1fh", entry.hoursWorked))
                 .font(.headline)
-            Text("dnes")
+            Text(Strings.widgetTodaySuffix)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -78,8 +78,8 @@ struct VaireWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             VaireWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("Vaire")
-        .description("Dnešní odpracovaný čas.")
+        .configurationDisplayName(Strings.widgetDisplayName)
+        .description(Strings.widgetDescription)
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import VaireKit
 
 @MainActor
 final class SettingsWindowController {
@@ -20,7 +21,7 @@ final class SettingsWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "Vaire — Nastavení"
+        window.title = Strings.settingsWindowTitle
         window.contentView = NSHostingView(rootView: SettingsView())
         window.center()
         window.isReleasedWhenClosed = false

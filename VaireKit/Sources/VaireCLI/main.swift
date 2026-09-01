@@ -43,6 +43,10 @@ func run() throws {
         try runDeleteBlock(db: db, args: rest)
     case "is-hooks-enabled":
         try runIsHooksEnabled(db: db, args: rest)
+    case "get-language":
+        try runGetLanguage()
+    case "set-language":
+        try runSetLanguage(args: rest)
     default:
         throw CLIError.usage("unknown command: \(command)")
     }
@@ -167,6 +171,18 @@ func runAdjustEstimate(db: AppDatabase, args: [String]) throws {
     _ = try BlockEditor.setEstimate(db: db, blockId: blockId, hours: hours)
     print("estimate adjusted")
     DataChangeNotifier.post()
+}
+
+func runGetLanguage() throws {
+    print(AppLanguage.current().rawValue)
+}
+
+func runSetLanguage(args: [String]) throws {
+    guard let raw = args.first, let language = AppLanguage(rawValue: raw) else {
+        throw CLIError.usage("usage: set-language <cs|en>")
+    }
+    try AppLanguage.set(language)
+    print("language set to \(language.rawValue)")
 }
 
 func runIsHooksEnabled(db: AppDatabase, args: [String]) throws {
