@@ -73,12 +73,15 @@ it (disabled while its timer is running) — equivalent to unchecking
 
 ### Importing from git
 
-Each project row in Settings has an **Import from git** button. It reads
-your commits in that repository from the last 90 days (filtered to
-`git config user.email`), turns them into time blocks, and merges them
-in alongside any Claude Code session blocks. Use it to backfill time you
-spent working on a project outside Claude Code — Vaire has no other way
-to see that work.
+The Week window has an **Import from git…** button, scoped to the week
+currently shown. It reads your commits in the selected project for that
+week (filtered to `git config user.email`), groups them into candidate
+time blocks, and opens a review sheet before writing anything — you can
+edit each candidate's note or start/end time, uncheck any you don't want,
+and choose whether to replace previously git-imported blocks for that
+week or add alongside them. Nothing is written until you click **Import**
+in the sheet. Use it to backfill time you spent working on a project
+outside Claude Code — Vaire has no other way to see that work.
 
 ### Language
 

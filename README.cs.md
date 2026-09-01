@@ -72,11 +72,16 @@ odškrtnutí **Track** v Nastavení.
 
 ### Import z gitu
 
-Každý řádek projektu v Nastavení má tlačítko **Import from git**. Načte
-tvé commity v daném repozitáři za posledních 90 dní (filtrované podle
-`git config user.email`), převede je na časové bloky a sloučí je se
-záznamy z Claude Code sessions. Použij ho, pokud jsi na projektu
-pracoval mimo Claude Code — Vaire jinak nemá jak takovou práci vidět.
+Okno Týden má tlačítko **Import from git…**, které pracuje se zrovna
+zobrazeným týdnem. Načte tvé commity ve vybraném projektu za tento týden
+(filtrované podle `git config user.email`), seskupí je do kandidátních
+časových bloků a než cokoliv zapíše, otevře kontrolní okno — u každého
+kandidáta můžeš upravit poznámku nebo čas začátku/konce, odškrtnout ty,
+co nechceš, a zvolit, jestli se mají nahradit dříve naimportované bloky
+za ten týden, nebo se mají jen přidat vedle nich. Nic se nezapíše, dokud
+v kontrolním okně neklikneš na **Import**. Použij ho, pokud jsi na
+projektu pracoval mimo Claude Code — Vaire jinak nemá jak takovou práci
+vidět.
 
 ### Jazyk
 
