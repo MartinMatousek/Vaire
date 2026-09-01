@@ -140,13 +140,13 @@ struct WeekView: View {
             }
 
             HStack {
+                Button(Strings.delete) { confirmDeleteSelected() }
+                    .disabled(selectedBlockId == nil)
+                Spacer()
                 Button(Strings.reportBug) {
                     reportBug()
                 }
                 .buttonStyle(.link)
-
-                Button(Strings.delete) { confirmDeleteSelected() }
-                    .disabled(selectedBlockId == nil)
                 Spacer()
                 Button(Strings.undo) { undoManager?.undo() }
                     .disabled(undoManager?.canUndo != true)
