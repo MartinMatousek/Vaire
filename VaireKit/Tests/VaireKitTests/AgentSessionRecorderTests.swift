@@ -104,6 +104,17 @@ import Testing
     #expect(result?.block.estimatedHoursWithoutAI == 4.0)
 }
 
+@Test func repeatedSetEstimateCallsOverwriteWithTheLastValue() throws {
+    let db = try AppDatabase.inMemory()
+    _ = try AgentSessionRecorder.start(db: db, sessionId: "sess-1", cwd: "/tmp/repo", note: nil)
+
+    try AgentSessionRecorder.setEstimate(db: db, sessionId: "sess-1", hours: 0.5)
+    try AgentSessionRecorder.setEstimate(db: db, sessionId: "sess-1", hours: 2.0)
+    let result = try AgentSessionRecorder.stop(db: db, sessionId: "sess-1")
+
+    #expect(result?.block.estimatedHoursWithoutAI == 2.0)
+}
+
 @Test func setEstimateOnUntrackedSessionIsANoOp() throws {
     let db = try AppDatabase.inMemory()
     try AgentSessionRecorder.setEstimate(db: db, sessionId: "never-started", hours: 4.0)

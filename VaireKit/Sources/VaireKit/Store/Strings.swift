@@ -25,7 +25,7 @@ public enum Strings {
     public static var newEntry: String { pick(cs: "Nový záznam", en: "New entry") }
     public static var activityDescription: String { pick(cs: "Popis aktivity (než zapomeneš)", en: "What are you working on (before you forget)") }
     public static var whatWillYouDoPlaceholder: String { pick(cs: "Co budeš dělat…", en: "What will you do…") }
-    public static var effortEstimateHours: String { pick(cs: "Odhad pracnosti (h):", en: "Effort estimate (h):") }
+    public static var effortEstimateHours: String { pick(cs: "Odhad pracnosti:", en: "Effort estimate:") }
     public static var withoutNote: String { pick(cs: "Bez poznámky", en: "No note") }
     public static var resume: String { pick(cs: "Navázat", en: "Continue") }
     public static var editTimeAndDescription: String { pick(cs: "Uprav čas a popis", en: "Edit time and description") }
@@ -45,7 +45,7 @@ public enum Strings {
     public static var saved: String { pick(cs: "Ušetřeno", en: "Saved") }
     public static func actualVsEstimate(actual: String, estimate: String) -> String { pick(cs: "Reálně \(actual) · Odhad \(estimate)", en: "Actual \(actual) · Estimate \(estimate)") }
     public static var editEstimate: String { pick(cs: "Upravit odhad…", en: "Edit estimate…") }
-    public static var estimateWithoutAIHours: String { pick(cs: "Odhad bez AI (hodiny)", en: "Estimate without AI (hours)") }
+    public static var estimateWithoutAIHours: String { pick(cs: "Odhad bez AI", en: "Estimate without AI") }
     public static var cancel: String { pick(cs: "Zrušit", en: "Cancel") }
 
     // MARK: - DailyReviewScheduler

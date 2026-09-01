@@ -247,7 +247,7 @@ struct WeekView: View {
                 Text(day.date, format: .dateTime.weekday(.abbreviated).day())
                     .font(.caption).bold()
                 if isWorkday {
-                    Text(String(format: "%.1fh", totalHours))
+                    Text(DurationFormatter.hoursMinutes(totalHours))
                         .font(.caption2)
                         .foregroundStyle(metTarget ? .green : .secondary)
                 }
@@ -375,7 +375,7 @@ struct WeekView: View {
         let projectName = projects[tracking.projectId]?.name ?? "?"
 
         return VStack(alignment: .leading, spacing: 2) {
-            Text(Strings.runningLabel(project: projectName, hours: String(format: "%.1fh", elapsedHours)))
+            Text(Strings.runningLabel(project: projectName, hours: DurationFormatter.hoursMinutes(elapsedHours)))
                 .font(.system(size: 8))
                 .bold()
                 .foregroundStyle(.green)
@@ -484,7 +484,7 @@ struct WeekView: View {
     }
 
     private func durationLabel(_ block: Block) -> String {
-        String(format: "%.1fh", displayHours(for: block.duration / 3600))
+        DurationFormatter.hoursMinutes(displayHours(for: block.duration / 3600))
     }
 
     private func reportBug() {

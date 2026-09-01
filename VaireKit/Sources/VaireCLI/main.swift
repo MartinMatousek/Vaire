@@ -14,7 +14,7 @@ enum CLIError: Error, CustomStringConvertible {
 func run() throws {
     let arguments = CommandLine.arguments.dropFirst()
     guard let command = arguments.first else {
-        throw CLIError.usage("usage: vaire <start-session|stop-session|is-tracking|delete-block> ...")
+        throw CLIError.usage("usage: vaire <start-session|stop-session|is-tracking|adjust-block|find-active|continue-session|set-estimate|has-estimate|adjust-estimate|delete-block|is-hooks-enabled|get-language|set-language> ...")
     }
 
     let db = try AppDatabase(path: SharedStorage.databasePath())
@@ -77,16 +77,16 @@ func runStopSession(db: AppDatabase, args: [String]) throws {
         return
     }
 
-    let hours = result.block.duration / 3600
-    let h = Int(hours)
-    let m = Int((hours - Double(h)) * 60)
+    let actualHours = result.block.duration / 3600
     print("project=\(result.project.name)")
     print("duration_seconds=\(Int(result.block.duration))")
-    print("duration_human=\(h)h \(m)m")
+    print("duration_human=\(DurationFormatter.hoursMinutes(actualHours))")
     print("note=\(result.block.note ?? "")")
     print("block_id=\(result.block.id.uuidString)")
     if let estimate = result.block.estimatedHoursWithoutAI {
         print("estimated_hours_without_ai=\(estimate)")
+        print("estimated_human=\(DurationFormatter.hoursMinutes(estimate))")
+        print("saved_human=\(DurationFormatter.hoursMinutes(estimate - actualHours))")
     }
     DataChangeNotifier.post()
 }

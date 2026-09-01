@@ -45,7 +45,7 @@ struct VaireWidgetEntryView: View {
                 ringAndTotal
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(entry.projectTotals.prefix(4), id: \.project.id) { total in
-                        Text(Strings.widgetProjectLine(project: total.project.name, hours: String(format: "%.1fh", total.hours)))
+                        Text(Strings.widgetProjectLine(project: total.project.name, hours: DurationFormatter.hoursMinutes(total.hours)))
                             .font(.caption2)
                             .lineLimit(1)
                     }
@@ -62,7 +62,7 @@ struct VaireWidgetEntryView: View {
         VStack(spacing: 6) {
             DayProgressRing(hoursWorked: entry.hoursWorked, targetHours: entry.targetHours)
                 .frame(width: 56, height: 56)
-            Text(String(format: "%.1fh", entry.hoursWorked))
+            Text(DurationFormatter.hoursMinutes(entry.hoursWorked))
                 .font(.headline)
             Text(Strings.widgetTodaySuffix)
                 .font(.caption2)

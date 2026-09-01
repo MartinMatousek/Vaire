@@ -107,10 +107,7 @@ struct ContentView: View {
     }
 
     private func elapsedLabel(_ project: Project) -> String {
-        let hours = timer.elapsed(projectId: project.id) / 3600
-        let h = Int(hours)
-        let m = Int((hours - Double(h)) * 60)
-        return "\(h)h \(m)m"
+        DurationFormatter.hoursMinutes(timer.elapsed(projectId: project.id) / 3600)
     }
 
     private var runningHoursAcrossAllProjects: Double {
@@ -119,9 +116,7 @@ struct ContentView: View {
 
     private var formattedTotal: String {
         let hours = todayHours + runningHoursAcrossAllProjects
-        let h = Int(hours)
-        let m = Int((hours - Double(h)) * 60)
-        return "\(h)h \(m)m / 8h"
+        return "\(DurationFormatter.hoursMinutes(hours)) / 8h"
     }
 
     private func noteEditorBeforeStart(projectId: UUID) -> some View {
@@ -176,11 +171,8 @@ struct ContentView: View {
     private func resumeOptionLabel(_ block: Block) -> String {
         let timeFormatter = DateFormatter()
         timeFormatter.timeStyle = .short
-        let hours = block.duration / 3600
-        let h = Int(hours)
-        let m = Int((hours - Double(h)) * 60)
         let timeLabel = timeFormatter.string(from: block.start)
-        let durationLabel = "\(h)h \(m)m"
+        let durationLabel = DurationFormatter.hoursMinutes(block.duration / 3600)
         if let note = block.note, !note.isEmpty {
             return "\(timeLabel) (\(durationLabel)) — \(note)"
         }
@@ -233,10 +225,7 @@ struct ContentView: View {
     }
 
     private func realElapsedLabel(_ block: Block) -> String {
-        let hours = block.duration / 3600
-        let h = Int(hours)
-        let m = Int((hours - Double(h)) * 60)
-        return "\(h)h \(m)m"
+        DurationFormatter.hoursMinutes(block.duration / 3600)
     }
 
     private func handleTap(for projectId: UUID) {

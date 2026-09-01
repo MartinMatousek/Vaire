@@ -19,6 +19,11 @@ if [ -z "$session_id" ]; then
     exit 0
 fi
 
+# The Stop hook's per-session block counter (vaire-stop-enforce-estimate.sh)
+# is never cleaned up on its own — remove it here so /tmp doesn't accumulate
+# one file per session forever.
+rm -f "/tmp/vaire-stop-hook-counters/$session_id"
+
 if ! command -v vaire >/dev/null 2>&1; then
     exit 0
 fi

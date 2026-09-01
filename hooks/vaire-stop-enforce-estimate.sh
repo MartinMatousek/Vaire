@@ -3,7 +3,9 @@
 # session is tracking time and no estimate has been recorded yet, blocks
 # the turn (up to MAX_BLOCKS times) to prompt Claude to call
 # `vaire set-estimate` before the turn actually ends. Once an
-# estimate is set, this becomes a no-op for the rest of the session.
+# estimate is set, this becomes a no-op for the rest of the session —
+# later revisions as the session's work grows are Claude's own standing
+# instruction (see CLAUDE.md), not something this hook re-enforces.
 #
 # SessionEnd can't do this: its exit code is ignored entirely (verified —
 # it has no blocking capability), so by the time a session is truly
@@ -62,5 +64,5 @@ fi
 
 echo $((count + 1)) > "$counter_file"
 
-echo "Vaire: before ending/clearing, call 'vaire set-estimate \"$session_id\" <hours>' with an estimate of how long this task would take without AI assistance — use a small honest number even for minor work (e.g. 0.1), never 0. Then continue." >&2
+echo "Vaire: before ending/clearing, call 'vaire set-estimate \"$session_id\" <hours>' with an estimate of how long the work done so far would take without AI assistance, including manual testing before pushing — use a small honest number even for minor work (e.g. 0.1), never 0. Re-run it later to replace this number after any further meaningful change. Then continue." >&2
 exit 2

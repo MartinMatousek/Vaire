@@ -22,12 +22,12 @@ stop_and_review() {
     note=$(echo "$result" | grep '^note=' | cut -d= -f2-)
     block_id=$(echo "$result" | grep '^block_id=' | cut -d= -f2-)
     estimated_hours=$(echo "$result" | grep '^estimated_hours_without_ai=' | cut -d= -f2-)
+    estimated_human=$(echo "$result" | grep '^estimated_human=' | cut -d= -f2-)
+    saved_human=$(echo "$result" | grep '^saved_human=' | cut -d= -f2-)
 
     added_value_line=""
     if [ -n "$estimated_hours" ]; then
-        actual_hours=$(awk "BEGIN { printf \"%.2f\", $duration_seconds / 3600 }")
-        saved_hours=$(awk "BEGIN { printf \"%.1f\", $estimated_hours - $actual_hours }")
-        added_value_line="${L_ESTIMATE_WITHOUT_AI}${estimated_hours}${L_SAVED_SUFFIX}${saved_hours}${L_HOURS_SUFFIX}"
+        added_value_line="${L_ESTIMATE_WITHOUT_AI}${estimated_human}${L_SAVED_SUFFIX}${saved_human}${L_HOURS_SUFFIX}"
     fi
 
     # Pass all user-controlled/dynamic strings as `on run argv` arguments
@@ -94,9 +94,12 @@ APPLESCRIPT
         fi
 
         if [ -n "$block_id" ]; then
-            default_estimate="${estimated_hours:-0}"
-            new_estimate=$(prompt_for_decimal "$L_ESTIMATE_HOURS_COLON" "$default_estimate")
-            [ -n "$new_estimate" ] && vaire adjust-estimate "$block_id" "$new_estimate" >/dev/null 2>&1
+            default_estimate_minutes=$(awk "BEGIN { printf \"%.0f\", ${estimated_hours:-0} * 60 }")
+            new_estimate_minutes=$(prompt_for_number "$L_ESTIMATE_HOURS_COLON" "$default_estimate_minutes")
+            if [ -n "$new_estimate_minutes" ]; then
+                new_estimate=$(awk "BEGIN { printf \"%.4f\", $new_estimate_minutes / 60 }")
+                vaire adjust-estimate "$block_id" "$new_estimate" >/dev/null 2>&1
+            fi
         fi
     fi
 }
@@ -136,40 +139,5 @@ APPLESCRIPT
         # silently falling back to the default, so a typo doesn't silently
         # save the wrong time.
         osascript -e "display alert \"$L_NUMBER_ONLY_WARNING\" as warning" >/dev/null 2>&1
-    done
-}
-
-# Like prompt_for_number but accepts decimals (e.g. "2.5") for hour
-# estimates. Returns empty string on cancel — callers treat that as
-# "leave the estimate unchanged" rather than clearing it.
-prompt_for_decimal() {
-    local label="$1"
-    local default_value="$2"
-    local value="$default_value"
-
-    while true; do
-        value=$(osascript - "$label" "$value" "$L_TITLE" <<'APPLESCRIPT' 2>/dev/null
-on run argv
-    set labelText to item 1 of argv
-    set defaultVal to item 2 of argv
-    set titleText to item 3 of argv
-    try
-        display dialog labelText default answer defaultVal with title titleText
-        return text returned of result
-    on error
-        return ""
-    end try
-end run
-APPLESCRIPT
-        )
-
-        [ -z "$value" ] && { echo ""; return; }
-
-        if [[ "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-            echo "$value"
-            return
-        fi
-
-        osascript -e "display alert \"$L_DECIMAL_WARNING\" as warning" >/dev/null 2>&1
     done
 }
