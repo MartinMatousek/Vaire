@@ -5,20 +5,22 @@ public enum SharedStorageError: Error {
 }
 
 public enum SharedStorage {
-    public static let appGroupIdentifier = "group.com.martinmatousek.vaire"
-
-    /// Path to the shared SQLite database inside the App Group container,
-    /// so the main app and the widget extension read and write the same
-    /// data instead of maintaining separate copies. Throws instead of
-    /// crashing when the container isn't mounted yet (e.g. Xcode's widget
-    /// preview host runs before entitlements are fully resolved) — callers
+    /// Path to the shared SQLite database under the user's Application
+    /// Support directory, so the main app, the widget extension, and the
+    /// CLI all read and write the same data instead of maintaining
+    /// separate copies. Deliberately not an App Group container: App
+    /// Groups require a provisioning-profile-backed signing identity, which
+    /// only works on machines registered to the same Apple Developer team —
+    /// a plain per-user directory works ad-hoc-signed on any Mac. Throws
+    /// instead of crashing when the directory can't be created — callers
     /// should fall back to an empty/placeholder state rather than take the
     /// whole preview or widget host down with them.
     public static func databasePath() throws -> String {
-        guard let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) else {
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             throw SharedStorageError.containerUnavailable
         }
-        try FileManager.default.createDirectory(at: containerURL, withIntermediateDirectories: true)
-        return containerURL.appendingPathComponent("vaire.sqlite").path
+        let directory = appSupport.appendingPathComponent("Vaire", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory.appendingPathComponent("vaire.sqlite").path
     }
 }
