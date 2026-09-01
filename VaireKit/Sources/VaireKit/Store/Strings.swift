@@ -64,21 +64,17 @@ public enum Strings {
 
     public static var projects: String { pick(cs: "Projekty", en: "Projects") }
     public static var track: String { pick(cs: "Sledovat", en: "Track") }
-    public static var importFromGit: String { pick(cs: "Import z gitu", en: "Import from git") }
-    public static var importFromGitHelp: String { pick(cs: "Vytvoří časové bloky z tvých commitů v tomto repozitáři za posledních 90 dní — pro čas odpracovaný mimo Claude Code.", en: "Creates time blocks from your commits in this repository over the last 90 days — for work done outside Claude Code.") }
     public static var name: String { pick(cs: "Název", en: "Name") }
     public static var path: String { pick(cs: "Cesta", en: "Path") }
     public static var choose: String { pick(cs: "Vybrat…", en: "Choose…") }
     public static var add: String { pick(cs: "Přidat", en: "Add") }
     public static var addProjectHint: String { pick(cs: "Nově přidaný projekt se rovnou sleduje pomocí Claude Code hooků. Zaškrtnutí „Sledovat\u{201C} zapíná/vypíná sledování pro existující projekty.", en: "A newly added project is tracked by Claude Code hooks right away. Checking \u{201C}Track\u{201D} turns tracking on/off for existing projects.") }
+    public static var gitImportMovedHint: String { pick(cs: "Import z gitu najdeš v okně Týden.", en: "Import from git now lives in the Week window.") }
     public static var exportCSV: String { pick(cs: "Export CSV", en: "Export CSV") }
     public static var exportJSON: String { pick(cs: "Export JSON", en: "Export JSON") }
     public static func addProjectFailed(_ message: String) -> String { pick(cs: "Nepodařilo se přidat projekt: \(message)", en: "Failed to add project: \(message)") }
     public static func trackToggleFailed(_ message: String) -> String { pick(cs: "Nepodařilo se změnit sledování: \(message)", en: "Failed to change tracking: \(message)") }
     public static func exportFailed(_ message: String) -> String { pick(cs: "Export selhal: \(message)", en: "Export failed: \(message)") }
-    public static var importing: String { pick(cs: "Importuji…", en: "Importing…") }
-    public static func importSummary(commits: Int, blocks: Int) -> String { pick(cs: "Naimportováno \(commits) commitů, \(blocks) bloků.", en: "Imported \(commits) commits, \(blocks) blocks.") }
-    public static func importFailed(_ message: String) -> String { pick(cs: "Import selhal: \(message)", en: "Import failed: \(message)") }
     public static var languageLabel: String { pick(cs: "Jazyk", en: "Language") }
     public static var languageCzech: String { pick(cs: "Čeština", en: "Czech") }
     public static var languageEnglish: String { pick(cs: "Angličtina", en: "English") }
@@ -109,6 +105,22 @@ public enum Strings {
     public static var deleteBlockConfirmMessage: String { pick(cs: "Tuto akci lze vzít zpět tlačítkem Zpět.", en: "You can undo this with the Undo button.") }
     public static var actionMove: String { pick(cs: "Přesun", en: "Move") }
     public static var actionDelete: String { pick(cs: "Smazání", en: "Delete") }
+
+    // MARK: - Git import review sheet
+
+    public static var importFromGit: String { pick(cs: "Import z gitu…", en: "Import from git…") }
+    public static var importFromGitHelp: String { pick(cs: "Projde commity za zobrazený týden a necháš tě je před uložením zkontrolovat.", en: "Walks through commits for the shown week and lets you review them before saving.") }
+    public static var gitImportSheetTitle: String { pick(cs: "Import z gitu", en: "Import from git") }
+    public static var gitImportProjectLabel: String { pick(cs: "Projekt", en: "Project") }
+    public static var gitImportLoading: String { pick(cs: "Načítám commity…", en: "Loading commits…") }
+    public static func gitImportFailed(_ message: String) -> String { pick(cs: "Nepodařilo se načíst commity: \(message)", en: "Failed to load commits: \(message)") }
+    public static var gitImportNoCommits: String { pick(cs: "Žádné commity tohoto autora v tomto týdnu.", en: "No commits by you in this week.") }
+    public static var gitImportReplaceExisting: String { pick(cs: "Nahradit dříve importované bloky za tento týden", en: "Replace previously imported blocks for this week") }
+    public static var gitImportDiscard: String { pick(cs: "Zahodit", en: "Discard") }
+    public static var gitImportInclude: String { pick(cs: "Zahrnout", en: "Include") }
+    public static func gitImportCandidateCount(_ count: Int) -> String { pick(cs: "\(count) záznamů k importu", en: "\(count) entries to import") }
+    public static var gitImportCommit: String { pick(cs: "Importovat", en: "Import") }
+    public static func gitImportSuccess(_ count: Int) -> String { pick(cs: "Naimportováno \(count) záznamů.", en: "Imported \(count) entries.") }
 
     // MARK: - Widget
 

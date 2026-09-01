@@ -26,6 +26,7 @@ struct WeekView: View {
     @State private var hasEstimateDraft: Bool = false
     @State private var showingTimeSaved = false
     @State private var showingDeleteConfirmation = false
+    @State private var showingGitImport = false
 
     private let targetHours: Double = 8
     private let defaultPixelsPerHour: CGFloat = 30
@@ -50,6 +51,13 @@ struct WeekView: View {
     private var weekStart: Date {
         let thisWeekStart = Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
         return Calendar.current.date(byAdding: .weekOfYear, value: weekOffset, to: thisWeekStart) ?? thisWeekStart
+    }
+
+    // Not filtered to hooksEnabled: git import exists specifically for
+    // work done outside Claude Code, which is often the projects that
+    // don't have hooks tracking on at all.
+    private var allProjectsSorted: [Project] {
+        projects.values.sorted { $0.name < $1.name }
     }
 
     private var weekRangeLabel: String {
@@ -91,6 +99,16 @@ struct WeekView: View {
                 }
 
                 Spacer()
+
+                Button(Strings.importFromGit) {
+                    showingGitImport = true
+                }
+                .buttonStyle(.link)
+                .help(Strings.importFromGitHelp)
+                .disabled(allProjectsSorted.isEmpty)
+                .sheet(isPresented: $showingGitImport) {
+                    GitImportSheet(weekStart: weekStart, projects: allProjectsSorted, onImported: reload)
+                }
 
                 Button(Strings.reportBug) {
                     reportBug()

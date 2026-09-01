@@ -1,6 +1,5 @@
 import SwiftUI
 import UniformTypeIdentifiers
-import WidgetKit
 import VaireKit
 
 struct SettingsView: View {
@@ -8,7 +7,6 @@ struct SettingsView: View {
     @State private var newProjectName = ""
     @State private var newProjectPath = ""
     @State private var exportError: String?
-    @State private var importStatus: String?
     @State private var selectedLanguage: AppLanguage = AppLanguage.current()
 
     var body: some View {
@@ -39,15 +37,9 @@ struct SettingsView: View {
                     Spacer()
                     Toggle(Strings.track, isOn: hooksEnabledBinding(for: project))
                         .toggleStyle(.checkbox)
-                    Button(Strings.importFromGit) { importGitHistory(for: project) }
-                        .help(Strings.importFromGitHelp)
                 }
             }
             .frame(minHeight: 120, maxHeight: 200)
-
-            if let importStatus {
-                Text(importStatus).font(.caption).foregroundStyle(.secondary)
-            }
 
             HStack {
                 TextField(Strings.name, text: $newProjectName)
@@ -58,6 +50,10 @@ struct SettingsView: View {
             }
 
             Text(Strings.addProjectHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Text(Strings.gitImportMovedHint)
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -163,39 +159,6 @@ struct SettingsView: View {
         } catch {
             exportError = Strings.exportFailed(error.localizedDescription)
         }
-    }
-
-    private func importGitHistory(for project: Project) {
-        importStatus = Strings.importing
-        do {
-            let author = try gitConfigValue(key: "user.email", repoPath: project.path)
-            let since = Calendar.current.date(byAdding: .day, value: -90, to: .now) ?? .distantPast
-            let commits = try GitImporter.fetchCommits(repoPath: project.path, author: author, since: since)
-            let sessionizedBlocks = GitImporter.blocks(from: commits)
-
-            let candidates = sessionizedBlocks.map {
-                CandidateBlock(projectId: project.id, start: $0.start, end: $0.end, source: .gitCommit)
-            }
-            let merged = BlockMerger.merge(candidates)
-            try ReimportGuard.reconcile(db: AppEnvironment.db, projectId: project.id, candidates: merged)
-
-            importStatus = Strings.importSummary(commits: commits.count, blocks: merged.count)
-            WidgetCenter.shared.reloadAllTimelines()
-        } catch {
-            importStatus = Strings.importFailed(error.localizedDescription)
-        }
-    }
-
-    private func gitConfigValue(key: String, repoPath: String) throws -> String {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-        process.arguments = ["-C", repoPath, "config", key]
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        try process.run()
-        process.waitUntilExit()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 }
 

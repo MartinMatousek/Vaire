@@ -16,6 +16,20 @@ public enum GitImporterError: Error {
     case processFailed(exitCode: Int32, stderr: String)
 }
 
+/// Reads a git config value (e.g. "user.email") for a repository, used to
+/// scope commit imports to commits authored by the current user.
+public func gitConfigValue(key: String, repoPath: String) throws -> String {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+    process.arguments = ["-C", repoPath, "config", key]
+    let pipe = Pipe()
+    process.standardOutput = pipe
+    try process.run()
+    process.waitUntilExit()
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+}
+
 public protocol CommitLogRunning: Sendable {
     func run(repoPath: String, author: String, since: Date) throws -> String
 }
@@ -116,6 +130,45 @@ public enum GitImporter {
             let start = group.first!.date.addingTimeInterval(-preCommitLead)
             let end = group.last!.date
             return SessionizedBlock(start: start, end: end, cwd: nil, gitBranch: nil)
+        }
+    }
+
+    /// A sessionized block paired with the commit subjects that produced
+    /// it, so a review UI can show the user what work the block represents
+    /// before it's written — plain `blocks(from:)` throws that context away.
+    public struct CandidateWithCommits: Equatable, Sendable {
+        public let block: SessionizedBlock
+        public let commits: [GitCommit]
+
+        public var suggestedNote: String {
+            commits.map(\.subject).joined(separator: "; ")
+        }
+    }
+
+    public static func candidatesWithCommits(
+        from commits: [GitCommit],
+        idleGap: TimeInterval = 15 * 60,
+        preCommitLead: TimeInterval = 20 * 60
+    ) -> [CandidateWithCommits] {
+        guard !commits.isEmpty else { return [] }
+
+        let sorted = commits.sorted { $0.date < $1.date }
+        var groups: [[GitCommit]] = [[sorted[0]]]
+
+        for commit in sorted.dropFirst() {
+            let lastGroupEnd = groups[groups.count - 1].last!.date
+            if commit.date.timeIntervalSince(lastGroupEnd) > idleGap {
+                groups.append([commit])
+            } else {
+                groups[groups.count - 1].append(commit)
+            }
+        }
+
+        return groups.map { group in
+            let start = group.first!.date.addingTimeInterval(-preCommitLead)
+            let end = group.last!.date
+            let block = SessionizedBlock(start: start, end: end, cwd: nil, gitBranch: nil)
+            return CandidateWithCommits(block: block, commits: group)
         }
     }
 }
