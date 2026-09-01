@@ -10,7 +10,7 @@ packages:
 
 settings:
   base:
-    MARKETING_VERSION: "1.0.1"
+    MARKETING_VERSION: "1.0.2"
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.10"
     DEVELOPMENT_TEAM: LG4P6Q3UG5
@@ -64,6 +64,6 @@ targets:
       path: VaireWidget/Info.plist
       properties:
         CFBundleDisplayName: Vaire Widget
-        CFBundleShortVersionString: "1.0.1"
+        CFBundleShortVersionString: "1.0.2"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
