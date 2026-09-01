@@ -6,7 +6,6 @@ import VaireKit
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSLog("Vaire: applicationDidFinishLaunching")
         NSApp.setActivationPolicy(.accessory)
 
         // MenuBarExtra has no WindowGroup scene for SwiftUI's onOpenURL to
@@ -40,18 +39,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func handleGetURL(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
-        guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue else {
-            NSLog("Vaire: handleGetURL got no urlString from event")
-            return
-        }
-        NSLog("Vaire: handleGetURL urlString=\(urlString)")
-        guard let components = URLComponents(string: urlString),
+        guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
+              let components = URLComponents(string: urlString),
               components.scheme == "vaire" else {
-            NSLog("Vaire: handleGetURL failed to parse or wrong scheme")
+            NSLog("Vaire: handleGetURL received an unparseable or non-vaire:// event")
             return
         }
-
-        NSLog("Vaire: handleGetURL host=\(components.host ?? "nil") queryItems=\(String(describing: components.queryItems))")
 
         switch components.host {
         case "edit-block":
@@ -64,11 +57,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 NSLog("Vaire: start-session missing session or cwd query item")
                 return
             }
-            NSLog("Vaire: presenting start-session editor sessionId=\(sessionId) cwd=\(cwd)")
             StartSessionWindowController.shared.presentEditor(sessionId: sessionId, cwd: cwd)
         default:
-            NSLog("Vaire: unknown host \(components.host ?? "nil")")
-            break
+            NSLog("Vaire: unknown vaire:// host \(components.host ?? "nil")")
         }
     }
 }
