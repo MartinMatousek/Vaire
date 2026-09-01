@@ -1,0 +1,113 @@
+# Vaire
+
+*English: [README.md](README.md)*
+
+Automatický sledovač času pro macOS. Vaire odvozuje odpracovaný čas z
+přepisů Claude Code session (`~/.claude/projects/*/*.jsonl`) a z historie
+git commitů, s ručním zadáváním a úpravami navrch. Aplikace v menu baru +
+WidgetKit widget s denním ukazatelem postupu.
+
+## Co umí
+
+- **Automaticky sleduje čas** z Claude Code sessions přes
+  `SessionStart`/`SessionEnd` hooky — žádné ruční spouštění/zastavování,
+  když pracuješ s Claude Code.
+- **Ruční start/stop** pro jednotlivé projekty z menu baru, pro práci mimo
+  Claude Code.
+- **Týdenní pohled** s rozšiřitelnou časovou osou, běžící/dokončené bloky
+  vizuálně odlišené, drag-and-drop mezi dny a inline úpravy času, poznámek
+  a odhadů pracnosti.
+- **Odhady úspory času** — zaznamenává, jak dlouho by task trval bez AI,
+  porovnané s reálně naloggovaným časem, aby bylo vidět přidanou hodnotu.
+- **Ukazatel postupu v menu baru** a desktopový widget s dnešními
+  odpracovanými hodinami vůči dennímu cíli.
+
+## Instalace
+
+Vyžaduje macOS 14 nebo novější.
+
+```
+brew tap MartinMatousek/vaire
+brew install --cask vaire
+```
+
+Vaire není notarizovaný (zatím žádný placený Apple Developer účet), takže
+macOS zablokuje první spuštění. Jak ho otevřít:
+
+1. Zkus Vaire otevřít — Gatekeeper to odmítne a nenabídne přímý obchvat.
+2. Jdi do **Nastavení systému → Soukromí a zabezpečení**, sjeď dolů a
+   klikni na **Přesto otevřít** vedle upozornění na Vaire.
+3. Potvrď v dialogu, který se objeví. Vaire pak už bude spouštět normálně.
+
+### Integrace s Claude Code (volitelné)
+
+Aby Vaire automaticky loggoval čas z Claude Code sessions, nainstaluj CLI
+a zaregistruj hooky:
+
+```
+./scripts/install_cli.sh
+```
+
+Tím se nainstaluje `vaire` do `~/.local/bin/`. Pak přidej skripty ze
+složky `hooks/` do `~/.claude/settings.json` pod `SessionStart` a
+`SessionEnd`, s velkorysým `timeout` (hooky zobrazují interaktivní
+dialogy — 120s je bezpečná rezerva). Viz `hooks/` pro skripty a sekci o
+struktuře projektu níže pro popis, co který dělá.
+
+Hooky sledují jen repozitáře, které jsi výslovně zapnul — u ostatních
+`cwd` zůstávají zticha místo aby se ptaly při každé session. Jak zapnout
+repozitář:
+
+1. Otevři okno Nastavení ve Vaire.
+2. Přidej repozitář, pokud tam ještě není — buď tam už bude z dřívější
+   Claude Code session (automaticky vytvořený, ale vypnutý), nebo vyber
+   jeho složku přes **Choose…** a klikni na **Add**.
+3. Zaškrtni vedle něj **Track**.
+
+Jen repozitáře se zaškrtnutým **Track** budou zobrazovat dialogy
+SessionStart / SessionEnd a loggovat čas. Seznam projektů v menu baru
+taky zobrazuje jen sledované repozitáře, každý s odkazem **Remove** pro
+odhlášení (vypnutý, dokud běží jeho časovač) — funguje stejně jako
+odškrtnutí **Track** v Nastavení.
+
+### Jazyk
+
+Rozhraní Vaire (aplikace i dialogy z hooků) je dostupné v angličtině a
+češtině. Výchozí je angličtina; na češtinu přepneš v Nastavení →
+**Language** — změna se projeví po restartu aplikace.
+
+## Struktura projektu
+
+- `VaireKit/` — sdílený Swift Package (model, SQLite úložiště,
+  importéry, slučovací logika, export). Sestavitelný a testovatelný
+  samostatně:
+  ```
+  cd VaireKit && swift test
+  ```
+- `VaireApp/` — aplikace v menu baru
+- `VaireWidget/` — WidgetKit extension
+- `VaireKit/Sources/VaireCLI/` — `vaire`, CLI most mezi Claude Code hooky
+  a sdílenou SQLite databází v `~/Library/Application Support/Vaire/`
+- `hooks/` — skripty `SessionStart`/`SessionEnd` hooků pro automatický
+  logging času z Claude Code sessions
+- `project.yml` — manifest pro [XcodeGen](https://github.com/yonaskolb/XcodeGen);
+  `Vaire.xcodeproj` se z něj generuje a není v repozitáři
+
+## Vývoj
+
+```
+brew install xcodegen   # jednorázově
+xcodegen generate
+open Vaire.xcodeproj
+```
+
+Nebo z příkazové řádky:
+
+```
+xcodebuild -project Vaire.xcodeproj -scheme VaireApp \
+  -destination 'platform=macOS' build
+```
+
+## Licence
+
+GPL-3.0 — viz [LICENSE](LICENSE).

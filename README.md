@@ -1,5 +1,7 @@
 # Vaire
 
+*Čeština: [README.cs.md](README.cs.md)*
+
 Automatic time tracker for macOS. Vaire derives worked time from Claude Code
 session transcripts (`~/.claude/projects/*/*.jsonl`) and git commit history,
 with manual entry and editing on top. Menu bar app + WidgetKit widget with a
@@ -53,6 +55,28 @@ This installs `vaire` to `~/.local/bin/`. Then add the scripts under
 dialogs — 120s is a safe margin). See `hooks/` for the scripts and the
 project structure section below for what each one does.
 
+Hooks only track repositories you've explicitly opted in — they stay
+silent for every other `cwd` instead of prompting on each session. To
+enable a repository:
+
+1. Open Vaire's Settings window.
+2. Add the repository if it isn't listed yet — either it will already be
+   there from a prior Claude Code session (auto-created but disabled), or
+   pick its folder with **Choose…** and click **Add**.
+3. Check the **Track** box next to it.
+
+Only repositories with **Track** checked will show the SessionStart /
+SessionEnd dialogs and log time. The menu bar dropdown's project list only
+shows followed repositories too, each with a **Remove** link to unfollow
+it (disabled while its timer is running) — equivalent to unchecking
+**Track** in Settings.
+
+### Language
+
+Vaire's UI (app and hook dialogs) is available in English and Czech.
+English is the default; switch to Czech in Settings → **Language** — the
+change takes effect after restarting the app.
+
 ## Project structure
 
 - `VaireKit/` — shared Swift Package (model, SQLite store, importers,
@@ -63,7 +87,8 @@ project structure section below for what each one does.
 - `VaireApp/` — the menu bar app
 - `VaireWidget/` — WidgetKit extension
 - `VaireKit/Sources/VaireCLI/` — `vaire`, the CLI bridge between Claude Code
-  hooks and the shared App Group database
+  hooks and the shared SQLite database in
+  `~/Library/Application Support/Vaire/`
 - `hooks/` — `SessionStart`/`SessionEnd` hook scripts for automatic time
   logging from Claude Code sessions
 - `project.yml` — [XcodeGen](https://github.com/yonaskolb/XcodeGen)
