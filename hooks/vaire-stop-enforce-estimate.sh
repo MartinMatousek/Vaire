@@ -62,5 +62,5 @@ fi
 
 echo $((count + 1)) > "$counter_file"
 
-echo "Vaire: před ukončením/clearem zavolej 'vaire set-estimate \"$session_id\" <hodiny>' s odhadem, kolik by tenhle task trval bez AI asistence — i pro drobnost použij malé číslo (např. 0.1), nikdy 0. Pak pokračuj." >&2
+echo "Vaire: before ending/clearing, call 'vaire set-estimate \"$session_id\" <hours>' with an estimate of how long this task would take without AI assistance — use a small honest number even for minor work (e.g. 0.1), never 0. Then continue." >&2
 exit 2

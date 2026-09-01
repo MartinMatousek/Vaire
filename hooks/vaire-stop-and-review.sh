@@ -11,6 +11,8 @@
 stop_and_review() {
     local session_id="$1"
 
+    source "$(dirname "${BASH_SOURCE[0]}")/vaire-i18n.sh"
+
     result=$(vaire stop-session "$session_id" 2>/dev/null)
     [ -z "$result" ] && return 0
 
@@ -25,50 +27,58 @@ stop_and_review() {
     if [ -n "$estimated_hours" ]; then
         actual_hours=$(awk "BEGIN { printf \"%.2f\", $duration_seconds / 3600 }")
         saved_hours=$(awk "BEGIN { printf \"%.1f\", $estimated_hours - $actual_hours }")
-        added_value_line="Odhad bez AI: ${estimated_hours}h (ušetřeno ~${saved_hours}h)"
+        added_value_line="${L_ESTIMATE_WITHOUT_AI}${estimated_hours}${L_SAVED_SUFFIX}${saved_hours}${L_HOURS_SUFFIX}"
     fi
 
     # Pass all user-controlled/dynamic strings as `on run argv` arguments
     # instead of interpolating them into the AppleScript source — the note
     # can contain quotes, backslashes, or non-ASCII text that would
     # otherwise break the script or enable injection.
-    choice=$(osascript - "$project" "$duration_human" "$note" "$added_value_line" <<'APPLESCRIPT' 2>/dev/null
+    choice=$(osascript - "$project" "$duration_human" "$note" "$added_value_line" "$L_WORKED_ON_PREFIX" "$L_NOTE_LABEL" "$L_DISCARD" "$L_EDIT" "$L_OK" "$L_SUMMARY_TITLE" <<'APPLESCRIPT' 2>/dev/null
 on run argv
     set proj to item 1 of argv
     set dur to item 2 of argv
     set noteText to item 3 of argv
     set addedValue to item 4 of argv
-    set msg to "Odpracováno na " & proj & ": " & dur & return & "Poznámka: " & noteText
+    set workedOnPrefix to item 5 of argv
+    set noteLabel to item 6 of argv
+    set discardBtn to item 7 of argv
+    set editBtn to item 8 of argv
+    set okBtn to item 9 of argv
+    set titleText to item 10 of argv
+    set msg to workedOnPrefix & proj & ": " & dur & return & noteLabel & noteText
     if addedValue is not "" then
         set msg to msg & return & addedValue
     end if
     try
-        display dialog msg buttons {"Zahodit", "Upravit", "OK"} default button "OK" with title "Vaire — shrnutí"
+        display dialog msg buttons {discardBtn, editBtn, okBtn} default button okBtn with title titleText
         return button returned of result
     on error
-        return "OK"
+        return okBtn
     end try
 end run
 APPLESCRIPT
     )
 
-    if [ "$choice" = "Zahodit" ]; then
+    if [ "$choice" = "$L_DISCARD" ]; then
         if [ -n "$block_id" ]; then
             vaire delete-block "$block_id" >/dev/null 2>&1
         fi
         return 0
     fi
 
-    if [ "$choice" = "Upravit" ]; then
+    if [ "$choice" = "$L_EDIT" ]; then
         default_minutes=$((duration_seconds / 60))
 
-        new_minutes=$(prompt_for_number "Kolik minut opravdu?" "$default_minutes")
+        new_minutes=$(prompt_for_number "$L_HOW_MANY_MINUTES" "$default_minutes")
 
-        new_note=$(osascript - "$note" <<'APPLESCRIPT' 2>/dev/null
+        new_note=$(osascript - "$note" "$L_NOTE_COLON" "$L_TITLE" <<'APPLESCRIPT' 2>/dev/null
 on run argv
     set defaultVal to item 1 of argv
+    set labelText to item 2 of argv
+    set titleText to item 3 of argv
     try
-        display dialog "Poznámka:" default answer defaultVal with title "Vaire"
+        display dialog labelText default answer defaultVal with title titleText
         return text returned of result
     on error
         return ""
@@ -85,7 +95,7 @@ APPLESCRIPT
 
         if [ -n "$block_id" ]; then
             default_estimate="${estimated_hours:-0}"
-            new_estimate=$(prompt_for_decimal "Odhad bez AI (hodiny):" "$default_estimate")
+            new_estimate=$(prompt_for_decimal "$L_ESTIMATE_HOURS_COLON" "$default_estimate")
             [ -n "$new_estimate" ] && vaire adjust-estimate "$block_id" "$new_estimate" >/dev/null 2>&1
         fi
     fi
@@ -100,12 +110,13 @@ prompt_for_number() {
     local value="$default_value"
 
     while true; do
-        value=$(osascript - "$label" "$value" <<'APPLESCRIPT' 2>/dev/null
+        value=$(osascript - "$label" "$value" "$L_TITLE" <<'APPLESCRIPT' 2>/dev/null
 on run argv
     set labelText to item 1 of argv
     set defaultVal to item 2 of argv
+    set titleText to item 3 of argv
     try
-        display dialog labelText default answer defaultVal with title "Vaire"
+        display dialog labelText default answer defaultVal with title titleText
         return text returned of result
     on error
         return ""
@@ -124,7 +135,7 @@ APPLESCRIPT
         # Non-numeric input — re-prompt with an explicit error instead of
         # silently falling back to the default, so a typo doesn't silently
         # save the wrong time.
-        osascript -e 'display alert "Zadej prosím jen číslo." as warning' >/dev/null 2>&1
+        osascript -e "display alert \"$L_NUMBER_ONLY_WARNING\" as warning" >/dev/null 2>&1
     done
 }
 
@@ -137,12 +148,13 @@ prompt_for_decimal() {
     local value="$default_value"
 
     while true; do
-        value=$(osascript - "$label" "$value" <<'APPLESCRIPT' 2>/dev/null
+        value=$(osascript - "$label" "$value" "$L_TITLE" <<'APPLESCRIPT' 2>/dev/null
 on run argv
     set labelText to item 1 of argv
     set defaultVal to item 2 of argv
+    set titleText to item 3 of argv
     try
-        display dialog labelText default answer defaultVal with title "Vaire"
+        display dialog labelText default answer defaultVal with title titleText
         return text returned of result
     on error
         return ""
@@ -158,6 +170,6 @@ APPLESCRIPT
             return
         fi
 
-        osascript -e 'display alert "Zadej prosím číslo (např. 2.5)." as warning' >/dev/null 2>&1
+        osascript -e "display alert \"$L_DECIMAL_WARNING\" as warning" >/dev/null 2>&1
     done
 }
