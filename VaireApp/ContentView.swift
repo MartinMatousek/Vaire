@@ -219,7 +219,9 @@ struct ContentView: View {
 
             HStack {
                 Spacer()
-                Button(Strings.discard) { stoppedBlock = nil }
+                if let stoppedBlock {
+                    Button(Strings.discard) { discardStoppedBlock(stoppedBlock) }
+                }
                 if let stoppedBlock {
                     Button(Strings.`continue`) { resumeTimer(for: stoppedBlock) }
                 }
@@ -298,6 +300,14 @@ struct ContentView: View {
         stoppedBlock = nil
         refreshTodayHours()
         WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    private func discardStoppedBlock(_ block: Block) {
+        try? BlockEditor.delete(db: AppEnvironment.db, blockId: block.id)
+        stoppedBlock = nil
+        refreshTodayHours()
+        WidgetCenter.shared.reloadAllTimelines()
+        DataChangeNotifier.post()
     }
 
     private func resumeTimer(for block: Block) {
