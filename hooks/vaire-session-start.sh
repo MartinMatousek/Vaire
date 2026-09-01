@@ -22,6 +22,11 @@ if ! command -v vaire >/dev/null 2>&1; then
     exit 0
 fi
 
+enabled=$(vaire is-hooks-enabled "$cwd" 2>/dev/null)
+if [ "$enabled" != "true" ]; then
+    exit 0
+fi
+
 project_name=$(basename "$cwd")
 
 active=""

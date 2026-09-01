@@ -81,6 +81,16 @@ public struct AppDatabase: Sendable {
             }
         }
 
+        migrator.registerMigration("v4") { db in
+            // Hooks now opt in per repository instead of tracking every
+            // cwd a Claude Code session happens to run in. Defaults to
+            // false so existing auto-created projects don't suddenly start
+            // popping dialogs; the user enables the repos they want.
+            try db.alter(table: "project") { t in
+                t.add(column: "hooksEnabled", .boolean).notNull().defaults(to: false)
+            }
+        }
+
         return migrator
     }
 }

@@ -22,6 +22,8 @@ struct SettingsView: View {
                         Text(project.path).font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
+                    Toggle("Sledovat", isOn: hooksEnabledBinding(for: project))
+                        .toggleStyle(.checkbox)
                     Button("Import z gitu") { importGitHistory(for: project) }
                 }
             }
@@ -34,9 +36,14 @@ struct SettingsView: View {
             HStack {
                 TextField("Název", text: $newProjectName)
                 TextField("Cesta", text: $newProjectPath)
+                Button("Vybrat…") { pickProjectPath() }
                 Button("Přidat") { addProject() }
                     .disabled(newProjectName.isEmpty || newProjectPath.isEmpty)
             }
+
+            Text("Nově přidaný projekt se rovnou sleduje pomocí Claude Code hooků. Zaškrtnutí „Sledovat“ zapíná/vypíná sledování pro existující projekty.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
             Divider()
 
@@ -50,7 +57,7 @@ struct SettingsView: View {
             }
         }
         .padding()
-        .frame(width: 420, height: 320)
+        .frame(width: 520, height: 360)
         .onAppear(perform: reload)
     }
 
@@ -61,7 +68,7 @@ struct SettingsView: View {
     }
 
     private func addProject() {
-        let project = Project(name: newProjectName, path: newProjectPath)
+        let project = Project(name: newProjectName, path: newProjectPath, hooksEnabled: true)
         do {
             try AppEnvironment.db.dbQueue.write { try project.insert($0) }
             newProjectName = ""
@@ -69,6 +76,38 @@ struct SettingsView: View {
             reload()
         } catch {
             exportError = "Nepodařilo se přidat projekt: \(error.localizedDescription)"
+        }
+    }
+
+    private func pickProjectPath() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        newProjectPath = url.path
+        if newProjectName.isEmpty {
+            newProjectName = url.lastPathComponent
+        }
+    }
+
+    private func hooksEnabledBinding(for project: Project) -> Binding<Bool> {
+        Binding(
+            get: { project.hooksEnabled },
+            set: { newValue in setHooksEnabled(newValue, for: project) }
+        )
+    }
+
+    private func setHooksEnabled(_ enabled: Bool, for project: Project) {
+        var updated = project
+        updated.hooksEnabled = enabled
+        do {
+            try AppEnvironment.db.dbQueue.write { try updated.update($0) }
+            reload()
+        } catch {
+            exportError = "Nepodařilo se změnit sledování: \(error.localizedDescription)"
         }
     }
 

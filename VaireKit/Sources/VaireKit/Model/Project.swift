@@ -7,19 +7,22 @@ public struct Project: Identifiable, Equatable, Sendable, Codable, FetchableReco
     public var path: String
     public var colorHex: String
     public var mdHoursPerDay: Double
+    public var hooksEnabled: Bool
 
     public init(
         id: UUID = UUID(),
         name: String,
         path: String,
         colorHex: String = "#34C759",
-        mdHoursPerDay: Double = 8.0
+        mdHoursPerDay: Double = 8.0,
+        hooksEnabled: Bool = false
     ) {
         self.id = id
         self.name = name
         self.path = path
         self.colorHex = colorHex
         self.mdHoursPerDay = mdHoursPerDay
+        self.hooksEnabled = hooksEnabled
     }
 
     public static let databaseTableName = "project"
@@ -43,5 +46,13 @@ public struct Project: Identifiable, Equatable, Sendable, Codable, FetchableReco
             try project.insert(conn)
         }
         return project
+    }
+
+    /// Whether hooks should track `path` at all. Used by SessionStart/End
+    /// hooks to stay silent for repositories the user hasn't opted in,
+    /// instead of prompting for every cwd Claude Code happens to run in.
+    /// A path with no project row yet is untracked by definition.
+    public static func hooksEnabled(forPath path: String, db: AppDatabase) throws -> Bool {
+        try find(byPath: path, db: db)?.hooksEnabled ?? false
     }
 }
