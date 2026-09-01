@@ -20,6 +20,9 @@ struct SettingsView: View {
         }
         .frame(width: 520, height: 480)
         .onAppear(perform: reload)
+        .onReceive(NotificationCenter.default.publisher(for: .vaireDataChanged)) { _ in
+            reload()
+        }
     }
 
     private var content: some View {
