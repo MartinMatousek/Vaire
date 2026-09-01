@@ -49,11 +49,20 @@ CLI and register the hooks:
 ./scripts/install_cli.sh
 ```
 
-This installs `vaire` to `~/.local/bin/`. Then add the scripts under
-`hooks/` to your `~/.claude/settings.json` under `SessionStart` and
-`SessionEnd`, with a generous `timeout` (the hooks show interactive
-dialogs — 120s is a safe margin). See `hooks/` for the scripts and the
-project structure section below for what each one does.
+This installs `vaire` to `~/.local/bin/`. Then register these scripts in
+your `~/.claude/settings.json`, with a generous `timeout` (the
+SessionStart/SessionEnd hooks show interactive dialogs — 120s is a safe
+margin):
+
+- `hooks/vaire-session-start.sh` under `SessionStart`
+- `hooks/vaire-session-end.sh` under `SessionEnd`
+- `hooks/vaire-stop-enforce-estimate.sh` under `Stop` (optional — nudges
+  Claude to record a time-saved estimate before ending a task; skip it if
+  you don't want that)
+
+`hooks/vaire-stop-and-review.sh` and `hooks/vaire-i18n.sh` aren't
+registered directly — they're shared logic the other scripts source. See
+the project structure section below for what each one does.
 
 Hooks only track repositories you've explicitly opted in — they stay
 silent for every other `cwd` instead of prompting on each session. To
@@ -76,12 +85,14 @@ it (disabled while its timer is running) — equivalent to unchecking
 The Week window has an **Import from git…** button, scoped to the week
 currently shown. It reads your commits in the selected project for that
 week (filtered to `git config user.email`), groups them into candidate
-time blocks, and opens a review sheet before writing anything — you can
-edit each candidate's note or start/end time, uncheck any you don't want,
-and choose whether to replace previously git-imported blocks for that
-week or add alongside them. Nothing is written until you click **Import**
-in the sheet. Use it to backfill time you spent working on a project
-outside Claude Code — Vaire has no other way to see that work.
+time blocks, and opens a review sheet before writing anything — each
+candidate shows its start time and an editable duration (hours/minutes,
+same as everywhere else in the app), its note is editable too, and you
+can uncheck any candidate you don't want. Choose whether to replace
+previously git-imported blocks for that week or add alongside them.
+Nothing is written until you click **Import** in the sheet. Use it to
+backfill time you spent working on a project outside Claude Code — Vaire
+has no other way to see that work.
 
 ### Language
 
@@ -101,8 +112,9 @@ change takes effect after restarting the app.
 - `VaireKit/Sources/VaireCLI/` — `vaire`, the CLI bridge between Claude Code
   hooks and the shared SQLite database in
   `~/Library/Application Support/Vaire/`
-- `hooks/` — `SessionStart`/`SessionEnd` hook scripts for automatic time
-  logging from Claude Code sessions
+- `hooks/` — `SessionStart`/`SessionEnd`/`Stop` hook scripts for automatic
+  time logging from Claude Code sessions, plus shared logic they source
+  (`vaire-stop-and-review.sh`, `vaire-i18n.sh`)
 - `project.yml` — [XcodeGen](https://github.com/yonaskolb/XcodeGen)
   manifest; `Vaire.xcodeproj` is generated from it and not checked in
 

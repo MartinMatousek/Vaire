@@ -48,11 +48,20 @@ a zaregistruj hooky:
 ./scripts/install_cli.sh
 ```
 
-Tím se nainstaluje `vaire` do `~/.local/bin/`. Pak přidej skripty ze
-složky `hooks/` do `~/.claude/settings.json` pod `SessionStart` a
-`SessionEnd`, s velkorysým `timeout` (hooky zobrazují interaktivní
-dialogy — 120s je bezpečná rezerva). Viz `hooks/` pro skripty a sekci o
-struktuře projektu níže pro popis, co který dělá.
+Tím se nainstaluje `vaire` do `~/.local/bin/`. Pak zaregistruj tyto
+skripty v `~/.claude/settings.json`, s velkorysým `timeout`
+(SessionStart/SessionEnd hooky zobrazují interaktivní dialogy — 120s je
+bezpečná rezerva):
+
+- `hooks/vaire-session-start.sh` pod `SessionStart`
+- `hooks/vaire-session-end.sh` pod `SessionEnd`
+- `hooks/vaire-stop-enforce-estimate.sh` pod `Stop` (volitelné — pobídne
+  Claude, aby před ukončením tasku zapsal odhad úspory času; pokud to
+  nechceš, vynech ho)
+
+`hooks/vaire-stop-and-review.sh` a `hooks/vaire-i18n.sh` se
+neregistrují přímo — jsou to sdílená logika, kterou ostatní skripty
+sourcují. Co který skript dělá, viz sekce o struktuře projektu níže.
 
 Hooky sledují jen repozitáře, které jsi výslovně zapnul — u ostatních
 `cwd` zůstávají zticha místo aby se ptaly při každé session. Jak zapnout
@@ -76,12 +85,13 @@ Okno Týden má tlačítko **Import from git…**, které pracuje se zrovna
 zobrazeným týdnem. Načte tvé commity ve vybraném projektu za tento týden
 (filtrované podle `git config user.email`), seskupí je do kandidátních
 časových bloků a než cokoliv zapíše, otevře kontrolní okno — u každého
-kandidáta můžeš upravit poznámku nebo čas začátku/konce, odškrtnout ty,
-co nechceš, a zvolit, jestli se mají nahradit dříve naimportované bloky
-za ten týden, nebo se mají jen přidat vedle nich. Nic se nezapíše, dokud
-v kontrolním okně neklikneš na **Import**. Použij ho, pokud jsi na
-projektu pracoval mimo Claude Code — Vaire jinak nemá jak takovou práci
-vidět.
+kandidáta vidíš čas začátku a upravuješ délku trvání (hodiny/minuty,
+stejně jako všude jinde v aplikaci), poznámka jde upravit taky, a
+kandidáty, co nechceš, můžeš odškrtnout. Zvol, jestli se mají nahradit
+dříve naimportované bloky za ten týden, nebo se mají jen přidat vedle
+nich. Nic se nezapíše, dokud v kontrolním okně neklikneš na **Import**.
+Použij ho, pokud jsi na projektu pracoval mimo Claude Code — Vaire jinak
+nemá jak takovou práci vidět.
 
 ### Jazyk
 
@@ -101,8 +111,9 @@ Rozhraní Vaire (aplikace i dialogy z hooků) je dostupné v angličtině a
 - `VaireWidget/` — WidgetKit extension
 - `VaireKit/Sources/VaireCLI/` — `vaire`, CLI most mezi Claude Code hooky
   a sdílenou SQLite databází v `~/Library/Application Support/Vaire/`
-- `hooks/` — skripty `SessionStart`/`SessionEnd` hooků pro automatický
-  logging času z Claude Code sessions
+- `hooks/` — skripty `SessionStart`/`SessionEnd`/`Stop` hooků pro
+  automatický logging času z Claude Code sessions, plus sdílená logika,
+  kterou sourcují (`vaire-stop-and-review.sh`, `vaire-i18n.sh`)
 - `project.yml` — manifest pro [XcodeGen](https://github.com/yonaskolb/XcodeGen);
   `Vaire.xcodeproj` se z něj generuje a není v repozitáři
 
