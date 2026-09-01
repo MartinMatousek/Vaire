@@ -27,7 +27,9 @@ public enum Strings {
     public static var whatWillYouDoPlaceholder: String { pick(cs: "Co budeš dělat…", en: "What will you do…") }
     public static var effortEstimateHours: String { pick(cs: "Odhad pracnosti:", en: "Effort estimate:") }
     public static var withoutNote: String { pick(cs: "Bez poznámky", en: "No note") }
+    public static var dontLog: String { pick(cs: "Nelogovat", en: "Don't log") }
     public static var resume: String { pick(cs: "Navázat", en: "Continue") }
+    public static func logTimeFor(_ project: String) -> String { pick(cs: "Logovat čas pro \(project)", en: "Log time for \(project)") }
     public static var editTimeAndDescription: String { pick(cs: "Uprav čas a popis", en: "Edit time and description") }
     public static func measuredOnTimer(_ elapsed: String) -> String { pick(cs: "Naměřeno na timeru: \(elapsed)", en: "Measured by timer: \(elapsed)") }
     public static var whatDidYouDoPlaceholder: String { pick(cs: "Co jsi dělal…", en: "What did you do…") }

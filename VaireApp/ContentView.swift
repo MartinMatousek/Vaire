@@ -13,11 +13,8 @@ struct ContentView: View {
     @State private var resumeSelection: UUID? // nil = "new entry"
     @State private var stoppedBlock: Block?
     @State private var noteDraft: String = ""
-    @State private var hoursDraft: Int = 0
-    @State private var minutesDraft: Int = 0
     @State private var estimateHoursDraft: Int = 0
     @State private var estimateMinutesDraft: Int = 0
-    @State private var hasEstimateDraft: Bool = false
 
     private let refreshTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -95,7 +92,13 @@ struct ContentView: View {
                 get: { stoppedBlock?.projectId == project.id },
                 set: { if !$0 { stoppedBlock = nil } }
             )) {
-                editorAfterStop
+                if let stoppedBlock, stoppedBlock.projectId == project.id {
+                    StoppedBlockEditorView(block: stoppedBlock) { _ in
+                        self.stoppedBlock = nil
+                        refreshTodayHours()
+                        WidgetCenter.shared.reloadAllTimelines()
+                    }
+                }
             }
             Button(Strings.unfollow) {
                 unfollow(project)
@@ -158,7 +161,8 @@ struct ContentView: View {
                         resumeTimer(for: block)
                         startingProjectId = nil
                     } else {
-                        let estimateHours = Double(estimateHoursDraft * 60 + estimateMinutesDraft) / 60
+                        let rounded = HoursMinutesField.roundedUp(totalMinutes: estimateHoursDraft * 60 + estimateMinutesDraft)
+                        let estimateHours = Double(rounded.hours * 60 + rounded.minutes) / 60
                         startTimer(for: projectId, note: noteDraft, estimate: estimateHours > 0 ? estimateHours : nil)
                     }
                 }
@@ -177,55 +181,6 @@ struct ContentView: View {
             return "\(timeLabel) (\(durationLabel)) — \(note)"
         }
         return "\(timeLabel) (\(durationLabel))"
-    }
-
-    private var editorAfterStop: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(Strings.editTimeAndDescription).font(.caption).bold()
-
-            if let stoppedBlock {
-                Text(Strings.measuredOnTimer(realElapsedLabel(stoppedBlock)))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-
-            }
-
-            HoursMinutesField(hours: $hoursDraft, minutes: $minutesDraft)
-
-            TextField(Strings.whatDidYouDoPlaceholder, text: $noteDraft, axis: .vertical)
-                .lineLimit(3...6)
-                .frame(minWidth: 240)
-
-            Toggle(Strings.estimateWithoutAI, isOn: $hasEstimateDraft)
-                .font(.caption)
-            if hasEstimateDraft {
-                HoursMinutesField(hours: $estimateHoursDraft, minutes: $estimateMinutesDraft)
-                let editedHours = Double(hoursDraft) + Double(minutesDraft) / 60
-                let estimateHours = Double(estimateHoursDraft) + Double(estimateMinutesDraft) / 60
-                if estimateHours < editedHours {
-                    Text(Strings.estimateLowerThanMeasured)
-                        .font(.caption2)
-                        .foregroundStyle(.red)
-                }
-            }
-
-            HStack {
-                Spacer()
-                if let stoppedBlock {
-                    Button(Strings.discard) { discardStoppedBlock(stoppedBlock) }
-                }
-                if let stoppedBlock {
-                    Button(Strings.`continue`) { resumeTimer(for: stoppedBlock) }
-                }
-                Button(Strings.save) { saveStoppedBlock() }
-                    .keyboardShortcut(.defaultAction)
-            }
-        }
-        .padding()
-    }
-
-    private func realElapsedLabel(_ block: Block) -> String {
-        DurationFormatter.hoursMinutes(block.duration / 3600)
     }
 
     private func handleTap(for projectId: UUID) {
@@ -251,52 +206,8 @@ struct ContentView: View {
         refreshTodayHours()
         WidgetCenter.shared.reloadAllTimelines()
         if let block {
-            noteDraft = block.note ?? ""
-            let totalMinutes = Int(block.duration / 60)
-            hoursDraft = totalMinutes / 60
-            minutesDraft = totalMinutes % 60
-            if let estimate = block.estimatedHoursWithoutAI {
-                let estimateMinutes = Int((estimate * 60).rounded())
-                estimateHoursDraft = estimateMinutes / 60
-                estimateMinutesDraft = estimateMinutes % 60
-                hasEstimateDraft = true
-            } else {
-                estimateHoursDraft = 0
-                estimateMinutesDraft = 0
-                hasEstimateDraft = false
-            }
             stoppedBlock = block
         }
-    }
-
-    private func saveStoppedBlock() {
-        guard let block = stoppedBlock else { return }
-        let newEnd = block.start.addingTimeInterval(Double(hoursDraft * 3600 + minutesDraft * 60))
-        do {
-            _ = try BlockEditor.setTimes(db: AppEnvironment.db, blockId: block.id, start: block.start, end: newEnd)
-            _ = try BlockEditor.setNote(db: AppEnvironment.db, blockId: block.id, note: noteDraft)
-            let newEstimate: Double? = hasEstimateDraft
-                ? Double(estimateHoursDraft * 60 + estimateMinutesDraft) / 60
-                : nil
-            if newEstimate != block.estimatedHoursWithoutAI {
-                _ = try BlockEditor.setEstimate(db: AppEnvironment.db, blockId: block.id, hours: newEstimate)
-            }
-        } catch {
-            // Block was already persisted by stop(); a failed correction
-            // just means the raw times/no note stand — not worth surfacing
-            // a menu-bar error for.
-        }
-        stoppedBlock = nil
-        refreshTodayHours()
-        WidgetCenter.shared.reloadAllTimelines()
-    }
-
-    private func discardStoppedBlock(_ block: Block) {
-        try? BlockEditor.delete(db: AppEnvironment.db, blockId: block.id)
-        stoppedBlock = nil
-        refreshTodayHours()
-        WidgetCenter.shared.reloadAllTimelines()
-        DataChangeNotifier.post()
     }
 
     private func resumeTimer(for block: Block) {
@@ -304,11 +215,10 @@ struct ContentView: View {
             try BlockEditor.delete(db: AppEnvironment.db, blockId: block.id)
         } catch {
             // Nothing to resume onto if the delete fails — leave the
-            // stopped block as-is rather than double-track it.
+            // earlier block as-is rather than double-track it.
             return
         }
         timer.resume(projectId: block.projectId, from: block.start, note: block.note)
-        stoppedBlock = nil
         refreshTodayHours()
         WidgetCenter.shared.reloadAllTimelines()
     }

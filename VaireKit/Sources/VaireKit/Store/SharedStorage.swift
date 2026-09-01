@@ -27,6 +27,25 @@ public enum SharedStorage {
         try directory().appendingPathComponent("language").path
     }
 
+    /// Path to the JSON result file for one `vaire://edit-block` request,
+    /// one file per block id so a stale/timed-out request from a previous
+    /// run can't be misread as the current one's answer. Written by the
+    /// app on Save/Discard/Continue/window-close, polled by the hook that
+    /// opened the URL.
+    public static func editResultPath(forBlockId id: UUID) throws -> String {
+        let directory = try directory().appendingPathComponent("edit-results", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory.appendingPathComponent("\(id.uuidString).json").path
+    }
+
+    /// Path to the JSON result file for one `vaire://start-session` request,
+    /// one file per Claude Code session id, mirroring `editResultPath`.
+    public static func startResultPath(forSessionId sessionId: String) throws -> String {
+        let directory = try directory().appendingPathComponent("start-results", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory.appendingPathComponent("\(sessionId).json").path
+    }
+
     private static func directory() throws -> URL {
         guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             throw SharedStorageError.containerUnavailable

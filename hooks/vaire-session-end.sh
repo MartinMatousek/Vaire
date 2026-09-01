@@ -3,14 +3,15 @@
 # the terminal, /exit, Ctrl-D) — NOT on /clear or /compact, which instead
 # fire SessionStart with a new session_id (see vaire-session-start.sh,
 # which offers to finish the task there since that's usually when work
-# actually wraps up). Stops the timer for this session (if any) and shows
-# the shared summary/edit dialog. Silent no-op if this session was never
-# tracked.
+# actually wraps up). Stops the timer for this session (if any) and opens
+# VaireApp's real edit window for the resulting block. Silent no-op if this
+# session was never tracked.
 #
 # NOTE: SessionEnd hooks share a small default timeout budget in Claude
-# Code. This hook is interactive (waits on dialogs), so it must be
-# registered with a generous per-hook timeout (e.g. 120s) in settings.json
-# or the dialog will be killed mid-interaction.
+# Code. This hook is interactive (waits up to 180s for the edit window in
+# vaire-stop-and-review.sh), so it must be registered with a generous
+# per-hook timeout (200s+) in settings.json or the window will be killed
+# mid-interaction.
 
 input=$(cat)
 session_id=$(echo "$input" | jq -r '.session_id // empty')

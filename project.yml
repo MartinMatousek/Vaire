@@ -44,6 +44,10 @@ targets:
             UTTypeTagSpecification:
               public.filename-extension:
                 - vaireblock
+        CFBundleURLTypes:
+          - CFBundleURLName: com.martinmatousek.vaire.app
+            CFBundleURLSchemes:
+              - vaire
 
   VaireWidgetExtension:
     type: app-extension
