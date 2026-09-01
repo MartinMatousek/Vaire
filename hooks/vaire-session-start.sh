@@ -135,7 +135,7 @@ on run argv
     set withNoteBtn to item 6 of argv
     set titleText to item 7 of argv
     try
-        display dialog prefixText & proj & suffixText buttons {noBtn, withoutNoteBtn, withNoteBtn} default button withoutNoteBtn with title titleText
+        display dialog prefixText & proj & suffixText buttons {noBtn, withoutNoteBtn, withNoteBtn} default button noBtn with title titleText
         return button returned of result
     on error
         return noBtn
@@ -165,6 +165,7 @@ APPLESCRIPT
     vaire start-session "$session_id" "$cwd" "$note" >/dev/null 2>&1
     ;;
 *)
+    vaire decline-session "$session_id" >/dev/null 2>&1
     ;;
 esac
 

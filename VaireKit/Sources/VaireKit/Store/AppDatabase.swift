@@ -108,6 +108,19 @@ public struct AppDatabase: Sendable {
             try db.create(index: "deletedBlockRange_projectId", on: "deletedBlockRange", columns: ["projectId"])
         }
 
+        migrator.registerMigration("v6") { db in
+            // The SessionStart "Log time?" dialog only controls the
+            // hook-driven manual timer (AgentSessionTracking/start-session).
+            // LiveImportCoordinator passively imports every session's
+            // transcript for any project with hooksEnabled, regardless of
+            // that answer, so declining still produced a block. A tombstone
+            // keyed by session_id lets the passive importer skip a session
+            // the user explicitly declined to log.
+            try db.create(table: "declinedSession") { t in
+                t.column("sessionId", .text).primaryKey()
+            }
+        }
+
         return migrator
     }
 }

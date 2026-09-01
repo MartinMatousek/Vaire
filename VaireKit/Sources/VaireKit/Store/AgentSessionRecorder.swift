@@ -136,4 +136,20 @@ public enum AgentSessionRecorder {
             try AgentSessionTracking.order(Column("start")).fetchAll(conn)
         }
     }
+
+    /// Records that the user declined to log `sessionId` at the
+    /// SessionStart dialog, so LiveImportCoordinator's passive transcript
+    /// import skips this session's file instead of logging it anyway.
+    public static func declineSession(db: AppDatabase, sessionId: String) throws {
+        try db.dbQueue.write { conn in
+            try DeclinedSession(sessionId: sessionId).insert(conn, onConflict: .ignore)
+        }
+    }
+
+    /// Whether `sessionId` was declined at the SessionStart dialog.
+    public static func isDeclined(db: AppDatabase, sessionId: String) throws -> Bool {
+        try db.dbQueue.read { conn in
+            try DeclinedSession.fetchOne(conn, key: sessionId) != nil
+        }
+    }
 }

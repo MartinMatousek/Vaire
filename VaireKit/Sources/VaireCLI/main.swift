@@ -27,6 +27,8 @@ func run() throws {
         try runStopSession(db: db, args: rest)
     case "is-tracking":
         try runIsTracking(db: db, args: rest)
+    case "decline-session":
+        try runDeclineSession(db: db, args: rest)
     case "adjust-block":
         try runAdjustBlock(db: db, args: rest)
     case "find-active":
@@ -94,6 +96,13 @@ func runIsTracking(db: AppDatabase, args: [String]) throws {
         throw CLIError.usage("usage: is-tracking <session_id>")
     }
     print(try AgentSessionRecorder.isTracking(db: db, sessionId: sessionId) ? "true" : "false")
+}
+
+func runDeclineSession(db: AppDatabase, args: [String]) throws {
+    guard let sessionId = args.first else {
+        throw CLIError.usage("usage: decline-session <session_id>")
+    }
+    try AgentSessionRecorder.declineSession(db: db, sessionId: sessionId)
 }
 
 func runAdjustBlock(db: AppDatabase, args: [String]) throws {

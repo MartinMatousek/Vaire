@@ -152,3 +152,22 @@ import Testing
 
     #expect(try AgentSessionRecorder.allActiveTrackings(db: db).isEmpty)
 }
+
+@Test func declineSessionMarksItAsDeclined() throws {
+    let db = try AppDatabase.inMemory()
+
+    #expect(!(try AgentSessionRecorder.isDeclined(db: db, sessionId: "sess-1")))
+
+    try AgentSessionRecorder.declineSession(db: db, sessionId: "sess-1")
+
+    #expect(try AgentSessionRecorder.isDeclined(db: db, sessionId: "sess-1"))
+}
+
+@Test func declineSessionIsIdempotent() throws {
+    let db = try AppDatabase.inMemory()
+
+    try AgentSessionRecorder.declineSession(db: db, sessionId: "sess-1")
+    try AgentSessionRecorder.declineSession(db: db, sessionId: "sess-1")
+
+    #expect(try AgentSessionRecorder.isDeclined(db: db, sessionId: "sess-1"))
+}
