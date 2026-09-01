@@ -51,8 +51,9 @@ CLI and register the hooks:
 
 This installs `vaire` to `~/.local/bin/`. Then register these scripts in
 your `~/.claude/settings.json`, with a generous `timeout` (the
-SessionStart/SessionEnd hooks show interactive dialogs — 120s is a safe
-margin):
+SessionStart/SessionEnd hooks open VaireApp's real note/edit windows via a
+`vaire://` URL and wait up to 180s for you to act on them — 200s+ is a
+safe margin):
 
 - `hooks/vaire-session-start.sh` under `SessionStart`
 - `hooks/vaire-session-end.sh` under `SessionEnd`
@@ -60,9 +61,9 @@ margin):
   Claude to record a time-saved estimate before ending a task; skip it if
   you don't want that)
 
-`hooks/vaire-stop-and-review.sh` and `hooks/vaire-i18n.sh` aren't
-registered directly — they're shared logic the other scripts source. See
-the project structure section below for what each one does.
+`hooks/vaire-stop-and-review.sh` isn't registered directly — it's shared
+logic the other scripts source. See the project structure section below
+for what each one does.
 
 Hooks only track repositories you've explicitly opted in — they stay
 silent for every other `cwd` instead of prompting on each session. To
@@ -114,7 +115,7 @@ change takes effect after restarting the app.
   `~/Library/Application Support/Vaire/`
 - `hooks/` — `SessionStart`/`SessionEnd`/`Stop` hook scripts for automatic
   time logging from Claude Code sessions, plus shared logic they source
-  (`vaire-stop-and-review.sh`, `vaire-i18n.sh`)
+  (`vaire-stop-and-review.sh`)
 - `project.yml` — [XcodeGen](https://github.com/yonaskolb/XcodeGen)
   manifest; `Vaire.xcodeproj` is generated from it and not checked in
 

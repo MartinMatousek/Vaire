@@ -50,8 +50,8 @@ a zaregistruj hooky:
 
 Tím se nainstaluje `vaire` do `~/.local/bin/`. Pak zaregistruj tyto
 skripty v `~/.claude/settings.json`, s velkorysým `timeout`
-(SessionStart/SessionEnd hooky zobrazují interaktivní dialogy — 120s je
-bezpečná rezerva):
+(SessionStart/SessionEnd hooky otevřou skutečné okno Vaire přes `vaire://`
+URL a čekají až 180s, než na něj zareaguješ — 200s+ je bezpečná rezerva):
 
 - `hooks/vaire-session-start.sh` pod `SessionStart`
 - `hooks/vaire-session-end.sh` pod `SessionEnd`
@@ -59,9 +59,9 @@ bezpečná rezerva):
   Claude, aby před ukončením tasku zapsal odhad úspory času; pokud to
   nechceš, vynech ho)
 
-`hooks/vaire-stop-and-review.sh` a `hooks/vaire-i18n.sh` se
-neregistrují přímo — jsou to sdílená logika, kterou ostatní skripty
-sourcují. Co který skript dělá, viz sekce o struktuře projektu níže.
+`hooks/vaire-stop-and-review.sh` se neregistruje přímo — je to sdílená
+logika, kterou ostatní skripty sourcují. Co který skript dělá, viz sekce
+o struktuře projektu níže.
 
 Hooky sledují jen repozitáře, které jsi výslovně zapnul — u ostatních
 `cwd` zůstávají zticha místo aby se ptaly při každé session. Jak zapnout
@@ -113,7 +113,7 @@ Rozhraní Vaire (aplikace i dialogy z hooků) je dostupné v angličtině a
   a sdílenou SQLite databází v `~/Library/Application Support/Vaire/`
 - `hooks/` — skripty `SessionStart`/`SessionEnd`/`Stop` hooků pro
   automatický logging času z Claude Code sessions, plus sdílená logika,
-  kterou sourcují (`vaire-stop-and-review.sh`, `vaire-i18n.sh`)
+  kterou sourcují (`vaire-stop-and-review.sh`)
 - `project.yml` — manifest pro [XcodeGen](https://github.com/yonaskolb/XcodeGen);
   `Vaire.xcodeproj` se z něj generuje a není v repozitáři
 
