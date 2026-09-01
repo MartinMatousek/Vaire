@@ -92,12 +92,10 @@ struct GitImportSheet: View {
                     .disabled(!candidate.wrappedValue.included)
 
                 HStack {
-                    HoursMinutesField(hours: hourBinding(candidate.start), minutes: minuteBinding(candidate.start))
-                    Text("–")
-                    HoursMinutesField(hours: hourBinding(candidate.end), minutes: minuteBinding(candidate.end))
-                    Text(durationLabel(candidate.wrappedValue))
+                    Text(startLabel(candidate.wrappedValue))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
+                    HoursMinutesField(hours: durationHoursBinding(candidate), minutes: durationMinutesBinding(candidate))
                 }
                 .disabled(!candidate.wrappedValue.included)
             }
@@ -106,29 +104,32 @@ struct GitImportSheet: View {
         .padding(.vertical, 4)
     }
 
-    private func durationLabel(_ candidate: GitImportCandidate) -> String {
-        let minutes = Int(candidate.end.timeIntervalSince(candidate.start) / 60)
-        return "\(minutes / 60)h \(minutes % 60)m"
+    private func startLabel(_ candidate: GitImportCandidate) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE HH:mm"
+        return formatter.string(from: candidate.start)
     }
 
-    /// Exposes a Date's hour-of-day as a plain Int binding so
-    /// HoursMinutesField (used everywhere else for time entry in the app)
-    /// can edit a clock time too, keeping every date component but the
-    /// hour fixed.
-    private func hourBinding(_ date: Binding<Date>) -> Binding<Int> {
+    /// Duration editing (like everywhere else in the app) instead of
+    /// separate start/end clock-time pickers — start stays fixed at the
+    /// commit-derived time, and editing hours/minutes here moves `end`
+    /// only.
+    private func durationHoursBinding(_ candidate: Binding<GitImportCandidate>) -> Binding<Int> {
         Binding(
-            get: { Calendar.current.component(.hour, from: date.wrappedValue) },
-            set: { newHour in
-                date.wrappedValue = Calendar.current.date(bySettingHour: newHour, minute: Calendar.current.component(.minute, from: date.wrappedValue), second: 0, of: date.wrappedValue) ?? date.wrappedValue
+            get: { Int(candidate.wrappedValue.end.timeIntervalSince(candidate.wrappedValue.start) / 3600) },
+            set: { newHours in
+                let minutes = Int(candidate.wrappedValue.end.timeIntervalSince(candidate.wrappedValue.start) / 60) % 60
+                candidate.wrappedValue.end = candidate.wrappedValue.start.addingTimeInterval(TimeInterval(newHours * 3600 + minutes * 60))
             }
         )
     }
 
-    private func minuteBinding(_ date: Binding<Date>) -> Binding<Int> {
+    private func durationMinutesBinding(_ candidate: Binding<GitImportCandidate>) -> Binding<Int> {
         Binding(
-            get: { Calendar.current.component(.minute, from: date.wrappedValue) },
-            set: { newMinute in
-                date.wrappedValue = Calendar.current.date(bySettingHour: Calendar.current.component(.hour, from: date.wrappedValue), minute: newMinute, second: 0, of: date.wrappedValue) ?? date.wrappedValue
+            get: { Int(candidate.wrappedValue.end.timeIntervalSince(candidate.wrappedValue.start) / 60) % 60 },
+            set: { newMinutes in
+                let hours = Int(candidate.wrappedValue.end.timeIntervalSince(candidate.wrappedValue.start) / 3600)
+                candidate.wrappedValue.end = candidate.wrappedValue.start.addingTimeInterval(TimeInterval(hours * 3600 + newMinutes * 60))
             }
         )
     }
