@@ -68,6 +68,50 @@ private func makeProject(_ db: AppDatabase) throws -> Project {
     #expect(allBlocks.count == 1)
 }
 
+@Test func mergingAwayAnAutoBlockTombstonesIt() throws {
+    let db = try AppDatabase.inMemory()
+    let project = try makeProject(db)
+
+    // merge()'s survivor is always the earliest-start block — put the
+    // manual block first so the later auto block is the one that gets
+    // deleted, which is the case that needs tombstoning.
+    let manualBlock = Block(
+        projectId: project.id,
+        start: Date(timeIntervalSince1970: 0),
+        end: Date(timeIntervalSince1970: 1800),
+        source: .manual,
+        isManual: true
+    )
+    let autoBlock = Block(
+        projectId: project.id,
+        start: Date(timeIntervalSince1970: 1800),
+        end: Date(timeIntervalSince1970: 3600),
+        source: .claudeSession,
+        isManual: false
+    )
+    try db.dbQueue.write {
+        try manualBlock.insert($0)
+        try autoBlock.insert($0)
+    }
+
+    _ = try BlockEditor.merge(db: db, blockIds: [manualBlock.id, autoBlock.id])
+
+    // A later reimport that would re-derive the same auto block must not
+    // resurrect it as a duplicate alongside the merged manual survivor.
+    let sameCandidateAgain = MergedBlock(
+        projectId: project.id,
+        start: autoBlock.start,
+        end: autoBlock.end,
+        sources: [.claudeSession],
+        evidenceRefs: [],
+        overlapsOtherProject: false
+    )
+    try ReimportGuard.reconcile(db: db, projectId: project.id, candidates: [sameCandidateAgain])
+
+    let remaining = try db.dbQueue.read { try Block.fetchAll($0) }
+    #expect(remaining.count == 1)
+}
+
 @Test func mergeAcrossDifferentProjectsThrows() throws {
     let db = try AppDatabase.inMemory()
     let projectA = try makeProject(db)

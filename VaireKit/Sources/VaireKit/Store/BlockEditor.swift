@@ -79,7 +79,14 @@ public enum BlockEditor {
             survivor.isManual = true
             try survivor.update(conn)
 
+            // Same reasoning as BlockEditor.delete: a merged-away auto
+            // block still exists in its source transcript, so without a
+            // tombstone the next reimport would re-derive and re-insert
+            // it as a duplicate alongside the manual survivor.
             for block in blocks where block.id != survivor.id {
+                if !block.isManual {
+                    try DeletedBlockRange(projectId: block.projectId, start: block.start, end: block.end).insert(conn)
+                }
                 try block.delete(conn)
             }
 
