@@ -126,12 +126,12 @@ struct WeekView: View {
             }
 
             HStack {
-                Button("Delete") { deleteSelected() }
+                Button("Smazat") { deleteSelected() }
                     .disabled(selectedBlockIds.isEmpty)
                 Spacer()
-                Button("Undo") { undoManager?.undo() }
+                Button("Zpět") { undoManager?.undo() }
                     .disabled(undoManager?.canUndo != true)
-                Button("Redo") { undoManager?.redo() }
+                Button("Znovu") { undoManager?.redo() }
                     .disabled(undoManager?.canRedo != true)
             }
         }
