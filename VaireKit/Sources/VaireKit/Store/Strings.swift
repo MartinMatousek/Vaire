@@ -65,6 +65,7 @@ public enum Strings {
     public static var projects: String { pick(cs: "Projekty", en: "Projects") }
     public static var track: String { pick(cs: "Sledovat", en: "Track") }
     public static var importFromGit: String { pick(cs: "Import z gitu", en: "Import from git") }
+    public static var importFromGitHelp: String { pick(cs: "Vytvoří časové bloky z tvých commitů v tomto repozitáři za posledních 90 dní — pro čas odpracovaný mimo Claude Code.", en: "Creates time blocks from your commits in this repository over the last 90 days — for work done outside Claude Code.") }
     public static var name: String { pick(cs: "Název", en: "Name") }
     public static var path: String { pick(cs: "Cesta", en: "Path") }
     public static var choose: String { pick(cs: "Vybrat…", en: "Choose…") }

@@ -70,6 +70,14 @@ taky zobrazuje jen sledované repozitáře, každý s odkazem **Remove** pro
 odhlášení (vypnutý, dokud běží jeho časovač) — funguje stejně jako
 odškrtnutí **Track** v Nastavení.
 
+### Import z gitu
+
+Každý řádek projektu v Nastavení má tlačítko **Import from git**. Načte
+tvé commity v daném repozitáři za posledních 90 dní (filtrované podle
+`git config user.email`), převede je na časové bloky a sloučí je se
+záznamy z Claude Code sessions. Použij ho, pokud jsi na projektu
+pracoval mimo Claude Code — Vaire jinak nemá jak takovou práci vidět.
+
 ### Jazyk
 
 Rozhraní Vaire (aplikace i dialogy z hooků) je dostupné v angličtině a

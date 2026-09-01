@@ -40,6 +40,7 @@ struct SettingsView: View {
                     Toggle(Strings.track, isOn: hooksEnabledBinding(for: project))
                         .toggleStyle(.checkbox)
                     Button(Strings.importFromGit) { importGitHistory(for: project) }
+                        .help(Strings.importFromGitHelp)
                 }
             }
             .frame(minHeight: 120, maxHeight: 200)

@@ -71,6 +71,15 @@ shows followed repositories too, each with a **Remove** link to unfollow
 it (disabled while its timer is running) — equivalent to unchecking
 **Track** in Settings.
 
+### Importing from git
+
+Each project row in Settings has an **Import from git** button. It reads
+your commits in that repository from the last 90 days (filtered to
+`git config user.email`), turns them into time blocks, and merges them
+in alongside any Claude Code session blocks. Use it to backfill time you
+spent working on a project outside Claude Code — Vaire has no other way
+to see that work.
+
 ### Language
 
 Vaire's UI (app and hook dialogs) is available in English and Czech.
