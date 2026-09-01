@@ -43,7 +43,7 @@ on run argv
         set msg to msg & return & addedValue
     end if
     try
-        display dialog msg buttons {"OK", "Upravit"} default button "OK" with title "Vaire — shrnutí"
+        display dialog msg buttons {"Zahodit", "Upravit", "OK"} default button "OK" with title "Vaire — shrnutí"
         return button returned of result
     on error
         return "OK"
@@ -51,6 +51,13 @@ on run argv
 end run
 APPLESCRIPT
     )
+
+    if [ "$choice" = "Zahodit" ]; then
+        if [ -n "$block_id" ]; then
+            vaire delete-block "$block_id" >/dev/null 2>&1
+        fi
+        return 0
+    fi
 
     if [ "$choice" = "Upravit" ]; then
         default_minutes=$((duration_seconds / 60))

@@ -14,7 +14,7 @@ enum CLIError: Error, CustomStringConvertible {
 func run() throws {
     let arguments = CommandLine.arguments.dropFirst()
     guard let command = arguments.first else {
-        throw CLIError.usage("usage: vaire <start-session|stop-session|is-tracking> ...")
+        throw CLIError.usage("usage: vaire <start-session|stop-session|is-tracking|delete-block> ...")
     }
 
     let db = try AppDatabase(path: SharedStorage.databasePath())
@@ -39,6 +39,10 @@ func run() throws {
         try runHasEstimate(db: db, args: rest)
     case "adjust-estimate":
         try runAdjustEstimate(db: db, args: rest)
+    case "delete-block":
+        try runDeleteBlock(db: db, args: rest)
+    case "is-hooks-enabled":
+        try runIsHooksEnabled(db: db, args: rest)
     default:
         throw CLIError.usage("unknown command: \(command)")
     }
@@ -162,6 +166,22 @@ func runAdjustEstimate(db: AppDatabase, args: [String]) throws {
     let hours = args.count >= 2 ? Double(args[1]) : nil
     _ = try BlockEditor.setEstimate(db: db, blockId: blockId, hours: hours)
     print("estimate adjusted")
+    DataChangeNotifier.post()
+}
+
+func runIsHooksEnabled(db: AppDatabase, args: [String]) throws {
+    guard let cwd = args.first else {
+        throw CLIError.usage("usage: is-hooks-enabled <cwd>")
+    }
+    print(try Project.hooksEnabled(forPath: cwd, db: db) ? "true" : "false")
+}
+
+func runDeleteBlock(db: AppDatabase, args: [String]) throws {
+    guard let blockId = args.first.flatMap(UUID.init) else {
+        throw CLIError.usage("usage: delete-block <block_id>")
+    }
+    try BlockEditor.delete(db: db, blockId: blockId)
+    print("deleted")
     DataChangeNotifier.post()
 }
 
