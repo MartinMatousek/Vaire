@@ -10,11 +10,11 @@ public enum ReimportGuard {
     /// Strategy: delete existing non-manual blocks that overlap the
     /// candidates' time range for this project, then insert the new ones —
     /// except candidates that overlap a tombstone the user left by
-    /// explicitly deleting a block there (see DeletedBlockRange), which
-    /// are skipped so a delete sticks instead of reappearing on the next
-    /// reimport of the same source transcript. Manual blocks in that same
-    /// range are left untouched, so a corrected block never gets silently
-    /// overwritten by the next import.
+    /// explicitly deleting a block there (see DeletedBlockRange), or that
+    /// overlap a manual block, which are skipped so a delete sticks instead
+    /// of reappearing on the next reimport of the same source transcript,
+    /// and so a corrected block never gets a duplicate stray block inserted
+    /// right alongside it.
     public static func reconcile(db: AppDatabase, projectId: UUID, candidates: [MergedBlock]) throws {
         guard !candidates.isEmpty else { return }
 
@@ -33,11 +33,22 @@ public enum ReimportGuard {
                 .filter(Column("start") < rangeEnd && Column("end") > rangeStart)
                 .fetchAll(conn)
 
+            let manualBlocks = try Block
+                .filter(Column("projectId") == projectId)
+                .filter(Column("isManual") == true)
+                .filter(Column("start") < rangeEnd && Column("end") > rangeStart)
+                .fetchAll(conn)
+
             for candidate in candidates {
                 let isTombstoned = tombstones.contains {
                     $0.start < candidate.end && $0.end > candidate.start
                 }
                 guard !isTombstoned else { continue }
+
+                let overlapsManual = manualBlocks.contains {
+                    $0.start < candidate.end && $0.end > candidate.start
+                }
+                guard !overlapsManual else { continue }
 
                 let block = Block(
                     projectId: candidate.projectId,

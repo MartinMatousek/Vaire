@@ -39,10 +39,10 @@ import Testing
     let remaining = try db.dbQueue.read { try Block.fetchAll($0) }
 
     // The old auto block is gone (superseded by the new import), the manual
-    // block survived untouched, and the new auto block was inserted.
-    #expect(remaining.count == 2)
+    // block survived untouched, and since the new candidate overlaps that
+    // manual block it's skipped rather than inserted as a stray duplicate.
+    #expect(remaining.count == 1)
     #expect(remaining.contains { $0.id == manualBlock.id && $0.start == manualBlock.start })
-    #expect(remaining.contains { !$0.isManual && $0.start == newCandidate.start && $0.end == newCandidate.end })
     #expect(!remaining.contains { $0.id == autoBlock.id })
 }
 
