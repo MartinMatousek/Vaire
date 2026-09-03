@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 import WidgetKit
 import VaireKit
+import GRDB
 
 struct DayColumn: Identifiable {
     let date: Date
@@ -27,6 +28,10 @@ struct WeekView: View {
     @State private var showingTimeSaved = false
     @State private var showingDeleteConfirmation = false
     @State private var showingGitImport = false
+    @State private var showingFinishDay = false
+    @State private var showingFinishWeek = false
+    @State private var showingUpload = false
+    @State private var uploadBlocks: [Block] = []
 
     private let targetHours: Double = 8
     private let defaultPixelsPerHour: CGFloat = 30
@@ -108,6 +113,35 @@ struct WeekView: View {
                 .disabled(allProjectsSorted.isEmpty)
                 .sheet(isPresented: $showingGitImport) {
                     GitImportSheet(weekStart: weekStart, projects: allProjectsSorted, onImported: reload)
+                }
+
+                Button(Strings.finishDay) {
+                    showingFinishDay = true
+                }
+                .buttonStyle(.link)
+                .help(Strings.finishDayHelp)
+                .disabled(allProjectsSorted.isEmpty)
+                .sheet(isPresented: $showingFinishDay) {
+                    FinishDayView(day: .now, projects: allProjectsSorted, targetHours: targetHours, onChanged: reload)
+                }
+
+                Button(Strings.finishWeek) {
+                    showingFinishWeek = true
+                }
+                .buttonStyle(.link)
+                .help(Strings.finishWeekHelp)
+                .disabled(allProjectsSorted.isEmpty)
+                .sheet(isPresented: $showingFinishWeek) {
+                    FinishWeekView(weekStart: weekStart, projects: allProjectsSorted, targetHours: targetHours, onChanged: reload)
+                }
+
+                Button(Strings.uploadDay) {
+                    startUpload(forDay: .now)
+                }
+                .buttonStyle(.link)
+                .disabled(allProjectsSorted.isEmpty)
+                .sheet(isPresented: $showingUpload) {
+                    UploadFlowView(blocksToUpload: uploadBlocks, projects: projects)
                 }
 
                 Button(Strings.savings) {
@@ -498,6 +532,36 @@ struct WeekView: View {
 
     private func toggleSelection(_ id: UUID) {
         selectedBlockId = selectedBlockId == id ? nil : id
+    }
+
+    /// Per the "export/upload only runs the finish flow when under target"
+    /// decision: an already-complete day skips straight to Upload; a short
+    /// day runs Finish day first, and Upload is what the user reaches for
+    /// once they're satisfied — this button never auto-chains into it, to
+    /// avoid surprising the user with a second flow they didn't ask for.
+    private func startUpload(forDay day: Date) {
+        let calendar = Calendar.current
+        let dayStart = calendar.startOfDay(for: day)
+        let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
+
+        let status = try? DayFinisher.status(db: AppEnvironment.db, day: day, targetHours: targetHours)
+        if status?.isComplete != true {
+            showingFinishDay = true
+            return
+        }
+
+        // Same overlap predicate as DailySummary/DayFinisher (start < dayEnd
+        // && end > dayStart), not a start-only range — a block straddling
+        // midnight counts toward DayFinisher.status's isComplete check
+        // above, so it must also appear here, or a day can report complete
+        // via that block while Upload silently omits it.
+        uploadBlocks = (try? AppEnvironment.db.dbQueue.read { conn in
+            try Block
+                .filter(Column("start") < dayEnd && Column("end") > dayStart)
+                .order(Column("start"))
+                .fetchAll(conn)
+        }) ?? []
+        showingUpload = true
     }
 
     private func reload() {

@@ -145,6 +145,15 @@ public enum GitImporter {
         }
     }
 
+    /// Whether `range` overlaps any existing block for `projectId` — used to
+    /// drop a commit-derived candidate that would duplicate time already
+    /// logged for that project, without touching other projects' blocks.
+    public static func overlapsExistingBlock(_ range: (start: Date, end: Date), projectId: UUID, blocks: [Block]) -> Bool {
+        blocks.contains { block in
+            block.projectId == projectId && block.start < range.end && block.end > range.start
+        }
+    }
+
     public static func candidatesWithCommits(
         from commits: [GitCommit],
         idleGap: TimeInterval = 15 * 60,

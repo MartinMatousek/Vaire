@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var noteDraft: String = ""
     @State private var estimateHoursDraft: Int = 0
     @State private var estimateMinutesDraft: Int = 0
+    @State private var showingFinishDay = false
 
     private let refreshTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -39,6 +40,15 @@ struct ContentView: View {
             }
 
             Divider()
+
+            Button(Strings.finishDay) {
+                showingFinishDay = true
+            }
+            .buttonStyle(.link)
+            .disabled(projects.isEmpty)
+            .sheet(isPresented: $showingFinishDay) {
+                FinishDayView(day: .now, projects: projects, targetHours: 8, onChanged: reload)
+            }
 
             Button(Strings.week) {
                 WeekWindowController.shared.show()

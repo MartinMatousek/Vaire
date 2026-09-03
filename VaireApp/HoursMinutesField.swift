@@ -67,9 +67,9 @@ struct HoursMinutesField: View {
     /// Rounds a raw minute count up to the nearest 15-minute slot,
     /// cascading into hours (e.g. 118 -> 2h00, not 1h120). Used to snap a
     /// draft to the grid on save, and when seeding drafts from a measured
-    /// duration.
+    /// duration. Forwards to VaireKit so non-UI code (DayFinisher) can snap
+    /// durations without depending on the app target.
     static func roundedUp(totalMinutes: Int) -> (hours: Int, minutes: Int) {
-        let rounded = ((totalMinutes + 14) / 15) * 15
-        return (rounded / 60, rounded % 60)
+        DurationRounding.roundedUp(totalMinutes: totalMinutes)
     }
 }
