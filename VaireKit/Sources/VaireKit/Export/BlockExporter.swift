@@ -35,20 +35,25 @@ public enum BlockExporter {
         }
     }
 
+    private static func csvField(_ field: String) -> String {
+        guard field.contains(",") || field.contains("\"") || field.contains("\n") else {
+            return field
+        }
+        return "\"\(field.replacingOccurrences(of: "\"", with: "\"\""))\""
+    }
+
     public static func csv(rows: [ExportedBlock]) -> String {
         let isoFormatter = ISO8601DateFormatter()
         var lines = ["project,start,end,hours,source,isManual,note"]
         for row in rows {
-            let note = (row.note ?? "").replacingOccurrences(of: "\"", with: "\"\"")
-            let escapedNote = note.isEmpty ? "" : "\"\(note)\""
             lines.append([
-                row.projectName,
-                isoFormatter.string(from: row.start),
-                isoFormatter.string(from: row.end),
-                String(format: "%.2f", row.hours),
-                row.source,
+                csvField(row.projectName),
+                csvField(isoFormatter.string(from: row.start)),
+                csvField(isoFormatter.string(from: row.end)),
+                csvField(String(format: "%.2f", row.hours)),
+                csvField(row.source),
                 row.isManual ? "true" : "false",
-                escapedNote
+                csvField(row.note ?? "")
             ].joined(separator: ","))
         }
         return lines.joined(separator: "\n")

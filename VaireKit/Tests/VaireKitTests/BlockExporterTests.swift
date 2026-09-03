@@ -36,6 +36,48 @@ import Testing
     #expect(csv.contains(#""said ""hi""""#))
 }
 
+@Test func csvQuotesProjectNameContainingComma() {
+    let row = ExportedBlock(
+        projectName: "Acme, Inc.",
+        start: Date(timeIntervalSince1970: 0),
+        end: Date(timeIntervalSince1970: 3600),
+        hours: 1,
+        source: "manual",
+        isManual: true,
+        note: nil
+    )
+    let csv = BlockExporter.csv(rows: [row])
+    #expect(csv.contains(#""Acme, Inc.""#))
+
+    let dataLine = csv.split(separator: "\n")[1]
+    var fields: [String] = []
+    var current = ""
+    var insideQuotes = false
+    let chars = Array(dataLine)
+    var i = 0
+    while i < chars.count {
+        let char = chars[i]
+        if char == "\"" {
+            if insideQuotes && i + 1 < chars.count && chars[i + 1] == "\"" {
+                current.append("\"")
+                i += 1
+            } else {
+                insideQuotes.toggle()
+            }
+        } else if char == "," && !insideQuotes {
+            fields.append(current)
+            current = ""
+        } else {
+            current.append(char)
+        }
+        i += 1
+    }
+    fields.append(current)
+
+    #expect(fields.count == 7)
+    #expect(fields[0] == "Acme, Inc.")
+}
+
 @Test func jsonRoundTripsExportedBlocks() throws {
     let row = ExportedBlock(
         projectName: "p",
