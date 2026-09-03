@@ -86,21 +86,6 @@ shows followed repositories too, each with a **Remove** link to unfollow
 it (disabled while its timer is running) — equivalent to unchecking
 **Track** in Settings.
 
-#### Using Vaire with ilmari
-
-Sessions that ilmari starts run through the Claude Agent SDK with
-`settingSources: []`, so they never read `~/.claude/settings.json` — the
-hooks above don't apply to them out of the box. To get Vaire tracking on
-ilmari-driven sessions, add hook callbacks to ilmari's `claude` adapter
-yourself (it takes an SDK `hooks` option, same shape as the CLI hooks
-above) that shell out to the `vaire` CLI (`./scripts/install_cli.sh`) for
-`SessionStart`/`Stop`/`SessionEnd`. Since there's no one watching a
-headless run to answer the note/estimate popup, have `SessionStart`
-start tracking immediately with a fixed note instead of waiting on the
-`vaire://` dialog. Gate all of it on `vaire is-hooks-enabled <cwd>`, and
-enable **Track** for the target repository in Vaire's Settings as above
-— the same opt-in the CLI hooks respect.
-
 ### Importing from git
 
 The Week window has an **Import from git…** button, scoped to the week

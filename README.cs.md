@@ -85,21 +85,6 @@ taky zobrazuje jen sledované repozitáře, každý s odkazem **Remove** pro
 odhlášení (vypnutý, dokud běží jeho časovač) — funguje stejně jako
 odškrtnutí **Track** v Nastavení.
 
-#### Používání Vaire s ilmari
-
-Sessions, které spouští ilmari, běží přes Claude Agent SDK s
-`settingSources: []`, takže nikdy nečtou `~/.claude/settings.json` —
-hooky výše se jich rovnou netýkají. Aby Vaire sledoval i sessions
-spuštěné ilmarim, musíš si sám do ilmariho `claude` adaptéru přidat hook
-callbacky (SDK má `hooks` volbu se stejným tvarem jako CLI hooky výše),
-které zavolají CLI `vaire` (`./scripts/install_cli.sh`) pro
-`SessionStart`/`Stop`/`SessionEnd`. Protože u headless běhu nikdo
-nesleduje popup s poznámkou a odhadem, ať `SessionStart` rovnou spustí
-sledování s pevnou poznámkou místo čekání na `vaire://` dialog. Celé to
-podmiň na `vaire is-hooks-enabled <cwd>` a zapni **Track** pro cílový
-repozitář ve Vaire Nastavení stejně jako výše — stejný opt-in, který
-respektují i CLI hooky.
-
 ### Import z gitu
 
 Okno Týden má tlačítko **Import from git…**, které pracuje se zrovna
