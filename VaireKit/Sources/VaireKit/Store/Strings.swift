@@ -49,6 +49,7 @@ public enum Strings {
     public static var editEstimate: String { pick(cs: "Upravit odhad…", en: "Edit estimate…") }
     public static var estimateWithoutAIHours: String { pick(cs: "Odhad bez AI", en: "Estimate without AI") }
     public static var cancel: String { pick(cs: "Zrušit", en: "Cancel") }
+    public static var close: String { pick(cs: "Zavřít", en: "Close") }
 
     // MARK: - DailyReviewScheduler
 

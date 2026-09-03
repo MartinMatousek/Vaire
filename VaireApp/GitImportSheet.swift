@@ -20,6 +20,7 @@ struct GitImportSheet: View {
     @State private var isLoading = false
     @State private var loadError: String?
     @State private var resultMessage: String?
+    @State private var didImport = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -67,10 +68,15 @@ struct GitImportSheet: View {
 
             HStack {
                 Spacer()
-                Button(Strings.cancel) { dismiss() }
-                Button(Strings.gitImportCommit) { commit() }
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(selectedProjectId == nil || candidates.filter(\.included).isEmpty)
+                if didImport {
+                    Button(Strings.close) { dismiss() }
+                        .keyboardShortcut(.defaultAction)
+                } else {
+                    Button(Strings.cancel) { dismiss() }
+                    Button(Strings.gitImportCommit) { commit() }
+                        .keyboardShortcut(.defaultAction)
+                        .disabled(selectedProjectId == nil || candidates.filter(\.included).isEmpty)
+                }
             }
         }
         .padding()
@@ -172,6 +178,7 @@ struct GitImportSheet: View {
                 replacingExisting: replaceExisting
             )
             resultMessage = Strings.gitImportSuccess(candidates.filter(\.included).count)
+            didImport = true
             WidgetCenter.shared.reloadAllTimelines()
             DataChangeNotifier.post()
             onImported()
