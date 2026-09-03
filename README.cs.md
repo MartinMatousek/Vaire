@@ -21,6 +21,11 @@ WidgetKit widget s denním ukazatelem postupu.
   porovnané s reálně naloggovaným časem, aby bylo vidět přidanou hodnotu.
 - **Ukazatel postupu v menu baru** a desktopový widget s dnešními
   odpracovanými hodinami vůči dennímu cíli.
+- **Průvodce dokončením dne/týdne**, který krok za krokem projde kratší
+  dny a navrhne nezalogované commity, prodloužení bloku nebo ruční záznam.
+- **Nahrání do Trask** (volitelné) — poloautomaticky zaloguje čas do
+  vlastního timesheetu Trask přes okno Chrome, které zkontroluješ a
+  potvrdíš, s volitelným automatickým vyplněním přihlášení přes 1Password.
 
 ## Instalace
 
@@ -93,6 +98,40 @@ nich. Nic se nezapíše, dokud v kontrolním okně neklikneš na **Import**.
 Použij ho, pokud jsi na projektu pracoval mimo Claude Code — Vaire jinak
 nemá jak takovou práci vidět.
 
+### Dokončení kratšího dne nebo týdne
+
+Okno Týden má tlačítka **Finish day…** a **Finish week…** — průvodce
+krok za krokem, jak doplnit den, který nedosahuje cílových hodin. Každý
+krok nabídne jeden návrh: nezalogovaný git commit, existující blok, který
+lze prodloužit (pro práci po skončení session), nebo ruční záznam —
+Přeskočit nebo Přidat a další, dokud se mezera nezavře nebo návrhy
+nedojdou. **Finish week…** projede stejně každý den v týdnu, který ještě
+není na cíli, dny na cíli přeskočí.
+
+### Nahrání času do Trask
+
+Pokud pracuješ v Trask, tlačítka **Upload day…** / **Upload week…** v
+okně Týden můžou zalogovat čas do vlastního timesheetu Trask
+(`my.trask.cz`) za tebe. Trask nemá API, takže se místo toho ovládá
+skutečné okno Chrome: nejdřív v Nastavení spáruj každý projekt s jeho
+Trask projektem/úkolem, pak Upload vyplní jeden záznam Trask po druhém v
+okně Chrome a zastaví se před Uložit — zkontroluješ ho a Uložit klikneš
+sám. Nic se nikdy neodešle bez tvé kontroly.
+
+Okno Chrome se spouští automaticky, a pokud v Nastavení zapneš
+automatické vyplnění přes **1Password** a vybereš svou položku pro
+přihlášení do Trask, stačí už jen potvrdit MFA v telefonu — Vaire žádné
+heslo neukládá, natahuje ho z 1Password (přes CLI `op`) při každém
+pokusu. Vyžaduje:
+
+```
+brew install --cask 1password-cli
+```
+
+Pak zapni **Integrate with 1Password CLI** v 1Password.app → Settings →
+Developer. Podrobnosti o automatizaci viz
+[`VaireUpload/README.md`](VaireUpload/README.md).
+
 ### Jazyk
 
 Rozhraní Vaire (aplikace i dialogy z hooků) je dostupné v angličtině a
@@ -114,6 +153,8 @@ Rozhraní Vaire (aplikace i dialogy z hooků) je dostupné v angličtině a
 - `hooks/` — skripty `SessionStart`/`SessionEnd`/`Stop` hooků pro
   automatický logging času z Claude Code sessions, plus sdílená logika,
   kterou sourcují (`vaire-stop-and-review.sh`)
+- `VaireUpload/` — Node/Playwright skripty pro nahrávání do Trask; není
+  součástí Swift Package, viz vlastní README
 - `project.yml` — manifest pro [XcodeGen](https://github.com/yonaskolb/XcodeGen);
   `Vaire.xcodeproj` se z něj generuje a není v repozitáři
 
