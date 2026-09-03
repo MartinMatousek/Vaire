@@ -140,6 +140,12 @@ struct WeekView: View {
                 }
                 .buttonStyle(.link)
                 .disabled(allProjectsSorted.isEmpty)
+
+                Button(Strings.uploadWeek) {
+                    startUpload(forWeek: weekStart)
+                }
+                .buttonStyle(.link)
+                .disabled(allProjectsSorted.isEmpty)
                 .sheet(isPresented: $showingUpload) {
                     UploadFlowView(blocksToUpload: uploadBlocks, projects: projects)
                 }
@@ -558,6 +564,30 @@ struct WeekView: View {
         uploadBlocks = (try? AppEnvironment.db.dbQueue.read { conn in
             try Block
                 .filter(Column("start") < dayEnd && Column("end") > dayStart)
+                .order(Column("start"))
+                .fetchAll(conn)
+        }) ?? []
+        showingUpload = true
+    }
+
+    /// Same gating as `startUpload(forDay:)`, scoped to the whole displayed
+    /// week: any day `WeekFinisher.daysNeedingReview` still flags (already
+    /// skips weekdays at target and empty weekend days) sends the user to
+    /// Finish week first — e.g. logging a whole week's work on Friday means
+    /// every prior day still needs filling before upload.
+    private func startUpload(forWeek weekStart: Date) {
+        let calendar = Calendar.current
+        let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart) ?? weekStart
+
+        let needsReview = (try? WeekFinisher.daysNeedingReview(db: AppEnvironment.db, weekStart: weekStart, targetHours: targetHours)) ?? []
+        if !needsReview.isEmpty {
+            showingFinishWeek = true
+            return
+        }
+
+        uploadBlocks = (try? AppEnvironment.db.dbQueue.read { conn in
+            try Block
+                .filter(Column("start") < weekEnd && Column("end") > weekStart)
                 .order(Column("start"))
                 .fetchAll(conn)
         }) ?? []

@@ -124,9 +124,9 @@ public enum Strings {
 
     // MARK: - Finish day/week flow
 
-    public static var finishDay: String { pick(cs: "Dokončit den…", en: "Finish day…") }
+    public static var finishDay: String { pick(cs: "Doplň den…", en: "Fill day…") }
     public static var finishDayHelp: String { pick(cs: "Projde návrhy, jak doplnit den do cílových hodin.", en: "Walks through suggestions to fill the day up to target hours.") }
-    public static var finishWeek: String { pick(cs: "Dokončit týden…", en: "Finish week…") }
+    public static var finishWeek: String { pick(cs: "Doplň týden…", en: "Fill week…") }
     public static var finishWeekHelp: String { pick(cs: "Projde dny v týdnu, které ještě nedosáhly cíle.", en: "Walks through the week's days that haven't hit target yet.") }
     public static func finishDayHeader(logged: String, target: String) -> String { pick(cs: "Odpracováno \(logged) z \(target)", en: "Logged \(logged) of \(target)") }
     public static func finishDayRemaining(_ remaining: String) -> String { pick(cs: "Zbývá \(remaining)", en: "\(remaining) remaining") }
@@ -142,7 +142,7 @@ public enum Strings {
     public static var finishWeekBack: String { pick(cs: "Zpět", en: "Back") }
     public static var finishWeekNextDay: String { pick(cs: "Další den", en: "Next day") }
     public static var finishWeekAllCaughtUp: String { pick(cs: "Všechny dny jsou na cíli.", en: "All days are at target.") }
-    public static var finishWeekTitle: String { pick(cs: "Dokončit týden", en: "Finish week") }
+    public static var finishWeekTitle: String { pick(cs: "Doplň týden", en: "Fill week") }
 
     // MARK: - Trask pairing (Settings)
 
@@ -164,8 +164,8 @@ public enum Strings {
 
     // MARK: - Trask upload flow
 
-    public static var uploadDay: String { pick(cs: "Nahrát den do Trask…", en: "Upload day to Trask…") }
-    public static var uploadWeek: String { pick(cs: "Nahrát týden do Trask…", en: "Upload week to Trask…") }
+    public static var uploadDay: String { pick(cs: "Nahrát den…", en: "Upload day…") }
+    public static var uploadWeek: String { pick(cs: "Nahrát týden…", en: "Upload week…") }
     public static var uploadNeedsRepairing: String { pick(cs: "Tyto projekty je potřeba přeparovat s Trask, než bude možné nahrát čas:", en: "These projects need re-pairing with Trask before time can be uploaded:") }
     public static var uploadOpenSettings: String { pick(cs: "Otevřít nastavení", en: "Open Settings") }
     public static func uploadEntryProgress(current: Int, total: Int) -> String { pick(cs: "Záznam \(current) z \(total)", en: "Entry \(current) of \(total)") }
