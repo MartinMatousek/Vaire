@@ -21,11 +21,11 @@ daily progress ring.
   without AI, compared against actual logged time, to see the added value.
 - **Menu bar progress ring** and a desktop widget showing today's hours
   against your daily target.
-- **Finish day/week wizard** that walks through short days step by step,
+- **Fill day/week wizard** that walks through short days step by step,
   suggesting unlogged commits, prolonged blocks, or manual entries.
-- **Trask timesheet upload** (optional) — semi-automatically logs your
-  time into Trask's own timesheet via a Chrome window you review and
-  confirm, with optional 1Password autofill for the login step.
+- **Timesheet upload** (optional) — semi-automatically logs your time
+  into an external web-based timesheet via a Chrome window you review
+  and confirm, with optional 1Password autofill for the login step.
 
 ## Install
 
@@ -86,6 +86,21 @@ shows followed repositories too, each with a **Remove** link to unfollow
 it (disabled while its timer is running) — equivalent to unchecking
 **Track** in Settings.
 
+#### Using Vaire with ilmari
+
+Sessions that ilmari starts run through the Claude Agent SDK with
+`settingSources: []`, so they never read `~/.claude/settings.json` — the
+hooks above don't apply to them out of the box. To get Vaire tracking on
+ilmari-driven sessions, add hook callbacks to ilmari's `claude` adapter
+yourself (it takes an SDK `hooks` option, same shape as the CLI hooks
+above) that shell out to the `vaire` CLI (`./scripts/install_cli.sh`) for
+`SessionStart`/`Stop`/`SessionEnd`. Since there's no one watching a
+headless run to answer the note/estimate popup, have `SessionStart`
+start tracking immediately with a fixed note instead of waiting on the
+`vaire://` dialog. Gate all of it on `vaire is-hooks-enabled <cwd>`, and
+enable **Track** for the target repository in Vaire's Settings as above
+— the same opt-in the CLI hooks respect.
+
 ### Importing from git
 
 The Week window has an **Import from git…** button, scoped to the week
@@ -100,28 +115,28 @@ Nothing is written until you click **Import** in the sheet. Use it to
 backfill time you spent working on a project outside Claude Code — Vaire
 has no other way to see that work.
 
-### Finishing a short day or week
+### Filling a short day or week
 
-The Week window has **Finish day…** and **Finish week…** buttons — a
+The Week window has **Fill day…** and **Fill week…** buttons — a
 guided, step-by-step way to fill a day that's under your target hours.
 Each step offers one suggestion at a time: an unlogged git commit, an
 existing block you can prolong (for work done after a session ended), or
 a manual entry — Skip or Add & next, until the day's gap is closed or you
-run out of suggestions. **Finish week…** runs the same flow across every
+run out of suggestions. **Fill week…** runs the same flow across every
 day in the week that isn't already at target, skipping days that are.
 
-### Uploading time to Trask
+### Uploading time to an external timesheet
 
-If you work at Trask, the Week window's **Upload day…** / **Upload
-week…** buttons can log your time into Trask's own timesheet
-(`my.trask.cz`) for you. Since Trask has no API, this drives a real
-Chrome window instead: pair each project with its Trask project/task in
-Settings first, then Upload fills one Trask entry at a time in a Chrome
-window and pauses before Save — you review it and click Save yourself.
-Nothing is ever submitted without you looking at it first.
+The Week window's **Upload day…** / **Upload week…** buttons can log
+your time into an external web-based timesheet for you. Since that
+timesheet has no API, this drives a real Chrome window instead: pair
+each project with its timesheet project/task in Settings first, then
+Upload fills one timesheet entry at a time in a Chrome window and pauses
+before Save — you review it and click Save yourself. Nothing is ever
+submitted without you looking at it first.
 
 The Chrome window itself launches automatically, and if you enable
-**1Password** autofill in Settings and pick your Trask login item, only
+**1Password** autofill in Settings and pick your login item, only
 approving MFA on your phone is ever needed — no password is stored by
 Vaire; it's fetched from 1Password (via the `op` CLI) per attempt.
 Requires:
@@ -155,7 +170,7 @@ change takes effect after restarting the app.
 - `hooks/` — `SessionStart`/`SessionEnd`/`Stop` hook scripts for automatic
   time logging from Claude Code sessions, plus shared logic they source
   (`vaire-stop-and-review.sh`)
-- `VaireUpload/` — Node/Playwright scripts behind the Trask upload
+- `VaireUpload/` — Node/Playwright scripts behind the timesheet upload
   feature; not part of the Swift package, see its own README
 - `project.yml` — [XcodeGen](https://github.com/yonaskolb/XcodeGen)
   manifest; `Vaire.xcodeproj` is generated from it and not checked in

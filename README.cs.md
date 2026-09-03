@@ -21,11 +21,12 @@ WidgetKit widget s denním ukazatelem postupu.
   porovnané s reálně naloggovaným časem, aby bylo vidět přidanou hodnotu.
 - **Ukazatel postupu v menu baru** a desktopový widget s dnešními
   odpracovanými hodinami vůči dennímu cíli.
-- **Průvodce dokončením dne/týdne**, který krok za krokem projde kratší
+- **Průvodce doplněním dne/týdne**, který krok za krokem projde kratší
   dny a navrhne nezalogované commity, prodloužení bloku nebo ruční záznam.
-- **Nahrání do Trask** (volitelné) — poloautomaticky zaloguje čas do
-  vlastního timesheetu Trask přes okno Chrome, které zkontroluješ a
-  potvrdíš, s volitelným automatickým vyplněním přihlášení přes 1Password.
+- **Nahrání do timesheetu** (volitelné) — poloautomaticky zaloguje čas
+  do externího webového timesheetu přes okno Chrome, které zkontroluješ
+  a potvrdíš, s volitelným automatickým vyplněním přihlášení přes
+  1Password.
 
 ## Instalace
 
@@ -84,6 +85,21 @@ taky zobrazuje jen sledované repozitáře, každý s odkazem **Remove** pro
 odhlášení (vypnutý, dokud běží jeho časovač) — funguje stejně jako
 odškrtnutí **Track** v Nastavení.
 
+#### Používání Vaire s ilmari
+
+Sessions, které spouští ilmari, běží přes Claude Agent SDK s
+`settingSources: []`, takže nikdy nečtou `~/.claude/settings.json` —
+hooky výše se jich rovnou netýkají. Aby Vaire sledoval i sessions
+spuštěné ilmarim, musíš si sám do ilmariho `claude` adaptéru přidat hook
+callbacky (SDK má `hooks` volbu se stejným tvarem jako CLI hooky výše),
+které zavolají CLI `vaire` (`./scripts/install_cli.sh`) pro
+`SessionStart`/`Stop`/`SessionEnd`. Protože u headless běhu nikdo
+nesleduje popup s poznámkou a odhadem, ať `SessionStart` rovnou spustí
+sledování s pevnou poznámkou místo čekání na `vaire://` dialog. Celé to
+podmiň na `vaire is-hooks-enabled <cwd>` a zapni **Track** pro cílový
+repozitář ve Vaire Nastavení stejně jako výše — stejný opt-in, který
+respektují i CLI hooky.
+
 ### Import z gitu
 
 Okno Týden má tlačítko **Import from git…**, které pracuje se zrovna
@@ -98,31 +114,31 @@ nich. Nic se nezapíše, dokud v kontrolním okně neklikneš na **Import**.
 Použij ho, pokud jsi na projektu pracoval mimo Claude Code — Vaire jinak
 nemá jak takovou práci vidět.
 
-### Dokončení kratšího dne nebo týdne
+### Doplnění kratšího dne nebo týdne
 
-Okno Týden má tlačítka **Finish day…** a **Finish week…** — průvodce
+Okno Týden má tlačítka **Doplň den…** a **Doplň týden…** — průvodce
 krok za krokem, jak doplnit den, který nedosahuje cílových hodin. Každý
 krok nabídne jeden návrh: nezalogovaný git commit, existující blok, který
 lze prodloužit (pro práci po skončení session), nebo ruční záznam —
 Přeskočit nebo Přidat a další, dokud se mezera nezavře nebo návrhy
-nedojdou. **Finish week…** projede stejně každý den v týdnu, který ještě
+nedojdou. **Doplň týden…** projede stejně každý den v týdnu, který ještě
 není na cíli, dny na cíli přeskočí.
 
-### Nahrání času do Trask
+### Nahrání času do externího timesheetu
 
-Pokud pracuješ v Trask, tlačítka **Upload day…** / **Upload week…** v
-okně Týden můžou zalogovat čas do vlastního timesheetu Trask
-(`my.trask.cz`) za tebe. Trask nemá API, takže se místo toho ovládá
-skutečné okno Chrome: nejdřív v Nastavení spáruj každý projekt s jeho
-Trask projektem/úkolem, pak Upload vyplní jeden záznam Trask po druhém v
-okně Chrome a zastaví se před Uložit — zkontroluješ ho a Uložit klikneš
-sám. Nic se nikdy neodešle bez tvé kontroly.
+Tlačítka **Upload day…** / **Upload week…** v okně Týden můžou zalogovat
+čas do externího webového timesheetu za tebe. Ten nemá API, takže se
+místo toho ovládá skutečné okno Chrome: nejdřív v Nastavení spáruj
+každý projekt s jeho projektem/úkolem v timesheetu, pak Upload vyplní
+jeden záznam po druhém v okně Chrome a zastaví se před Uložit —
+zkontroluješ ho a Uložit klikneš sám. Nic se nikdy neodešle bez tvé
+kontroly.
 
 Okno Chrome se spouští automaticky, a pokud v Nastavení zapneš
-automatické vyplnění přes **1Password** a vybereš svou položku pro
-přihlášení do Trask, stačí už jen potvrdit MFA v telefonu — Vaire žádné
-heslo neukládá, natahuje ho z 1Password (přes CLI `op`) při každém
-pokusu. Vyžaduje:
+automatické vyplnění přes **1Password** a vybereš svou přihlašovací
+položku, stačí už jen potvrdit MFA v telefonu — Vaire žádné heslo
+neukládá, natahuje ho z 1Password (přes CLI `op`) při každém pokusu.
+Vyžaduje:
 
 ```
 brew install --cask 1password-cli
@@ -153,8 +169,8 @@ Rozhraní Vaire (aplikace i dialogy z hooků) je dostupné v angličtině a
 - `hooks/` — skripty `SessionStart`/`SessionEnd`/`Stop` hooků pro
   automatický logging času z Claude Code sessions, plus sdílená logika,
   kterou sourcují (`vaire-stop-and-review.sh`)
-- `VaireUpload/` — Node/Playwright skripty pro nahrávání do Trask; není
-  součástí Swift Package, viz vlastní README
+- `VaireUpload/` — Node/Playwright skripty pro nahrávání do timesheetu;
+  není součástí Swift Package, viz vlastní README
 - `project.yml` — manifest pro [XcodeGen](https://github.com/yonaskolb/XcodeGen);
   `Vaire.xcodeproj` se z něj generuje a není v repozitáři
 
