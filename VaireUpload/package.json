@@ -1,0 +1,14 @@
+{
+  "name": "vaire-upload",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Browser automation helpers Vaire shells out to for scraping and filling the Trask timesheet (my.trask.cz). Not part of the Swift package or app bundle — invoked via Process, same pattern as GitImporter shelling to /usr/bin/git.",
+  "scripts": {
+    "scrape": "node src/scrapeCatalog.mjs",
+    "fill": "node src/fillEntry.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.62.1"
+  }
+}

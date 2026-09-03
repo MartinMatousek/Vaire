@@ -21,3 +21,6 @@ Package.resolved
 
 # xcodegen output (generated from project.yml, not checked in)
 Vaire.xcodeproj/
+
+# VaireUpload (Node/Playwright)
+VaireUpload/node_modules/

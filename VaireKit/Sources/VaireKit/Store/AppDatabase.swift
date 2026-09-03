@@ -121,6 +121,44 @@ public struct AppDatabase: Sendable {
             }
         }
 
+        migrator.registerMigration("v7") { db in
+            // Trask's project/task catalog is scraped from the live
+            // my.trask.cz timesheet UI (it has no API) and cached here so
+            // Settings can offer real pickers without re-scraping on every
+            // screen open. `id` is derived from the scraped label (the
+            // stable trailing code for a project, e.g. "ET97" — the
+            // client/fiscal-year prefix churns yearly; a hash of the label
+            // for a task, which has no such stable code) so a re-scrape can
+            // upsert by identity instead of only ever growing the table.
+            // `active` is flipped false rather than deleting a row that
+            // disappears from a scrape, so a project/task the user already
+            // paired against can be detected as stale and flagged for
+            // re-pairing instead of silently pointing at nothing.
+            try db.create(table: "traskProject") { t in
+                t.column("id", .text).primaryKey()
+                t.column("label", .text).notNull()
+                t.column("active", .boolean).notNull().defaults(to: true)
+            }
+
+            try db.create(table: "traskTask") { t in
+                t.column("id", .text).primaryKey()
+                t.column("traskProjectId", .text).notNull()
+                    .references("traskProject", onDelete: .cascade)
+                t.column("label", .text).notNull()
+                t.column("active", .boolean).notNull().defaults(to: true)
+            }
+            try db.create(index: "traskTask_traskProjectId", on: "traskTask", columns: ["traskProjectId"])
+
+            try db.alter(table: "project") { t in
+                t.add(column: "traskProjectId", .text)
+                t.add(column: "defaultTraskTaskId", .text)
+            }
+
+            try db.alter(table: "block") { t in
+                t.add(column: "traskTaskId", .text)
+            }
+        }
+
         return migrator
     }
 }

@@ -27,6 +27,15 @@ public enum SharedStorage {
         try directory().appendingPathComponent("language").path
     }
 
+    /// Path to the plain-text file holding the 1Password Trask-login
+    /// setting ("enabled\n<item-uuid-or-empty>"). File-based rather than a
+    /// DB row since it's a single global preference, same reasoning as
+    /// languagePath — and so it stays legible/editable without a SQLite
+    /// client if something ever needs to reset it by hand.
+    public static func onePasswordSettingPath() throws -> String {
+        try directory().appendingPathComponent("onePasswordSetting").path
+    }
+
     /// Path to the JSON result file for one `vaire://edit-block` request,
     /// one file per block id so a stale/timed-out request from a previous
     /// run can't be misread as the current one's answer. Written by the
