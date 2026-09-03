@@ -8,6 +8,8 @@ public struct Project: Identifiable, Equatable, Sendable, Codable, FetchableReco
     public var colorHex: String
     public var mdHoursPerDay: Double
     public var hooksEnabled: Bool
+    public var traskProjectId: String?
+    public var defaultTraskTaskId: String?
 
     public init(
         id: UUID = UUID(),
@@ -15,7 +17,9 @@ public struct Project: Identifiable, Equatable, Sendable, Codable, FetchableReco
         path: String,
         colorHex: String = "#34C759",
         mdHoursPerDay: Double = 8.0,
-        hooksEnabled: Bool = false
+        hooksEnabled: Bool = false,
+        traskProjectId: String? = nil,
+        defaultTraskTaskId: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -23,6 +27,8 @@ public struct Project: Identifiable, Equatable, Sendable, Codable, FetchableReco
         self.colorHex = colorHex
         self.mdHoursPerDay = mdHoursPerDay
         self.hooksEnabled = hooksEnabled
+        self.traskProjectId = traskProjectId
+        self.defaultTraskTaskId = defaultTraskTaskId
     }
 
     public static let databaseTableName = "project"

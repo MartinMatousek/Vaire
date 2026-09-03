@@ -122,6 +122,72 @@ public enum Strings {
     public static var gitImportCommit: String { pick(cs: "Importovat", en: "Import") }
     public static func gitImportSuccess(_ count: Int) -> String { pick(cs: "Naimportováno \(count) záznamů.", en: "Imported \(count) entries.") }
 
+    // MARK: - Finish day/week flow
+
+    public static var finishDay: String { pick(cs: "Dokončit den…", en: "Finish day…") }
+    public static var finishDayHelp: String { pick(cs: "Projde návrhy, jak doplnit den do cílových hodin.", en: "Walks through suggestions to fill the day up to target hours.") }
+    public static var finishWeek: String { pick(cs: "Dokončit týden…", en: "Finish week…") }
+    public static var finishWeekHelp: String { pick(cs: "Projde dny v týdnu, které ještě nedosáhly cíle.", en: "Walks through the week's days that haven't hit target yet.") }
+    public static func finishDayHeader(logged: String, target: String) -> String { pick(cs: "Odpracováno \(logged) z \(target)", en: "Logged \(logged) of \(target)") }
+    public static func finishDayRemaining(_ remaining: String) -> String { pick(cs: "Zbývá \(remaining)", en: "\(remaining) remaining") }
+    public static var finishDayComplete: String { pick(cs: "Den je hotový.", en: "Day is complete.") }
+    public static var finishDayNoMoreSuggestions: String { pick(cs: "Žádné další návrhy — doplň zbytek ručně.", en: "No more suggestions — fill the rest manually.") }
+    public static var finishDaySuggestionGitCommit: String { pick(cs: "Nezalogovaný commit", en: "Unlogged commit") }
+    public static func finishDaySuggestionProlong(_ project: String) -> String { pick(cs: "Prodloužit poslední záznam (\(project))", en: "Prolong last entry (\(project))") }
+    public static var finishDaySuggestionManual: String { pick(cs: "Ruční záznam", en: "Manual entry") }
+    public static var finishDaySkip: String { pick(cs: "Přeskočit", en: "Skip") }
+    public static var finishDayAddAndNext: String { pick(cs: "Přidat a další", en: "Add & next") }
+    public static var finishDayDone: String { pick(cs: "Hotovo", en: "Done") }
+    public static var finishWeekSkipDay: String { pick(cs: "Přeskočit den", en: "Skip day") }
+    public static var finishWeekBack: String { pick(cs: "Zpět", en: "Back") }
+    public static var finishWeekNextDay: String { pick(cs: "Další den", en: "Next day") }
+    public static var finishWeekAllCaughtUp: String { pick(cs: "Všechny dny jsou na cíli.", en: "All days are at target.") }
+    public static var finishWeekTitle: String { pick(cs: "Dokončit týden", en: "Finish week") }
+
+    // MARK: - Trask pairing (Settings)
+
+    public static var traskSectionTitle: String { pick(cs: "Trask", en: "Trask") }
+    public static var traskProjectLabel: String { pick(cs: "Trask projekt", en: "Trask project") }
+    public static var traskDefaultTaskLabel: String { pick(cs: "Výchozí úkol", en: "Default task") }
+    public static var traskNoPairing: String { pick(cs: "Nespárováno", en: "Not paired") }
+    public static var traskRefreshCatalog: String { pick(cs: "Obnovit katalog Trask…", en: "Refresh Trask catalog…") }
+    public static var traskRefreshing: String { pick(cs: "Načítám z Trask…", en: "Refreshing from Trask…") }
+    public static func traskRefreshFailed(_ message: String) -> String { pick(cs: "Obnovení selhalo: \(message)", en: "Refresh failed: \(message)") }
+    public static func traskRefreshSummary(newProjects: Int, newTasks: Int, deactivated: Int) -> String {
+        pick(
+            cs: "Nové projekty: \(newProjects), nové úkoly: \(newTasks), deaktivováno: \(deactivated)",
+            en: "New projects: \(newProjects), new tasks: \(newTasks), deactivated: \(deactivated)"
+        )
+    }
+    public static var traskPairingStaleProject: String { pick(cs: "Trask projekt už neexistuje — přeparuj prosím.", en: "Trask project no longer exists — please re-pair.") }
+    public static var traskPairingStaleTask: String { pick(cs: "Výchozí úkol už neexistuje — přeparuj prosím.", en: "Default task no longer exists — please re-pair.") }
+
+    // MARK: - Trask upload flow
+
+    public static var uploadDay: String { pick(cs: "Nahrát den do Trask…", en: "Upload day to Trask…") }
+    public static var uploadWeek: String { pick(cs: "Nahrát týden do Trask…", en: "Upload week to Trask…") }
+    public static var uploadNeedsRepairing: String { pick(cs: "Tyto projekty je potřeba přeparovat s Trask, než bude možné nahrát čas:", en: "These projects need re-pairing with Trask before time can be uploaded:") }
+    public static var uploadOpenSettings: String { pick(cs: "Otevřít nastavení", en: "Open Settings") }
+    public static func uploadEntryProgress(current: Int, total: Int) -> String { pick(cs: "Záznam \(current) z \(total)", en: "Entry \(current) of \(total)") }
+    public static var uploadEntryFilled: String { pick(cs: "Vyplněno — zkontroluj okno Chrome, klikni tam na Uložit, pak pokračuj.", en: "Filled — check the Chrome window, click Save there, then continue.") }
+    public static var uploadNext: String { pick(cs: "Další", en: "Next") }
+    public static var uploadSkipEntry: String { pick(cs: "Přeskočit záznam", en: "Skip entry") }
+    public static var uploadCancel: String { pick(cs: "Zrušit nahrávání", en: "Cancel upload") }
+    public static func uploadFillFailed(_ message: String) -> String { pick(cs: "Vyplnění selhalo: \(message)", en: "Filling failed: \(message)") }
+    public static var uploadComplete: String { pick(cs: "Nahrávání dokončeno.", en: "Upload complete.") }
+
+    // MARK: - 1Password login autofill (Settings)
+
+    public static var onePasswordUseForLogin: String { pick(cs: "Použít 1Password pro přihlášení do Trask", en: "Use 1Password to fill Trask login") }
+    public static var onePasswordChooseItem: String { pick(cs: "Vybrat položku 1Password pro přihlášení…", en: "Choose 1Password item for Trask login…") }
+    public static func onePasswordSelectedItem(_ title: String) -> String { pick(cs: "Vybráno: \(title)", en: "Selected: \(title)") }
+    public static var onePasswordNoneSelected: String { pick(cs: "Zatím nevybráno", en: "Not yet chosen") }
+    public static var onePasswordPickerTitle: String { pick(cs: "Vybrat položku 1Password", en: "Choose 1Password item") }
+    public static var onePasswordPickerSearch: String { pick(cs: "Hledat…", en: "Search…") }
+    public static var uploadAwaiting2FA: String { pick(cs: "Vyplněno uživatelské jméno a heslo — dokonči prosím dvoufázové ověření v okně Chrome, pak zkus znovu.", en: "Username/password filled — please complete 2FA in the Chrome window, then try again.") }
+    public static var uploadLoginRequired: String { pick(cs: "Přihlas se prosím do Trask v okně Chrome, nebo zapni automatické vyplnění pomocí 1Password v Nastavení.", en: "Please log into Trask in the Chrome window, or enable 1Password autofill in Settings.") }
+    public static func uploadEnsureReadyFailed(_ message: String) -> String { pick(cs: "Příprava nahrávání selhala: \(message)", en: "Preparing the upload failed: \(message)") }
+
     // MARK: - Widget
 
     public static func widgetProjectLine(project: String, hours: String) -> String { "\(project): \(hours)" }
