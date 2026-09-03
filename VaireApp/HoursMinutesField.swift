@@ -29,22 +29,20 @@ struct HoursMinutesField: View {
         .textFieldStyle(.roundedBorder)
     }
 
-    /// Hand-rolled up/down buttons instead of `Stepper` — SwiftUI's
-    /// `Stepper(value:in:step:)` calls the binding's setter twice per
-    /// click on the increment side (a platform quirk, not reproducible on
-    /// decrement), which double-applies the 15-minute snap. Plain buttons
-    /// give a guaranteed single call per click.
+    /// `Stepper(value:in:step:)` calls the binding's setter twice per click
+    /// on the increment side (a platform quirk, not reproducible on
+    /// decrement), which double-applies the 15-minute snap. The
+    /// `onIncrement`/`onDecrement` closure form doesn't have that bug (it
+    /// fires exactly once per click either direction) and renders as a
+    /// real native Stepper, matching the hours field's chevrons instead of
+    /// a visually different hand-rolled pair of tiny SF Symbol buttons.
     private var minutesStepperButtons: some View {
-        VStack(spacing: 0) {
-            Button { stepMinutes(up: true) } label: {
-                Image(systemName: "chevron.up")
-            }
-            Button { stepMinutes(up: false) } label: {
-                Image(systemName: "chevron.down")
-            }
-        }
-        .buttonStyle(.borderless)
-        .font(.system(size: 9))
+        Stepper(
+            "",
+            onIncrement: { stepMinutes(up: true) },
+            onDecrement: { stepMinutes(up: false) }
+        )
+        .labelsHidden()
     }
 
     /// Moves minutes by 15: from an exact 15-multiple, a plain +/-15; from
