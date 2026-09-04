@@ -13,6 +13,15 @@ final class LiveImportCoordinator {
             .appendingPathComponent(".claude/projects", isDirectory: true)
         guard FileManager.default.fileExists(atPath: claudeProjectsDir.path) else { return }
 
+        // FSEventStream only reports events from the moment it starts
+        // (kFSEventStreamEventIdSinceNow) — a session file that was already
+        // being written before this launch (e.g. Vaire restarted mid-day)
+        // won't trigger a reimport until it's next appended to, so today's
+        // hours read as 0h 0m until that happens. Reimport every session
+        // file already on disk once up front so a restart doesn't lose
+        // already-logged time.
+        reimportAllExisting(in: claudeProjectsDir)
+
         let watcher = ClaudeProjectsWatcher { [weak self] changedPath in
             Task { @MainActor in
                 self?.reimport(sessionFilePath: changedPath)
@@ -20,6 +29,18 @@ final class LiveImportCoordinator {
         }
         watcher.start(watching: claudeProjectsDir.path)
         self.watcher = watcher
+    }
+
+    private func reimportAllExisting(in directory: URL) {
+        guard let enumerator = FileManager.default.enumerator(
+            at: directory,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ) else { return }
+
+        for case let url as URL in enumerator where url.pathExtension == "jsonl" {
+            reimport(sessionFilePath: url.path)
+        }
     }
 
     private func reimport(sessionFilePath: String) {
