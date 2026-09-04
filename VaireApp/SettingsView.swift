@@ -258,6 +258,24 @@ struct SettingsView: View {
 
         Task {
             do {
+                let status = try await TraskScraper.ensureReady()
+                switch status {
+                case .ready:
+                    break
+                case .awaitingTwoFactor:
+                    await MainActor.run {
+                        traskError = Strings.uploadAwaiting2FA
+                        isRefreshingTraskCatalog = false
+                    }
+                    return
+                case .loginRequired:
+                    await MainActor.run {
+                        traskError = Strings.uploadLoginRequired
+                        isRefreshingTraskCatalog = false
+                    }
+                    return
+                }
+
                 let scraped = try await TraskScraper.scrapeCatalog()
                 let diff = try TraskCatalog.refresh(db: AppEnvironment.db, scraped: scraped)
                 await MainActor.run {
