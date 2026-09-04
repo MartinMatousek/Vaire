@@ -11,6 +11,11 @@ struct FinishDayView: View {
     let projects: [Project]
     let targetHours: Double
     let onChanged: () -> Void
+    /// Called instead of a plain dismiss when Done is pressed and the day
+    /// has reached target — lets the caller chain straight into Upload
+    /// rather than making the user close this sheet and click Upload
+    /// again themselves.
+    var onCompleteAndUpload: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -58,7 +63,14 @@ struct FinishDayView: View {
 
             HStack {
                 Spacer()
-                Button(Strings.finishDayDone) { dismiss() }
+                Button(Strings.finishDayDone) {
+                    if status?.isComplete == true, let onCompleteAndUpload {
+                        dismiss()
+                        onCompleteAndUpload()
+                    } else {
+                        dismiss()
+                    }
+                }
                 if currentSuggestion != nil, status?.isComplete != true {
                     Button(Strings.finishDaySkip) { advance() }
                     Button(Strings.finishDayAddAndNext) { addAndAdvance() }
@@ -69,23 +81,47 @@ struct FinishDayView: View {
         }
         .padding()
         .frame(width: 420)
-        .onAppear(perform: load)
+        .task { await load() }
     }
 
+    /// `.prolong` only ever extends an existing block's end time —
+    /// `DayFinisher.apply` doesn't read `suggestion.projectId` or
+    /// `suggestion.note` for that case at all (confirmed in
+    /// DayFinisher.swift), so showing the Project picker and Note field
+    /// for it invited exactly the confusion this form used to cause: a
+    /// note typed while a prolong suggestion was on screen silently went
+    /// nowhere. Only the duration control does anything for a prolong.
     private func suggestionCard(_ suggestion: FinishSuggestion) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(kindLabel(suggestion))
-                .font(.caption).bold()
+                .font(.subheadline).bold()
 
-            Picker(Strings.gitImportProjectLabel, selection: $projectIdDraft) {
-                ForEach(projects) { project in
-                    Text(project.name).tag(Optional(project.id))
+            switch suggestion.kind {
+            case .prolong(_, let currentStart, let currentEnd):
+                Text(Strings.finishDayProlongExplanation)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Text("\(currentStart.formatted(date: .omitted, time: .shortened))–\(currentEnd.formatted(date: .omitted, time: .shortened)) · \(DurationFormatter.hoursMinutes(currentEnd.timeIntervalSince(currentStart) / 3600))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if !suggestion.note.isEmpty {
+                    Text(suggestion.note)
+                        .font(.caption)
                 }
-            }
 
-            Text(Strings.activityDescriptionLabel).font(.caption)
-            TextField(Strings.whatDidYouDoPlaceholder, text: $noteDraft, axis: .vertical)
-                .lineLimit(2...4)
+            case .gitCommit, .manual, .meeting:
+                Picker(Strings.gitImportProjectLabel, selection: $projectIdDraft) {
+                    ForEach(projects) { project in
+                        Text(project.name).tag(Optional(project.id))
+                    }
+                }
+
+                Text(Strings.activityDescriptionLabel).font(.caption)
+                TextField(Strings.whatDidYouDoPlaceholder, text: $noteDraft, axis: .vertical)
+                    .lineLimit(2...4)
+            }
 
             Text(Strings.timeLabel).font(.caption)
             HoursMinutesField(hours: $hoursDraft, minutes: $minutesDraft)
@@ -99,6 +135,8 @@ struct FinishDayView: View {
         case .prolong:
             let projectName = projects.first(where: { $0.id == suggestion.projectId })?.name ?? "?"
             return Strings.finishDaySuggestionProlong(projectName)
+        case .meeting(_, let title):
+            return Strings.finishDaySuggestionMeeting(title)
         case .manual:
             return Strings.finishDaySuggestionManual
         }
@@ -115,7 +153,7 @@ struct FinishDayView: View {
         )
     }
 
-    private func load() {
+    private func load() async {
         isLoading = true
         defer { isLoading = false }
 
@@ -127,15 +165,23 @@ struct FinishDayView: View {
                 let author = (try? gitConfigValue(key: "user.email", repoPath: project.path)) ?? ""
                 guard !author.isEmpty else { continue }
                 let since = Calendar.current.startOfDay(for: day)
-                if let commits = try? GitImporter.fetchCommits(repoPath: project.path, author: author, since: since) {
+                let until = Calendar.current.date(byAdding: .day, value: 1, to: since) ?? since
+                if let commits = try? GitImporter.fetchCommits(repoPath: project.path, author: author, since: since, until: until) {
                     commitsByProject[project.id] = commits
                 }
             }
+
+            let meetings = (try? await MeetingImporter.fetchMeetings(
+                day: day,
+                calendarTitles: MeetingImporter.workCalendarTitles
+            )) ?? []
 
             suggestions = try DayFinisher.suggestions(
                 db: AppEnvironment.db,
                 day: day,
                 commitsByProject: commitsByProject,
+                meetings: meetings,
+                defaultMeetingProjectId: projects.first?.id,
                 targetHours: targetHours
             )
             currentIndex = 0

@@ -29,6 +29,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Vaire reads your work calendar to suggest logging meetings as time entries.</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
