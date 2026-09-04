@@ -11,7 +11,7 @@ public struct Block: Identifiable, Equatable, Sendable, Codable, FetchableRecord
     public var isManual: Bool
     public var confidence: Double
     public var estimatedHoursWithoutAI: Double?
-    public var traskTaskId: String?
+    public var timesheetTaskId: String?
 
     public init(
         id: UUID = UUID(),
@@ -23,7 +23,7 @@ public struct Block: Identifiable, Equatable, Sendable, Codable, FetchableRecord
         isManual: Bool = false,
         confidence: Double = 1.0,
         estimatedHoursWithoutAI: Double? = nil,
-        traskTaskId: String? = nil
+        timesheetTaskId: String? = nil
     ) {
         self.id = id
         self.projectId = projectId
@@ -34,7 +34,7 @@ public struct Block: Identifiable, Equatable, Sendable, Codable, FetchableRecord
         self.isManual = isManual
         self.confidence = confidence
         self.estimatedHoursWithoutAI = estimatedHoursWithoutAI
-        self.traskTaskId = traskTaskId
+        self.timesheetTaskId = timesheetTaskId
     }
 
     public var duration: TimeInterval {

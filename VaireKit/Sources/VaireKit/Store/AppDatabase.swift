@@ -122,8 +122,8 @@ public struct AppDatabase: Sendable {
         }
 
         migrator.registerMigration("v7") { db in
-            // Trask's project/task catalog is scraped from the live
-            // my.trask.cz timesheet UI (it has no API) and cached here so
+            // The external timesheet's project/task catalog is scraped from
+            // the live my.trask.cz UI (it has no API) and cached here so
             // Settings can offer real pickers without re-scraping on every
             // screen open. `id` is derived from the scraped label (the
             // stable trailing code for a project, e.g. "ET97" — the
@@ -156,6 +156,52 @@ public struct AppDatabase: Sendable {
 
             try db.alter(table: "block") { t in
                 t.add(column: "traskTaskId", .text)
+            }
+        }
+
+        migrator.registerMigration("v8") { db in
+            // De-brands Vaire's own table/column naming for the external
+            // timesheet integration — "Trask" was never Vaire's name to
+            // use, it's the external product's name. Renamed here (not just
+            // at the Swift-type level) so already-installed users' DBs
+            // don't end up with columns that no longer match anything in
+            // the app.
+            //
+            // `traskProject` is renamed in place (it has no foreign key
+            // clauses pointing at it that need rewriting, and no incoming
+            // rename of its own columns). `traskTask` is rebuilt from
+            // scratch instead of renamed in place — confirmed live that
+            // `ALTER TABLE traskTask RENAME TO timesheetTask` (and the
+            // column rename after it) leaves the CREATE TABLE's own
+            // `REFERENCES traskProject(id)` clause referring to the
+            // OLD table name, since SQLite's rename doesn't rewrite a
+            // table's own foreign-key clause text to match a column rename
+            // performed in a separate statement — this then trips a real
+            // foreign-key-constraint violation on every future write
+            // against a column that, from the app's Swift-level view,
+            // looks completely renamed and healthy.
+            try db.rename(table: "traskProject", to: "timesheetProject")
+
+            try db.create(table: "timesheetTask") { t in
+                t.column("id", .text).primaryKey()
+                t.column("timesheetProjectId", .text).notNull()
+                    .references("timesheetProject", onDelete: .cascade)
+                t.column("label", .text).notNull()
+                t.column("active", .boolean).notNull().defaults(to: true)
+            }
+            try db.execute(sql: """
+                INSERT INTO timesheetTask (id, timesheetProjectId, label, active)
+                SELECT id, traskProjectId, label, active FROM traskTask
+                """)
+            try db.drop(table: "traskTask")
+            try db.create(index: "timesheetTask_timesheetProjectId", on: "timesheetTask", columns: ["timesheetProjectId"])
+
+            try db.alter(table: "project") { t in
+                t.rename(column: "traskProjectId", to: "timesheetProjectId")
+                t.rename(column: "defaultTraskTaskId", to: "defaultTimesheetTaskId")
+            }
+            try db.alter(table: "block") { t in
+                t.rename(column: "traskTaskId", to: "timesheetTaskId")
             }
         }
 

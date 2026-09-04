@@ -116,7 +116,7 @@ private func day(_ dateString: String) -> Date {
     try db.dbQueue.write { try original.insert($0) }
 
     let suggestion = FinishSuggestion(
-        kind: .prolong(blockId: original.id, currentEnd: original.end),
+        kind: .prolong(blockId: original.id, currentStart: original.start, currentEnd: original.end),
         projectId: project.id,
         start: original.end,
         durationMinutes: 30,
