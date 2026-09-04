@@ -1,6 +1,6 @@
 # VaireUpload
 
-Node/Playwright helpers that drive the Trask timesheet at `my.trask.cz`. Shelled out to by VaireApp via `Process`, the same pattern `GitImporter` uses for `/usr/bin/git`. Not part of the Swift package or app bundle.
+Node/Playwright helpers that drive the external timesheet at `my.trask.cz`. Shelled out to by VaireApp via `Process`, the same pattern `GitImporter` uses for `/usr/bin/git`. Not part of the Swift package or app bundle.
 
 ## Why a separate Chrome, not a spawned one
 
@@ -18,7 +18,7 @@ npx playwright install chromium
 
 1. Launch a **separate** debug Chrome profile — Chrome 127+ silently ignores `--remote-debugging-port` on your normal/default profile, so this must be a distinct `--user-data-dir`:
    ```bash
-   open -na "Google Chrome" --args --remote-debugging-port=9222 --user-data-dir="$HOME/chrome-trask-debug"
+   open -na "Google Chrome" --args --remote-debugging-port=9222 --user-data-dir="$HOME/chrome-timesheet-debug"
    ```
 2. In that window, go to `https://my.trask.cz/` and log in (first time only — the profile persists after that).
 3. Confirm the debug port is up:
@@ -34,10 +34,10 @@ npx playwright install chromium
   ```bash
   node src/fillEntry.mjs '{"projectLabel":"...","taskLabel":"...","dateISO":"2026-09-02","hours":1,"minutes":30,"description":"...","remoteWork":false}'
   ```
-  Prints `ready` and exits 0 once filled — you review and click Save yourself in the Chrome window. `minutes` must be 0/15/30/45 (Trask's own field limit). Only same-day entries are supported today — see `attach.mjs`'s comments if the date field ever needs driving via the calendar picker.
+  Prints `ready` and exits 0 once filled — you review and click Save yourself in the Chrome window. `minutes` must be 0/15/30/45 (the timesheet's own field limit). Only same-day entries are supported today — see `attach.mjs`'s comments if the date field ever needs driving via the calendar picker.
 
 ## Known constraints
 
-- Radzen (the UI library Trask uses) re-marks/reorders dropdown options after a selection — both scripts always select by exact label text, never by index. Confirmed live: an index-based click caused a stale-element timeout on the 2nd project.
-- If a project or task label has changed or been removed in Trask, `fillEntry.mjs` fails with a message telling you to re-run the catalog refresh — it does not guess or fall back to a similar label.
-- The Trask project/task catalog changes over time (fiscal year rollovers rename the client/FY prefix; the trailing code, e.g. `ET97`, is the stable part). Re-scrape rather than relying on a cached list from months ago.
+- Radzen (the UI library the timesheet uses) re-marks/reorders dropdown options after a selection — both scripts always select by exact label text, never by index. Confirmed live: an index-based click caused a stale-element timeout on the 2nd project.
+- If a project or task label has changed or been removed in the timesheet, `fillEntry.mjs` fails with a message telling you to re-run the catalog refresh — it does not guess or fall back to a similar label.
+- The timesheet's project/task catalog changes over time (fiscal year rollovers rename the client/FY prefix; the trailing code, e.g. `ET97`, is the stable part). Re-scrape rather than relying on a cached list from months ago.
