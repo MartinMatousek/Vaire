@@ -1,4 +1,4 @@
-// Long-lived Trask automation server for one upload session. VaireApp
+// Long-lived timesheet automation server for one upload session. VaireApp
 // spawns exactly one of these per upload (UploadFlowView), keeps it alive
 // across ensureReady + checkExistingEntries + every fillEntry call in the
 // batch, and kills it when the upload ends — replacing the old pattern of
@@ -30,10 +30,11 @@
 //
 // A single request's failure must never crash the process or block
 // subsequent requests — every op is wrapped in its own try/catch. Only a
-// genuine startup failure (Chrome won't launch, no Trask tab found) or an
-// unhandled exception outside the per-request handling exits the process.
+// genuine startup failure (Chrome won't launch, no timesheet tab found) or
+// an unhandled exception outside the per-request handling exits the
+// process.
 import readline from 'node:readline';
-import { ensureTraskTab, recoverFromStaleConnection, findExistingLoggedEntries, runFillEntry } from './attach.mjs';
+import { ensureTimesheetTab, recoverFromStaleConnection, findExistingLoggedEntries, runFillEntry } from './attach.mjs';
 import { loginIfNeeded } from './loginIfNeeded.mjs';
 
 function writeResponse(response) {
@@ -58,7 +59,7 @@ async function main() {
   let page;
   let browser;
   try {
-    ({ browser, page } = await ensureTraskTab());
+    ({ browser, page } = await ensureTimesheetTab());
   } catch (error) {
     writeResponse({ id: null, ok: false, error: error.message });
     process.exit(1);

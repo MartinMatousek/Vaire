@@ -1,9 +1,10 @@
-// Scrapes the live Project/Task catalog from the Trask "Log time" form and
-// prints it as JSON to stdout. Read-only: this never selects Type, sets
-// Hours/Minutes, or touches Save — it only opens dropdowns to read their
-// options. VaireApp shells out to this (via Process) every time an upload
-// runs, per the "re-scrape every upload" design decision, so the local
-// traskProject/traskTask cache never drifts silently out of date.
+// Scrapes the live Project/Task catalog from the timesheet's "Log time"
+// form and prints it as JSON to stdout. Read-only: this never selects
+// Type, sets Hours/Minutes, or touches Save — it only opens dropdowns to
+// read their options. VaireApp shells out to this (via Process) every time
+// an upload runs, per the "re-scrape every upload" design decision, so the
+// local timesheetProject/timesheetTask cache never drifts silently out of
+// date.
 //
 // Usage: node src/scrapeCatalog.mjs
 // Output (stdout, single JSON object, one line):
@@ -11,10 +12,10 @@
 // On failure: a human-readable error on stderr, exit code 1. Nothing is
 // printed to stdout on failure — callers should treat "empty stdout" as
 // well as a non-zero exit code as failure.
-import { attachToTraskTab, dropdownByInputName, selectDropdownOption, readDropdownOptions } from './attach.mjs';
+import { attachToTimesheetTab, dropdownByInputName, selectDropdownOption, readDropdownOptions } from './attach.mjs';
 
 async function main() {
-  const { browser, page } = await attachToTraskTab();
+  const { browser, page } = await attachToTimesheetTab();
 
   // Reload to the timesheet root defensively — if the tab is on some other
   // my.trask.cz page (e.g. Export, Dashboard) the Log-time form and its
@@ -31,7 +32,7 @@ async function main() {
 
   const projectLabels = await readDropdownOptions(page, projectDropdown);
   if (projectLabels.length === 0) {
-    throw new Error('Project dropdown returned no options — the Trask page layout may have changed.');
+    throw new Error('Project dropdown returned no options — the timesheet page layout may have changed.');
   }
 
   const catalog = {};

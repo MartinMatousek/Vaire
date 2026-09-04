@@ -11,13 +11,13 @@
 //   { "status": "login-required" }   -- on login page, autofill disabled/unset
 // Non-zero exit + stderr message on any failure (Chrome wouldn't launch,
 // op CLI failure, etc).
-import { ensureTraskTab } from './attach.mjs';
+import { ensureTimesheetTab } from './attach.mjs';
 import { loginIfNeeded } from './loginIfNeeded.mjs';
 
 async function main() {
   const onePasswordItemId = process.argv[2] || null;
 
-  const { browser, page } = await ensureTraskTab();
+  const { browser, page } = await ensureTimesheetTab();
   const result = await loginIfNeeded(page, onePasswordItemId);
   await browser.close(); // detaches only; the Chrome window stays open
 

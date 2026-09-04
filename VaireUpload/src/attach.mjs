@@ -1,15 +1,16 @@
-// Shared CDP-attach helper for the Trask automation scripts. Connects to a
-// dedicated debug Chrome profile — never the user's regular Chrome — that
-// Vaire launches itself on demand (ensureDebugChrome), so uploading never
-// requires the user to run a shell command by hand. Credentials still never
-// touch this codebase: login is either done by the user in that window, or
-// (if enabled in Settings) via loginIfNeeded.mjs pulling from 1Password
-// through the `op` CLI's biometric-gated per-call mode — no stored secret,
-// no service-account token.
+// Shared CDP-attach helper for the timesheet automation scripts. Connects
+// to a dedicated debug Chrome profile — never the user's regular Chrome —
+// that Vaire launches itself on demand (ensureDebugChrome), so uploading
+// never requires the user to run a shell command by hand. Credentials
+// still never touch this codebase: login is either done by the user in
+// that window, or (if enabled in Settings) via loginIfNeeded.mjs pulling
+// from 1Password through the `op` CLI's biometric-gated per-call mode —
+// no stored secret, no service-account token.
 //
 // A stale/expired CDP connection or a missing/wrong tab are both routine,
-// expected failure modes here (the profile isn't running yet, Trask logged
-// the session out, etc.) — every export throws a plain Error with an
+// expected failure modes here (the profile isn't running yet, the
+// timesheet logged the session out, etc.) — every export throws a plain
+// Error with an
 // actionable message rather than letting a raw Playwright timeout surface,
 // since VaireApp will show these messages to the user directly.
 import { chromium } from 'playwright';
@@ -26,8 +27,8 @@ const DEBUG_PORT = 9222;
 // which silently fails to bring up the debug port at all. Confirmed live:
 // an absolute path launches correctly in well under a second; the literal
 // "$HOME" string hangs indefinitely with no window ever opening.
-const PROFILE_DIR = path.join(os.homedir(), 'chrome-trask-debug');
-const TRASK_URL = 'https://my.trask.cz/';
+const PROFILE_DIR = path.join(os.homedir(), 'chrome-timesheet-debug');
+const TIMESHEET_URL = 'https://my.trask.cz/';
 
 async function isDebugPortUp() {
   try {
@@ -90,10 +91,10 @@ export async function connectToDebugChrome() {
  * Connects to the debug Chrome, launching it first if needed, and returns
  * an open tab on my.trask.cz — navigating a fresh tab there if none exists
  * yet. This is the auto-launch entry point `ensureReady.mjs` uses; plain
- * `attachToTraskTab()` below stays as the "tab must already exist" variant
+ * `attachToTimesheetTab()` below stays as the "tab must already exist" variant
  * used by scripts that assume a prior successful ensureReady/login.
  */
-export async function ensureTraskTab() {
+export async function ensureTimesheetTab() {
   await ensureDebugChrome();
   const browser = await connectToDebugChrome();
 
@@ -123,16 +124,16 @@ export async function ensureTraskTab() {
 
   const context = browser.contexts()[0] ?? (await browser.newContext());
   const page = await context.newPage();
-  await page.goto(TRASK_URL);
+  await page.goto(TIMESHEET_URL);
   return { browser, page };
 }
 
 /**
- * Finds the open my.trask.cz tab among the debug Chrome's windows. Throws a
+ * Finds the open my.trask.cz timesheet tab among the debug Chrome's windows. Throws a
  * clear, distinct message for "no such tab" vs. "tab is stuck on the
  * Keycloak login page" so the caller can show the right instruction.
  */
-export async function findTraskPage(browser) {
+export async function findTimesheetPage(browser) {
   for (const context of browser.contexts()) {
     for (const page of context.pages()) {
       if (page.url().includes('my.trask.cz')) {
@@ -155,14 +156,14 @@ export async function findTraskPage(browser) {
 /**
  * Blazor Server's SignalR connection drops after the tab sits idle for a
  * while (confirmed live: a debug Chrome tab left open across several
- * automation runs) and Trask throws up its own reconnect overlay
+ * automation runs) and the timesheet throws up its own reconnect overlay
  * (`#components-reconnect-modal`) covering the whole page. The overlay
  * intercepts every click but doesn't remove any existing DOM content, so a
  * script reading text/attributes off the stale page looks like it's
  * succeeding right up until the actual click — which then hangs for the
  * full actionability timeout waiting on a target that's permanently
  * covered. A plain reload re-establishes the connection and is safe/
- * idempotent for Trask's timesheet page.
+ * idempotent for the timesheet page.
  */
 export async function recoverFromStaleConnection(page) {
   const modal = page.locator('#components-reconnect-modal');
@@ -183,9 +184,9 @@ export async function recoverFromStaleConnection(page) {
  * Convenience wrapper: connect + find the tab + bring it to front, the
  * common case for every script here.
  */
-export async function attachToTraskTab() {
+export async function attachToTimesheetTab() {
   const browser = await connectToDebugChrome();
-  const page = await findTraskPage(browser);
+  const page = await findTimesheetPage(browser);
   await page.bringToFront();
   await recoverFromStaleConnection(page);
   return { browser, page };
@@ -205,8 +206,8 @@ export function dropdownByInputName(page, inputName) {
 /**
  * Opens a dropdown and selects the option matching `label` by exact text.
  *
- * Selecting by index is unsafe here: confirmed live against Trask's actual
- * Project dropdown that Radzen re-marks/reorders options after a selection,
+ * Selecting by index is unsafe here: confirmed live against the timesheet's
+ * actual Project dropdown that Radzen re-marks/reorders options after a selection,
  * which caused a stale-element timeout on the 2nd project when indexed by
  * position. Exact-label selection is the only implementation used anywhere
  * in this codebase — do not reintroduce index-based selection.
@@ -239,7 +240,7 @@ export async function selectDropdownOption(page, dropdown, label) {
 
     // Confirmed live (2026-09-03) that a label coming from Vaire (Swift ->
     // JSON -> shell arg -> process.argv) can arrive NFD-decomposed (e.g.
-    // "Č" as "C" + combining caron, 2 codepoints) while Trask's DOM
+    // "Č" as "C" + combining caron, 2 codepoints) while the timesheet's DOM
     // renders the same text NFC-precomposed (1 codepoint) — visually and
     // even in a plain string diff they look identical, but a CSS
     // attribute selector or getByRole's accessible-name match against the
@@ -271,7 +272,7 @@ export async function readDropdownOptions(page, dropdown) {
 }
 
 /**
- * Sets Trask's date field to `dateISO` by typing directly into the input
+ * Sets the timesheet's date field to `dateISO` by typing directly into the input
  * and pressing Tab, rather than driving the calendar popup — confirmed
  * live (2026-09-04) that `input.rz-daterangepicker-single-input` accepts a
  * typed "dd.mm.yyyy" value and Tab commits it cleanly, closing the popup
@@ -310,7 +311,7 @@ export async function setDatePickerDate(page, dateISO) {
 }
 
 /**
- * Reads the already-logged Trask entries for every day in the currently-
+ * Reads the already-logged timesheet entries for every day in the currently-
  * visible week in one pass, returning
  * `{ [dateISO]: { projectLabel, note }[] }`. Meant to be called ONCE per
  * upload batch (by checkExistingEntries.mjs), not once per entry — an
@@ -333,7 +334,7 @@ export async function setDatePickerDate(page, dateISO) {
  *   (also 7, same order, "dd.mm.yyyy" format in each field's text).
  * - An already-logged entry's `.rz-event-content` text is
  *   "Project label | Note text" (a literal " | " separator) — this is
- *   the entry's free-text note/description, NOT its Trask task category.
+ *   the entry's free-text note/description, NOT its timesheet task category.
  *   An earlier version of this function assumed the text after " | " was
  *   the task, which is wrong: the task category isn't shown in this
  *   compact view at all, so comparing it against Vaire's task label
@@ -343,8 +344,8 @@ export async function setDatePickerDate(page, dateISO) {
  *   distinct grey inline style — this function only returns the logged
  *   ones.
  */
-// Trask's date field renders dd.MM.yyyy; dateISO comes in as yyyy-MM-dd.
-function formatTraskDate(dateISO) {
+// The timesheet's date field renders dd.MM.yyyy; dateISO comes in as yyyy-MM-dd.
+function formatTimesheetDate(dateISO) {
   const [year, month, day] = dateISO.split('-');
   if (!year || !month || !day) {
     throw new Error(`dateISO must be yyyy-MM-dd, got "${dateISO}"`);
@@ -353,7 +354,7 @@ function formatTraskDate(dateISO) {
 }
 
 /**
- * Fills one Trask "Log time" entry on an already-attached `page` and clicks
+ * Fills one timesheet "Log time" entry on an already-attached `page` and clicks
  * Save — fully automatic. Extracted from fillEntry.mjs's `main()` so both
  * the one-shot CLI script and the long-lived session server share the exact
  * same fill/Save/confirm sequence; this function's body must stay a literal
@@ -375,7 +376,7 @@ export async function runFillEntry(page, entry) {
   try {
     await selectDropdownOption(page, projectDropdown, entry.projectLabel);
   } catch (error) {
-    throw new Error(`Could not select project "${entry.projectLabel}" — it may no longer exist in Trask. Re-run the catalog refresh. (${error.message})`);
+    throw new Error(`Could not select project "${entry.projectLabel}" — it may no longer exist in the timesheet. Re-run the catalog refresh. (${error.message})`);
   }
 
   const taskInput = page.locator('input[name="DropDownTimeEntryTask"]');
@@ -401,7 +402,7 @@ export async function runFillEntry(page, entry) {
   // Date: only touch the field if the requested date isn't already showing
   // — confirmed live that it defaults to today, so same-day entries (the
   // common case for the day-finish flow) need no date interaction at all.
-  const wantedDate = formatTraskDate(entry.dateISO);
+  const wantedDate = formatTimesheetDate(entry.dateISO);
   const dateInput = page.locator('input.rz-daterangepicker-single-input');
   const currentDate = await dateInput.inputValue().catch(() => '');
   if (currentDate.trim() !== wantedDate) {
@@ -446,7 +447,7 @@ export async function runFillEntry(page, entry) {
   // actually completed before this script exits — an unconfirmed click
   // would look identical to success from the caller's side.
   await page.locator('#Description').waitFor({ state: 'hidden', timeout: 15000 }).catch(async () => {
-    // Some Trask flows keep the form open and just clear its fields
+    // Some timesheet flows keep the form open and just clear its fields
     // instead of hiding it — fall back to checking the Description field
     // emptied out as evidence the save happened.
     const remaining = await page.locator('#Description').inputValue().catch(() => '');

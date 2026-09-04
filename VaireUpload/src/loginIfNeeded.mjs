@@ -5,8 +5,8 @@
 // user; this never attempts to handle it.
 //
 // The real flow (confirmed live 2026-09-03, NOT plain Keycloak as first
-// assumed): Trask's Keycloak realm brokers to Microsoft Entra ID (Azure
-// AD) for "Pracovníci Trask (trask email)" accounts:
+// assumed): the timesheet's Keycloak realm brokers to Microsoft Entra ID
+// (Azure AD) for "Pracovníci Trask (trask email)" accounts:
 //   1. id.trask.cz — an IdP picker: "Pracovníci Trask (trask email)" vs
 //      "Externí uživatelé (personal email)". No inputs on this step.
 //   2. login.microsoftonline.com — EITHER a remembered-account picker
@@ -30,7 +30,7 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
-const TRASK_IDP_PICKER_TEXT = 'Pracovníci Trask';
+const TIMESHEET_IDP_PICKER_TEXT = 'Pracovníci Trask';
 const MS_EMAIL_INPUT_SELECTOR = 'input[name="loginfmt"]';
 const MS_PASSWORD_INPUT_SELECTOR = 'input[name="passwd"]';
 const MS_SUBMIT_SELECTOR = '#idSIButton9';
@@ -80,7 +80,7 @@ async function fetchOnePasswordCredential(itemId) {
  */
 async function passIdpPickerIfPresent(page) {
   if (!page.url().includes('id.trask.cz/auth')) return;
-  const link = page.getByText(TRASK_IDP_PICKER_TEXT, { exact: false });
+  const link = page.getByText(TIMESHEET_IDP_PICKER_TEXT, { exact: false });
   if (await link.count() > 0) {
     await link.first().click();
     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
@@ -104,7 +104,7 @@ async function passIdpPickerIfPresent(page) {
  */
 async function fillMicrosoftLogin(page, username, password) {
   // A single point-in-time URL check here is unsafe: clicking the IdP
-  // picker link starts a multi-hop redirect (Trask -> Keycloak ->
+  // picker link starts a multi-hop redirect (timesheet -> Keycloak ->
   // Microsoft) that isn't guaranteed to have landed on
   // login.microsoftonline.com by the time `networkidle` resolves in the
   // caller. A bug found live (2026-09-03): on a fresh profile with no
