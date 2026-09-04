@@ -27,7 +27,7 @@ public enum SharedStorage {
         try directory().appendingPathComponent("language").path
     }
 
-    /// Path to the plain-text file holding the 1Password Trask-login
+    /// Path to the plain-text file holding the 1Password timesheet-login
     /// setting ("enabled\n<item-uuid-or-empty>"). File-based rather than a
     /// DB row since it's a single global preference, same reasoning as
     /// languagePath — and so it stays legible/editable without a SQLite

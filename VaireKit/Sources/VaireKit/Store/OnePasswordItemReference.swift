@@ -1,6 +1,6 @@
 import Foundation
 
-/// The user's choice of whether Vaire should autofill the Trask/Keycloak
+/// The user's choice of whether Vaire should autofill the timesheet's Keycloak
 /// login via 1Password, and which item to use. File-based like
 /// `AppLanguage`, not a DB table — this is a single global setting, and the
 /// two halves (enabled flag, chosen item) are read/written independently so

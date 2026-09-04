@@ -26,7 +26,7 @@ public enum MeetingImporter {
     /// return free/busy placeholders ("Free"/"Tentative" as the title) —
     /// those must be excluded rather than filtered after the fact, since
     /// there's no reliable per-event signal that distinguishes them.
-    public static let workCalendarTitles: Set<String> = ["Trask"]
+    public static let workCalendarTitles: Set<String> = ["Work"]
 
     /// Requests calendar access if needed, then fetches "real meeting"
     /// events for `day`: canceled and all-day events are dropped, as are
