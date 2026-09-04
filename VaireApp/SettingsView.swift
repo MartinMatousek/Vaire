@@ -12,7 +12,6 @@ struct SettingsView: View {
     @State private var traskTasks: [TraskTask] = []
     @State private var traskPairingIssues: [UUID: TraskPairingIssue] = [:]
     @State private var onePasswordSetting = OnePasswordSetting.current()
-    @State private var onePasswordItemTitle: String?
     @State private var showingOnePasswordPicker = false
     @State private var isRefreshingTraskCatalog = false
     @State private var traskError: String?
@@ -28,7 +27,6 @@ struct SettingsView: View {
         .frame(width: 520, height: 480)
         .onAppear {
             reload()
-            resolveOnePasswordItemTitle()
         }
         .onReceive(NotificationCenter.default.publisher(for: .vaireDataChanged)) { _ in
             reload()
@@ -200,28 +198,14 @@ struct SettingsView: View {
 
     private var onePasswordItemDisplayLabel: String {
         guard onePasswordSetting.itemId != nil else { return Strings.onePasswordNoneSelected }
-        guard let onePasswordItemTitle else { return Strings.onePasswordNoneSelected }
-        return Strings.onePasswordSelectedItem(onePasswordItemTitle)
+        guard let itemTitle = onePasswordSetting.itemTitle else { return Strings.onePasswordNoneSelected }
+        return Strings.onePasswordSelectedItem(itemTitle)
     }
 
     private func setOnePasswordItem(_ item: OnePasswordItem) {
         onePasswordSetting.itemId = item.id
-        onePasswordItemTitle = item.title
+        onePasswordSetting.itemTitle = item.title
         try? OnePasswordSetting.set(onePasswordSetting)
-    }
-
-    /// Only the item's UUID is persisted (see OnePasswordSetting's doc
-    /// comment on why), so on a fresh launch its title is unknown until
-    /// resolved once against `op item list` — otherwise an already-chosen
-    /// item would misleadingly show "Not yet chosen" after every restart.
-    private func resolveOnePasswordItemTitle() {
-        guard let itemId = onePasswordSetting.itemId else { return }
-        Task {
-            let items = (try? await OnePasswordCLI.listItems()) ?? []
-            await MainActor.run {
-                onePasswordItemTitle = items.first { $0.id == itemId }?.title
-            }
-        }
     }
 
     private func traskProjectBinding(for project: Project) -> Binding<String?> {
