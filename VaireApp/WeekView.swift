@@ -4,6 +4,20 @@ import WidgetKit
 import VaireKit
 import GRDB
 
+/// Carries the blocks to upload as part of the sheet's own presentation
+/// state, not a separate Bool + separate array — confirmed live that
+/// `.sheet(isPresented:)` with `uploadBlocks` as a sibling `@State` var
+/// could present with a stale/empty `uploadBlocks` on the very first
+/// presentation after the window was created (both writes happen
+/// synchronously in the same function, but the sheet's content closure
+/// still captured the pre-update value that one time — a real SwiftUI
+/// timing quirk, not a logic bug). `.sheet(item:)` ties presentation and
+/// data together atomically so there's nothing to desync.
+private struct UploadRequest: Identifiable {
+    let id = UUID()
+    let blocks: [Block]
+}
+
 struct DayColumn: Identifiable {
     let date: Date
     var blocks: [Block]
@@ -29,9 +43,9 @@ struct WeekView: View {
     @State private var showingDeleteConfirmation = false
     @State private var showingGitImport = false
     @State private var showingFinishDay = false
+    @State private var finishDayTarget: Date = .now
     @State private var showingFinishWeek = false
-    @State private var showingUpload = false
-    @State private var uploadBlocks: [Block] = []
+    @State private var uploadRequest: UploadRequest?
 
     private let targetHours: Double = 8
     private let defaultPixelsPerHour: CGFloat = 30
@@ -115,16 +129,6 @@ struct WeekView: View {
                     GitImportSheet(weekStart: weekStart, projects: allProjectsSorted, onImported: reload)
                 }
 
-                Button(Strings.finishDay) {
-                    showingFinishDay = true
-                }
-                .buttonStyle(.link)
-                .help(Strings.finishDayHelp)
-                .disabled(allProjectsSorted.isEmpty)
-                .sheet(isPresented: $showingFinishDay) {
-                    FinishDayView(day: .now, projects: allProjectsSorted, targetHours: targetHours, onChanged: reload)
-                }
-
                 Button(Strings.finishWeek) {
                     showingFinishWeek = true
                 }
@@ -135,19 +139,13 @@ struct WeekView: View {
                     FinishWeekView(weekStart: weekStart, projects: allProjectsSorted, targetHours: targetHours, onChanged: reload)
                 }
 
-                Button(Strings.uploadDay) {
-                    startUpload(forDay: .now)
-                }
-                .buttonStyle(.link)
-                .disabled(allProjectsSorted.isEmpty)
-
                 Button(Strings.uploadWeek) {
                     startUpload(forWeek: weekStart)
                 }
                 .buttonStyle(.link)
                 .disabled(allProjectsSorted.isEmpty)
-                .sheet(isPresented: $showingUpload) {
-                    UploadFlowView(blocksToUpload: uploadBlocks, projects: projects)
+                .sheet(item: $uploadRequest) { request in
+                    UploadFlowView(blocksToUpload: request.blocks, projects: projects)
                 }
 
                 Button(Strings.savings) {
@@ -216,6 +214,23 @@ struct WeekView: View {
         } message: {
             Text(Strings.deleteBlockConfirmMessage)
         }
+        .sheet(isPresented: $showingFinishDay) {
+            FinishDayView(
+                day: finishDayTarget,
+                projects: allProjectsSorted,
+                targetHours: targetHours,
+                onChanged: reload,
+                onCompleteAndUpload: {
+                    // Deferred a beat: presenting the Upload sheet while
+                    // this one is still mid-dismiss can be dropped by
+                    // SwiftUI on macOS (only one sheet transition at a
+                    // time per view) — let the dismiss finish first.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        startUpload(forDay: finishDayTarget)
+                    }
+                }
+            )
+        }
     }
 
     private var scaleHeight: CGFloat {
@@ -250,7 +265,7 @@ struct WeekView: View {
         CGFloat(gridHours) * pixelsPerHour
     }
 
-    private let dayColumnHeaderHeight: CGFloat = 20
+    private let dayColumnHeaderHeight: CGFloat = 34
 
     /// Blocks stack sequentially by logged order, not by clock time — so
     /// this ruler marks accumulated length (0h, 1h, 2h...) from the top of
@@ -291,6 +306,24 @@ struct WeekView: View {
                         .font(.caption2)
                         .foregroundStyle(metTarget ? .green : .secondary)
                 }
+            }
+
+            HStack(spacing: 6) {
+                Button(Strings.finishDayShort) {
+                    finishDayTarget = day.date
+                    showingFinishDay = true
+                }
+                .buttonStyle(.link)
+                .font(.caption2)
+                .help(Strings.finishDayHelp)
+                .disabled(allProjectsSorted.isEmpty)
+
+                Button(Strings.uploadDayShort) {
+                    startUpload(forDay: day.date)
+                }
+                .buttonStyle(.link)
+                .font(.caption2)
+                .disabled(allProjectsSorted.isEmpty)
             }
 
             ZStack(alignment: .top) {
@@ -552,6 +585,7 @@ struct WeekView: View {
 
         let status = try? DayFinisher.status(db: AppEnvironment.db, day: day, targetHours: targetHours)
         if status?.isComplete != true {
+            finishDayTarget = day
             showingFinishDay = true
             return
         }
@@ -561,13 +595,13 @@ struct WeekView: View {
         // midnight counts toward DayFinisher.status's isComplete check
         // above, so it must also appear here, or a day can report complete
         // via that block while Upload silently omits it.
-        uploadBlocks = (try? AppEnvironment.db.dbQueue.read { conn in
+        let blocks = (try? AppEnvironment.db.dbQueue.read { conn in
             try Block
                 .filter(Column("start") < dayEnd && Column("end") > dayStart)
                 .order(Column("start"))
                 .fetchAll(conn)
         }) ?? []
-        showingUpload = true
+        uploadRequest = UploadRequest(blocks: blocks)
     }
 
     /// Same gating as `startUpload(forDay:)`, scoped to the whole displayed
@@ -585,13 +619,13 @@ struct WeekView: View {
             return
         }
 
-        uploadBlocks = (try? AppEnvironment.db.dbQueue.read { conn in
+        let blocks = (try? AppEnvironment.db.dbQueue.read { conn in
             try Block
                 .filter(Column("start") < weekEnd && Column("end") > weekStart)
                 .order(Column("start"))
                 .fetchAll(conn)
         }) ?? []
-        showingUpload = true
+        uploadRequest = UploadRequest(blocks: blocks)
     }
 
     private func reload() {
