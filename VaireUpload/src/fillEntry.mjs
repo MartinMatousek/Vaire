@@ -1,20 +1,29 @@
-// Fills one Trask "Log time" entry from a JSON argument and stops before
-// Save — the user reviews the filled form in their own Chrome window and
-// clicks Save themselves. This is the semi-automatic design: the script's
-// job ends at "the form is correctly filled," never at "the entry is
-// submitted." Confirmed live (2026-09-03) that a plain `.fill()` on the
-// Hours/Minutes numeric inputs works with no comma-decimal handling needed,
-// and that the date range field already defaults to today, so this script
-// only touches the date picker when the requested date isn't today.
+// Fills one Trask "Log time" entry from a JSON argument and clicks Save —
+// fully automatic. Confirmed live that a plain `.fill()` on the
+// Hours/Minutes numeric inputs works with no comma-decimal handling
+// needed, and that the date field already defaults to today, so this
+// script only touches it when the requested date isn't today, by typing
+// directly into it (see `setDatePickerDate` in attach.mjs).
+//
+// History: reverted to semi-automatic (2026-09-04) after a fully-automatic
+// version created real duplicate entries in the user's live Trask
+// timesheet on repeated attempts, root cause never fully pinned down
+// (suspected: a gap between the batch dedup check's snapshot and what
+// Trask's UI actually reflects by the time each fill runs). Re-enabled
+// (2026-09-04) after several live full upload+Save cycles, including
+// re-runs over already-uploaded weeks, showed no duplicates with the
+// existing batch dedup (UploadFlowView.isDuplicate, checked once via
+// checkExistingEntries.mjs before the fill loop starts). If duplicates
+// reappear, revert this Save click first before suspecting the dedup
+// logic — that's the part that changed here.
 //
 // Usage:
 //   node src/fillEntry.mjs '{"projectLabel":"...","taskLabel":"...","dateISO":"2026-09-02","hours":1,"minutes":30,"description":"...","remoteWork":false}'
 //
-// Prints "ready" to stdout and exits 0 once the form is filled and waiting
-// for the user. Prints a human-readable error to stderr and exits 1 on any
-// failure (bad input, project/task not found, dropdown never enabled, etc).
-// Never clicks the Save button.
-import { attachToTraskTab, dropdownByInputName, selectDropdownOption } from './attach.mjs';
+// Prints "ready" to stdout and exits 0 once the form is filled and saved.
+// Prints a human-readable error to stderr and exits 1 on any failure (bad
+// input, project/task not found, dropdown never enabled, etc).
+import { attachToTraskTab, dropdownByInputName, selectDropdownOption, setDatePickerDate } from './attach.mjs';
 
 function parseEntryArg(argv) {
   const raw = argv[2];
@@ -91,22 +100,18 @@ async function main() {
     throw new Error(`Could not select task "${entry.taskLabel}" under project "${entry.projectLabel}" — it may no longer exist. Re-run the catalog refresh. (${error.message})`);
   }
 
-  // Date: only touch the picker if the requested date isn't already showing
+  // Date: only touch the field if the requested date isn't already showing
   // — confirmed live that it defaults to today, so same-day entries (the
   // common case for the day-finish flow) need no date interaction at all.
   const wantedDate = formatTraskDate(entry.dateISO);
   const dateInput = page.locator('input.rz-daterangepicker-single-input');
   const currentDate = await dateInput.inputValue().catch(() => '');
   if (currentDate.trim() !== wantedDate) {
-    // The date range picker is a calendar popup, not a typeable field in
-    // the confirmed-working path — typing into it was not exercised in the
-    // spike. Fail loudly rather than guess at calendar navigation; the
-    // finish-day flow only ever uploads for the day it just reviewed, so
-    // this path should be rare (e.g. uploading a backdated entry).
-    throw new Error(
-      `Date field shows "${currentDate}", need "${wantedDate}", and this script doesn't yet drive the date picker. ` +
-      'Set the date by hand in the browser, or only upload for today until the picker path is implemented.'
-    );
+    try {
+      await setDatePickerDate(page, entry.dateISO);
+    } catch (error) {
+      throw new Error(`Could not set the date field to "${wantedDate}": ${error.message}`);
+    }
   }
 
   await page.locator('#NumericHours').fill(String(entry.hours));
@@ -124,16 +129,35 @@ async function main() {
     }
   }
 
-  // Deliberately no Save click. Confirm the fields actually hold what we
-  // set before declaring success — a silently-rejected fill (e.g. a
-  // disabled field) should surface as an error, not a false "ready".
+  // Confirm the fields actually hold what we set before clicking Save — a
+  // silently-rejected fill (e.g. a disabled field) should surface as an
+  // error here, not show up as a confusing failure after Save.
   const finalHours = await page.locator('#NumericHours').inputValue();
   const finalMinutes = await page.locator('#NumericMinutes').inputValue();
   if (finalHours !== String(entry.hours) || finalMinutes !== String(entry.minutes)) {
     throw new Error(`Hours/Minutes did not hold the requested values (wanted ${entry.hours}/${entry.minutes}, form shows ${finalHours}/${finalMinutes}).`);
   }
 
-  await browser.close(); // detaches only, browser window stays open with the filled form
+  // The Save button has no stable id (Radzen auto-generates a fresh one
+  // per page load), so select by its exact visible text instead.
+  const saveButton = page.locator('button.rz-button', { hasText: 'Save' }).first();
+  await saveButton.waitFor({ state: 'visible', timeout: 5000 });
+  await saveButton.click();
+
+  // Wait for the form to clear/close, confirming the save round-trip
+  // actually completed before this script exits — an unconfirmed click
+  // would look identical to success from the caller's side.
+  await page.locator('#Description').waitFor({ state: 'hidden', timeout: 15000 }).catch(async () => {
+    // Some Trask flows keep the form open and just clear its fields
+    // instead of hiding it — fall back to checking the Description field
+    // emptied out as evidence the save happened.
+    const remaining = await page.locator('#Description').inputValue().catch(() => '');
+    if (remaining === entry.description) {
+      throw new Error('Save click did not appear to complete — form still shows the filled description.');
+    }
+  });
+
+  await browser.close(); // detaches only, browser window stays open
 
   process.stdout.write('ready\n');
 }
