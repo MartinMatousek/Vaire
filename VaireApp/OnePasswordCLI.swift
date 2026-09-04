@@ -23,7 +23,7 @@ struct OnePasswordItem: Identifiable, Equatable {
 }
 
 /// Thin `Process` wrapper around the `op` CLI, same shell-out pattern as
-/// `GitImporter`/`TraskScraper`. Only ever lists item titles for the
+/// `GitImporter`/`TimesheetScraper`. Only ever lists item titles for the
 /// Settings picker — never fetches or handles a secret value; that only
 /// happens on the VaireUpload/Node side (`loginIfNeeded.mjs`), gated by the
 /// same biometric per-call prompt either way.

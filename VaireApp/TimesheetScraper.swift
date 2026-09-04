@@ -1,7 +1,7 @@
 import Foundation
 import VaireKit
 
-enum TraskScraperError: Error, LocalizedError {
+enum TimesheetScraperError: Error, LocalizedError {
     case scriptNotFound(String)
     case processFailed(exitCode: Int32, stderr: String)
     case malformedOutput
@@ -11,9 +11,9 @@ enum TraskScraperError: Error, LocalizedError {
         case .scriptNotFound(let path):
             return "VaireUpload script not found at \(path)."
         case .processFailed(_, let stderr):
-            return stderr.isEmpty ? "The Trask automation script failed." : stderr
+            return stderr.isEmpty ? "The timesheet automation script failed." : stderr
         case .malformedOutput:
-            return "The Trask automation script returned unexpected output."
+            return "The timesheet automation script returned unexpected output."
         }
     }
 }
@@ -25,7 +25,7 @@ enum TraskScraperError: Error, LocalizedError {
 /// app target rather than VaireKit because locating the script on disk is
 /// dev-repo-relative for now; this is the seam to revisit if VaireUpload
 /// ever needs to ship inside the app bundle for other machines.
-enum TraskScraper {
+enum TimesheetScraper {
     /// Directory containing package.json/src for VaireUpload, resolved
     /// relative to this source file's location in the repo. Works for a
     /// locally-built/run app; would need revisiting for a distributed build
@@ -41,10 +41,10 @@ enum TraskScraper {
     /// structs. Throws with the script's own stderr message on failure —
     /// those messages are already written to be user-facing (e.g. "log in
     /// first", "no tab found").
-    static func scrapeCatalog() async throws -> [TraskScrapedProject] {
+    static func scrapeCatalog() async throws -> [TimesheetScrapedProject] {
         let scriptPath = vaireUploadDirectory.appendingPathComponent("src/scrapeCatalog.mjs").path
         guard FileManager.default.fileExists(atPath: scriptPath) else {
-            throw TraskScraperError.scriptNotFound(scriptPath)
+            throw TimesheetScraperError.scriptNotFound(scriptPath)
         }
 
         let output = try await runNode(scriptPath: scriptPath, arguments: [])
@@ -81,7 +81,7 @@ enum TraskScraper {
     static func ensureReady() async throws -> ReadyStatus {
         let scriptPath = vaireUploadDirectory.appendingPathComponent("src/ensureReady.mjs").path
         guard FileManager.default.fileExists(atPath: scriptPath) else {
-            throw TraskScraperError.scriptNotFound(scriptPath)
+            throw TimesheetScraperError.scriptNotFound(scriptPath)
         }
 
         let setting = OnePasswordSetting.current()
@@ -92,15 +92,15 @@ enum TraskScraper {
               let decoded = try? JSONDecoder().decode([String: String].self, from: data),
               let statusRaw = decoded["status"],
               let status = ReadyStatus(rawValue: statusRaw) else {
-            throw TraskScraperError.malformedOutput
+            throw TimesheetScraperError.malformedOutput
         }
         return status
     }
 
-    /// One already-logged Trask entry, as read by `checkExistingEntries()`.
-    /// `note` is the entry's free-text description as Trask's calendar
-    /// view shows it, NOT its task category — confirmed live that view
-    /// never exposes the task category at all, only "Project | Note".
+    /// One already-logged timesheet entry, as read by `checkExistingEntries()`.
+    /// `note` is the entry's free-text description as the timesheet's
+    /// calendar view shows it, NOT its task category — confirmed live that
+    /// view never exposes the task category at all, only "Project | Note".
     struct ExistingEntry: Equatable {
         let projectLabel: String
         let note: String
@@ -138,7 +138,7 @@ enum TraskScraper {
                 if proc.terminationStatus == 0 {
                     continuation.resume(returning: stdoutString)
                 } else {
-                    continuation.resume(throwing: TraskScraperError.processFailed(
+                    continuation.resume(throwing: TimesheetScraperError.processFailed(
                         exitCode: proc.terminationStatus,
                         stderr: stderrString
                     ))
@@ -157,13 +157,13 @@ enum TraskScraper {
         let tasks: [String]
     }
 
-    private static func parseCatalog(json: String) throws -> [TraskScrapedProject] {
+    private static func parseCatalog(json: String) throws -> [TimesheetScrapedProject] {
         guard let data = json.data(using: .utf8) else {
-            throw TraskScraperError.malformedOutput
+            throw TimesheetScraperError.malformedOutput
         }
         let decoded = try JSONDecoder().decode([String: ScrapedProjectJSON].self, from: data)
         return decoded.map { label, value in
-            TraskScrapedProject(label: label, taskLabels: value.tasks)
+            TimesheetScrapedProject(label: label, taskLabels: value.tasks)
         }
     }
 }

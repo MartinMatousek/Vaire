@@ -13,7 +13,7 @@ import VaireKit
 /// map of in-flight requests) touched from multiple `Task`s in
 /// `UploadFlowView` (the initial `ensureReady` call, then one `fillEntry`
 /// call per block as the user advances/retries).
-actor TraskUploadSession {
+actor TimesheetUploadSession {
     private var process: Process?
     private var stdinHandle: FileHandle?
     private var pending: [String: CheckedContinuation<[String: Any], Error>] = [:]
@@ -24,31 +24,31 @@ actor TraskUploadSession {
     private static let requestTimeoutNanoseconds: UInt64 = 45_000_000_000 // 45s, above attach.mjs's own internal timeout ceiling (15s)
 
     /// Starts the session process if not already started, and performs the
-    /// first `ensureReady` login check — mirrors what `TraskScraper.ensureReady()`
+    /// first `ensureReady` login check — mirrors what `TimesheetScraper.ensureReady()`
     /// did per-call, but now runs against a process that stays alive for
     /// every subsequent call this session makes.
-    func start(onePasswordItemId: String?) async throws -> TraskScraper.ReadyStatus {
+    func start(onePasswordItemId: String?) async throws -> TimesheetScraper.ReadyStatus {
         if process == nil {
             try launchProcess()
         }
         let args: [String: Any] = onePasswordItemId.map { ["onePasswordItemId": $0] } ?? [:]
         let result = try await send(op: "ensureReady", args: args)
         guard let statusRaw = result["status"] as? String,
-              let status = TraskScraper.ReadyStatus(rawValue: statusRaw) else {
-            throw TraskScraperError.malformedOutput
+              let status = TimesheetScraper.ReadyStatus(rawValue: statusRaw) else {
+            throw TimesheetScraperError.malformedOutput
         }
         return status
     }
 
-    func checkExistingEntries() async throws -> [String: [TraskScraper.ExistingEntry]] {
+    func checkExistingEntries() async throws -> [String: [TimesheetScraper.ExistingEntry]] {
         let result = try await send(op: "checkExistingEntries", args: [:])
-        var byDate: [String: [TraskScraper.ExistingEntry]] = [:]
+        var byDate: [String: [TimesheetScraper.ExistingEntry]] = [:]
         for (date, rawEntries) in result {
             guard let rawEntries = rawEntries as? [[String: Any]] else { continue }
             byDate[date] = rawEntries.compactMap { raw in
                 guard let projectLabel = raw["projectLabel"] as? String,
                       let note = raw["note"] as? String else { return nil }
-                return TraskScraper.ExistingEntry(projectLabel: projectLabel, note: note)
+                return TimesheetScraper.ExistingEntry(projectLabel: projectLabel, note: note)
             }
         }
         return byDate
@@ -64,7 +64,7 @@ actor TraskUploadSession {
     func stop() {
         guard let process, process.isRunning else {
             self.process = nil
-            failAllPending(with: TraskScraperError.processFailed(exitCode: -1, stderr: "Upload session stopped."))
+            failAllPending(with: TimesheetScraperError.processFailed(exitCode: -1, stderr: "Upload session stopped."))
             return
         }
         // Best-effort graceful shutdown; terminate() below is the backstop
@@ -73,7 +73,7 @@ actor TraskUploadSession {
         process.terminate()
         self.process = nil
         self.stdinHandle = nil
-        failAllPending(with: TraskScraperError.processFailed(exitCode: -1, stderr: "Upload session stopped."))
+        failAllPending(with: TimesheetScraperError.processFailed(exitCode: -1, stderr: "Upload session stopped."))
     }
 
     private func failAllPending(with error: Error) {
@@ -85,7 +85,7 @@ actor TraskUploadSession {
 
     private func send(op: String, args: [String: Any]) async throws -> [String: Any] {
         guard let stdinHandle else {
-            throw TraskScraperError.malformedOutput
+            throw TimesheetScraperError.malformedOutput
         }
         let id = String(nextId)
         nextId += 1
@@ -119,16 +119,16 @@ actor TraskUploadSession {
 
     private func timeoutRequest(id: String) {
         guard let continuation = pending.removeValue(forKey: id) else { return }
-        continuation.resume(throwing: TraskScraperError.processFailed(
+        continuation.resume(throwing: TimesheetScraperError.processFailed(
             exitCode: -1,
-            stderr: "The Trask automation script did not respond in time."
+            stderr: "The timesheet automation script did not respond in time."
         ))
     }
 
     private func launchProcess() throws {
-        let scriptPath = TraskScraper.vaireUploadDirectory.appendingPathComponent("src/session.mjs").path
+        let scriptPath = TimesheetScraper.vaireUploadDirectory.appendingPathComponent("src/session.mjs").path
         guard FileManager.default.fileExists(atPath: scriptPath) else {
-            throw TraskScraperError.scriptNotFound(scriptPath)
+            throw TimesheetScraperError.scriptNotFound(scriptPath)
         }
 
         let process = Process()
@@ -171,7 +171,7 @@ actor TraskUploadSession {
     private func handleProcessExit(exitCode: Int32, stderr: String) {
         process = nil
         stdinHandle = nil
-        failAllPending(with: TraskScraperError.processFailed(exitCode: exitCode, stderr: stderr))
+        failAllPending(with: TimesheetScraperError.processFailed(exitCode: exitCode, stderr: stderr))
     }
 
     private func handleStdout(_ data: Data) {
@@ -195,8 +195,8 @@ actor TraskUploadSession {
         if ok {
             continuation.resume(returning: (json["result"] as? [String: Any]) ?? [:])
         } else {
-            let message = json["error"] as? String ?? "The Trask automation script returned an error with no message."
-            continuation.resume(throwing: TraskScraperError.processFailed(exitCode: 1, stderr: message))
+            let message = json["error"] as? String ?? "The timesheet automation script returned an error with no message."
+            continuation.resume(throwing: TimesheetScraperError.processFailed(exitCode: 1, stderr: message))
         }
     }
 }

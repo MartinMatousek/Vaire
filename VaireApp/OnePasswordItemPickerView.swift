@@ -1,7 +1,7 @@
 import SwiftUI
 import VaireKit
 
-/// Searchable picker for choosing which 1Password item is the Trask login.
+/// Searchable picker for choosing which 1Password item is the timesheet login.
 /// Shows titles only, never a secret value — this view never touches
 /// `op item get`, only `op item list`.
 struct OnePasswordItemPickerView: View {

@@ -2,21 +2,21 @@ import AppKit
 import SwiftUI
 import VaireKit
 
-/// Uploads a day (or several days, for a week) of logged blocks to Trask.
-/// Fully automatic: `session.fillEntry` fills one Trask form and clicks
-/// Save, this view auto-advances to the next block on success and only
-/// stops to show a Retry/Skip choice on failure. One `TraskUploadSession`
-/// (a single long-lived Node/Playwright process) serves the whole batch —
-/// see its doc comment for why. Duplicate protection is the one-time batch
-/// check in `beginUpload()` (`isDuplicate`), not anything per-entry — see
-/// its doc comment for why.
+/// Uploads a day (or several days, for a week) of logged blocks to the
+/// external timesheet. Fully automatic: `session.fillEntry` fills one
+/// timesheet form and clicks Save, this view auto-advances to the next
+/// block on success and only stops to show a Retry/Skip choice on failure.
+/// One `TimesheetUploadSession` (a single long-lived Node/Playwright
+/// process) serves the whole batch — see its doc comment for why.
+/// Duplicate protection is the one-time batch check in `beginUpload()`
+/// (`isDuplicate`), not anything per-entry — see its doc comment for why.
 ///
 /// History: reverted to semi-automatic (2026-09-04) after a
 /// fully-automatic version created real duplicate entries in the user's
-/// live Trask timesheet. Re-enabled (2026-09-04) after live full
-/// upload+Save cycles, including re-runs over already-uploaded weeks,
-/// showed no duplicates with the existing batch dedup — see
-/// fillEntry.mjs's header for the same note.
+/// live timesheet. Re-enabled (2026-09-04) after live full upload+Save
+/// cycles, including re-runs over already-uploaded weeks, showed no
+/// duplicates with the existing batch dedup — see fillEntry.mjs's header
+/// for the same note.
 struct UploadFlowView: View {
     let blocksToUpload: [Block]
     let projects: [UUID: Project]
@@ -33,20 +33,21 @@ struct UploadFlowView: View {
     }
 
     @State private var stage: Stage = .checkingPairings
-    @State private var session = TraskUploadSession()
+    @State private var session = TimesheetUploadSession()
     @State private var currentIndex = 0
     @State private var fillError: String?
     @State private var isFilling = false
     @State private var duplicateSkippedCount = 0
     /// Populated once in `beginUpload()`, before the fill loop starts —
     /// never re-checked per entry and never updated as entries fill
-    /// (checked only against what Trask had *before* this upload began, so
-    /// two real, separate same-day sessions on the same project+task
-    /// aren't mistaken for duplicates of each other — confirmed live that
-    /// checking within-batch entries caused exactly that false positive).
-    /// A date not present as a key means it wasn't in Trask's visible week
-    /// when checked — no dedup guarantee for it.
-    @State private var existingEntriesByDate: [String: [TraskScraper.ExistingEntry]] = [:]
+    /// (checked only against what the timesheet had *before* this upload
+    /// began, so two real, separate same-day sessions on the same
+    /// project+task aren't mistaken for duplicates of each other —
+    /// confirmed live that checking within-batch entries caused exactly
+    /// that false positive). A date not present as a key means it wasn't in
+    /// the timesheet's visible week when checked — no dedup guarantee for
+    /// it.
+    @State private var existingEntriesByDate: [String: [TimesheetScraper.ExistingEntry]] = [:]
 
     private var currentBlock: Block? {
         guard currentIndex < blocksToUpload.count else { return nil }
@@ -159,7 +160,7 @@ struct UploadFlowView: View {
     private func checkPairings() {
         let involvedProjects = Set(blocksToUpload.map(\.projectId)).compactMap { projects[$0] }
         let staleProjects = involvedProjects.filter { project in
-            (try? TraskCatalog.validatePairing(db: AppEnvironment.db, project: project)) != nil
+            (try? TimesheetCatalog.validatePairing(db: AppEnvironment.db, project: project)) != nil
         }
 
         if !staleProjects.isEmpty {
@@ -231,11 +232,11 @@ struct UploadFlowView: View {
     }
 
     /// Auto-skips (no fill, no Chrome interaction) a block whose
-    /// project+note+date exactly matches something Trask already had
-    /// *before* this upload began — see `existingEntriesByDate`'s doc
+    /// project+note+date exactly matches something the timesheet already
+    /// had *before* this upload began — see `existingEntriesByDate`'s doc
     /// comment for why the check is against that one-time snapshot only.
-    /// Matches on note, not task: confirmed live Trask's calendar view
-    /// (the only source this check has) shows "Project | Note", never the
+    /// Matches on note, not task: confirmed live the timesheet's calendar
+    /// view (the only source this check has) shows "Project | Note", never the
     /// task category — an earlier version compared against task and
     /// produced systematic false negatives (every real duplicate's task
     /// category compared against the other entry's note text and never
@@ -245,7 +246,7 @@ struct UploadFlowView: View {
             return false
         }
         let existing = existingEntriesByDate[dateISO] ?? []
-        // A Trask project label here can be a suffix of the full dropdown
+        // A timesheet project label here can be a suffix of the full dropdown
         // label (e.g. "Produkty a KVK - FY27 - ET97" vs. "ČEZ Prodej -
         // Produkty a KVK - FY27 - ET97"), confirmed live, so match with
         // .hasSuffix, not exact equality.
@@ -284,16 +285,16 @@ struct UploadFlowView: View {
         }
     }
 
-    /// Looks up the Trask project/task labels, note, and dateISO for
+    /// Looks up the timesheet project/task labels, note, and dateISO for
     /// `block`, shared by `isDuplicate` (which only needs project+note)
     /// and `fillCurrentEntry` (which needs the full payload) so the DB
     /// lookups happen once per call site rather than being duplicated.
     private func makeEntryComponents(block: Block, project: Project) throws -> (payload: [String: Any], dateISO: String, projectLabel: String, note: String) {
-        guard let traskProject = try traskProjectLabel(for: project) else {
-            throw TraskScraperError.malformedOutput
+        guard let timesheetProject = try timesheetProjectLabel(for: project) else {
+            throw TimesheetScraperError.malformedOutput
         }
-        let taskId = block.traskTaskId ?? project.defaultTraskTaskId
-        let taskLabel = try taskId.flatMap { try traskTaskLabel(id: $0) } ?? ""
+        let taskId = block.timesheetTaskId ?? project.defaultTimesheetTaskId
+        let taskLabel = try taskId.flatMap { try timesheetTaskLabel(id: $0) } ?? ""
         let note = block.note ?? ""
 
         let dateFormatter = DateFormatter()
@@ -303,7 +304,7 @@ struct UploadFlowView: View {
         let totalMinutes = Int((block.duration / 60).rounded())
 
         let payload: [String: Any] = [
-            "projectLabel": traskProject,
+            "projectLabel": timesheetProject,
             "taskLabel": taskLabel,
             "dateISO": dateISO,
             "hours": totalMinutes / 60,
@@ -311,19 +312,19 @@ struct UploadFlowView: View {
             "description": note,
             "remoteWork": false,
         ]
-        return (payload, dateISO, traskProject, note)
+        return (payload, dateISO, timesheetProject, note)
     }
 
-    private func traskProjectLabel(for project: Project) throws -> String? {
-        guard let traskProjectId = project.traskProjectId else { return nil }
+    private func timesheetProjectLabel(for project: Project) throws -> String? {
+        guard let timesheetProjectId = project.timesheetProjectId else { return nil }
         return try AppEnvironment.db.dbQueue.read { conn in
-            try TraskProject.fetchOne(conn, key: traskProjectId)?.label
+            try TimesheetProject.fetchOne(conn, key: timesheetProjectId)?.label
         }
     }
 
-    private func traskTaskLabel(id: String) throws -> String? {
+    private func timesheetTaskLabel(id: String) throws -> String? {
         try AppEnvironment.db.dbQueue.read { conn in
-            try TraskTask.fetchOne(conn, key: id)?.label
+            try TimesheetTask.fetchOne(conn, key: id)?.label
         }
     }
 }

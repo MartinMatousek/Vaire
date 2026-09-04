@@ -8,14 +8,14 @@ struct SettingsView: View {
     @State private var newProjectPath = ""
     @State private var exportError: String?
     @State private var selectedLanguage: AppLanguage = AppLanguage.current()
-    @State private var traskProjects: [TraskProject] = []
-    @State private var traskTasks: [TraskTask] = []
-    @State private var traskPairingIssues: [UUID: TraskPairingIssue] = [:]
+    @State private var timesheetProjects: [TimesheetProject] = []
+    @State private var timesheetTasks: [TimesheetTask] = []
+    @State private var timesheetPairingIssues: [UUID: TimesheetPairingIssue] = [:]
     @State private var onePasswordSetting = OnePasswordSetting.current()
     @State private var showingOnePasswordPicker = false
-    @State private var isRefreshingTraskCatalog = false
-    @State private var traskError: String?
-    @State private var traskRefreshMessage: String?
+    @State private var isRefreshingTimesheetCatalog = false
+    @State private var timesheetError: String?
+    @State private var timesheetRefreshMessage: String?
 
     var body: some View {
         ScrollView {
@@ -69,28 +69,28 @@ struct SettingsView: View {
 
             Divider()
 
-            Text(Strings.traskSectionTitle)
+            Text(Strings.timesheetSectionTitle)
                 .font(.headline)
 
             ForEach(projects) { project in
-                traskPairingRow(project)
+                timesheetPairingRow(project)
             }
 
             HStack {
-                Button(Strings.traskRefreshCatalog) { refreshTraskCatalog() }
-                    .disabled(isRefreshingTraskCatalog)
-                if isRefreshingTraskCatalog {
-                    Text(Strings.traskRefreshing)
+                Button(Strings.timesheetRefreshCatalog) { refreshTimesheetCatalog() }
+                    .disabled(isRefreshingTimesheetCatalog)
+                if isRefreshingTimesheetCatalog {
+                    Text(Strings.timesheetRefreshing)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
 
-            if let traskRefreshMessage {
-                Text(traskRefreshMessage).font(.caption).foregroundStyle(.secondary)
+            if let timesheetRefreshMessage {
+                Text(timesheetRefreshMessage).font(.caption).foregroundStyle(.secondary)
             }
-            if let traskError {
-                Text(traskError).font(.caption).foregroundStyle(.red)
+            if let timesheetError {
+                Text(timesheetError).font(.caption).foregroundStyle(.red)
             }
 
             Toggle(Strings.onePasswordUseForLogin, isOn: onePasswordEnabledBinding)
@@ -139,48 +139,48 @@ struct SettingsView: View {
 
     private enum ExportFormat { case csv, json }
 
-    private var activeTraskProjectsSorted: [TraskProject] {
-        traskProjects.filter(\.active).sorted { $0.label < $1.label }
+    private var activeTimesheetProjectsSorted: [TimesheetProject] {
+        timesheetProjects.filter(\.active).sorted { $0.label < $1.label }
     }
 
-    private func activeTasks(for traskProjectId: String?) -> [TraskTask] {
-        guard let traskProjectId else { return [] }
-        return traskTasks
-            .filter { $0.traskProjectId == traskProjectId && $0.active }
+    private func activeTasks(for timesheetProjectId: String?) -> [TimesheetTask] {
+        guard let timesheetProjectId else { return [] }
+        return timesheetTasks
+            .filter { $0.timesheetProjectId == timesheetProjectId && $0.active }
             .sorted { $0.label < $1.label }
     }
 
-    private func traskPairingRow(_ project: Project) -> some View {
-        let pairingIssue = traskPairingIssues[project.id]
+    private func timesheetPairingRow(_ project: Project) -> some View {
+        let pairingIssue = timesheetPairingIssues[project.id]
 
         return VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(project.name).font(.callout)
 
-                Picker(Strings.traskProjectLabel, selection: traskProjectBinding(for: project)) {
-                    Text(Strings.traskNoPairing).tag(Optional<String>.none)
-                    ForEach(activeTraskProjectsSorted) { traskProject in
-                        Text(traskProject.label).tag(Optional(traskProject.id))
+                Picker(Strings.timesheetProjectLabel, selection: timesheetProjectBinding(for: project)) {
+                    Text(Strings.timesheetNoPairing).tag(Optional<String>.none)
+                    ForEach(activeTimesheetProjectsSorted) { timesheetProject in
+                        Text(timesheetProject.label).tag(Optional(timesheetProject.id))
                     }
                 }
                 .labelsHidden()
 
-                Picker(Strings.traskDefaultTaskLabel, selection: defaultTraskTaskBinding(for: project)) {
-                    Text(Strings.traskNoPairing).tag(Optional<String>.none)
-                    ForEach(activeTasks(for: project.traskProjectId)) { task in
+                Picker(Strings.timesheetDefaultTaskLabel, selection: defaultTimesheetTaskBinding(for: project)) {
+                    Text(Strings.timesheetNoPairing).tag(Optional<String>.none)
+                    ForEach(activeTasks(for: project.timesheetProjectId)) { task in
                         Text(task.label).tag(Optional(task.id))
                     }
                 }
                 .labelsHidden()
-                .disabled(project.traskProjectId == nil)
+                .disabled(project.timesheetProjectId == nil)
             }
 
             if let pairingIssue {
                 switch pairingIssue {
                 case .projectInactiveOrMissing:
-                    Text(Strings.traskPairingStaleProject).font(.caption).foregroundStyle(.red)
+                    Text(Strings.timesheetPairingStaleProject).font(.caption).foregroundStyle(.red)
                 case .defaultTaskInactiveOrMissing:
-                    Text(Strings.traskPairingStaleTask).font(.caption).foregroundStyle(.red)
+                    Text(Strings.timesheetPairingStaleTask).font(.caption).foregroundStyle(.red)
                 }
             }
         }
@@ -208,89 +208,89 @@ struct SettingsView: View {
         try? OnePasswordSetting.set(onePasswordSetting)
     }
 
-    private func traskProjectBinding(for project: Project) -> Binding<String?> {
+    private func timesheetProjectBinding(for project: Project) -> Binding<String?> {
         Binding(
-            get: { project.traskProjectId },
-            set: { newValue in setTraskProject(newValue, for: project) }
+            get: { project.timesheetProjectId },
+            set: { newValue in setTimesheetProject(newValue, for: project) }
         )
     }
 
-    private func defaultTraskTaskBinding(for project: Project) -> Binding<String?> {
+    private func defaultTimesheetTaskBinding(for project: Project) -> Binding<String?> {
         Binding(
-            get: { project.defaultTraskTaskId },
-            set: { newValue in setDefaultTraskTask(newValue, for: project) }
+            get: { project.defaultTimesheetTaskId },
+            set: { newValue in setDefaultTimesheetTask(newValue, for: project) }
         )
     }
 
-    private func setTraskProject(_ traskProjectId: String?, for project: Project) {
+    private func setTimesheetProject(_ timesheetProjectId: String?, for project: Project) {
         var updated = project
-        updated.traskProjectId = traskProjectId
-        // Changing the paired Trask project invalidates any previously
+        updated.timesheetProjectId = timesheetProjectId
+        // Changing the paired timesheet project invalidates any previously
         // chosen default task — it almost certainly belongs to the old
         // project, and leaving it set would silently pair a task from one
         // project onto a different one.
-        updated.defaultTraskTaskId = nil
+        updated.defaultTimesheetTaskId = nil
         do {
             try AppEnvironment.db.dbQueue.write { try updated.update($0) }
             reload()
             DataChangeNotifier.post()
         } catch {
-            traskError = Strings.trackToggleFailed(error.localizedDescription)
+            timesheetError = Strings.trackToggleFailed(error.localizedDescription)
         }
     }
 
-    private func setDefaultTraskTask(_ traskTaskId: String?, for project: Project) {
+    private func setDefaultTimesheetTask(_ timesheetTaskId: String?, for project: Project) {
         var updated = project
-        updated.defaultTraskTaskId = traskTaskId
+        updated.defaultTimesheetTaskId = timesheetTaskId
         do {
             try AppEnvironment.db.dbQueue.write { try updated.update($0) }
             reload()
             DataChangeNotifier.post()
         } catch {
-            traskError = Strings.trackToggleFailed(error.localizedDescription)
+            timesheetError = Strings.trackToggleFailed(error.localizedDescription)
         }
     }
 
-    private func refreshTraskCatalog() {
-        traskError = nil
-        traskRefreshMessage = nil
-        isRefreshingTraskCatalog = true
+    private func refreshTimesheetCatalog() {
+        timesheetError = nil
+        timesheetRefreshMessage = nil
+        isRefreshingTimesheetCatalog = true
 
         Task {
             do {
-                let status = try await TraskScraper.ensureReady()
+                let status = try await TimesheetScraper.ensureReady()
                 switch status {
                 case .ready:
                     break
                 case .awaitingTwoFactor:
                     await MainActor.run {
-                        traskError = Strings.uploadAwaiting2FA
-                        isRefreshingTraskCatalog = false
+                        timesheetError = Strings.uploadAwaiting2FA
+                        isRefreshingTimesheetCatalog = false
                     }
                     return
                 case .loginRequired:
                     await MainActor.run {
-                        traskError = Strings.uploadLoginRequired
-                        isRefreshingTraskCatalog = false
+                        timesheetError = Strings.uploadLoginRequired
+                        isRefreshingTimesheetCatalog = false
                     }
                     return
                 }
 
-                let scraped = try await TraskScraper.scrapeCatalog()
-                let diff = try TraskCatalog.refresh(db: AppEnvironment.db, scraped: scraped)
+                let scraped = try await TimesheetScraper.scrapeCatalog()
+                let diff = try TimesheetCatalog.refresh(db: AppEnvironment.db, scraped: scraped)
                 await MainActor.run {
-                    traskRefreshMessage = Strings.traskRefreshSummary(
+                    timesheetRefreshMessage = Strings.timesheetRefreshSummary(
                         newProjects: diff.newProjectLabels.count,
                         newTasks: diff.newTaskLabels.count,
                         deactivated: diff.deactivatedProjectLabels.count + diff.deactivatedTaskLabels.count
                     )
-                    isRefreshingTraskCatalog = false
+                    isRefreshingTimesheetCatalog = false
                     reload()
                 }
             } catch {
                 await MainActor.run {
-                    traskError = Strings.traskRefreshFailed(error.localizedDescription)
-                    isRefreshingTraskCatalog = false
+                    timesheetError = Strings.timesheetRefreshFailed(error.localizedDescription)
+                    isRefreshingTimesheetCatalog = false
                 }
             }
         }
@@ -298,13 +298,13 @@ struct SettingsView: View {
 
     private func reload() {
         projects = (try? AppEnvironment.db.dbQueue.read { try Project.fetchAll($0) }) ?? []
-        traskProjects = (try? AppEnvironment.db.dbQueue.read { try TraskProject.fetchAll($0) }) ?? []
-        traskTasks = (try? AppEnvironment.db.dbQueue.read { try TraskTask.fetchAll($0) }) ?? []
+        timesheetProjects = (try? AppEnvironment.db.dbQueue.read { try TimesheetProject.fetchAll($0) }) ?? []
+        timesheetTasks = (try? AppEnvironment.db.dbQueue.read { try TimesheetTask.fetchAll($0) }) ?? []
         // Computed once here rather than per-row-per-render — validatePairing
-        // is a DB read, and traskPairingRow is re-evaluated on every body
+        // is a DB read, and timesheetPairingRow is re-evaluated on every body
         // pass for every project.
-        traskPairingIssues = Dictionary(uniqueKeysWithValues: projects.compactMap { project -> (UUID, TraskPairingIssue)? in
-            guard let issue = try? TraskCatalog.validatePairing(db: AppEnvironment.db, project: project) else { return nil }
+        timesheetPairingIssues = Dictionary(uniqueKeysWithValues: projects.compactMap { project -> (UUID, TimesheetPairingIssue)? in
+            guard let issue = try? TimesheetCatalog.validatePairing(db: AppEnvironment.db, project: project) else { return nil }
             return (project.id, issue)
         })
     }
