@@ -1,10 +1,12 @@
 # VaireUpload
 
-Node/Playwright helpers that drive the external timesheet at `my.trask.cz`. Shelled out to by VaireApp via `Process`, the same pattern `GitImporter` uses for `/usr/bin/git`. Not part of the Swift package or app bundle.
+Node/Playwright helpers that drive an external, Blazor Server-based timesheet web app — no REST endpoint, no CSV import — over the Chrome DevTools Protocol (CDP). Shelled out to by VaireApp via `Process`, the same pattern `GitImporter` uses for `/usr/bin/git`. Not part of the Swift package or app bundle.
+
+The timesheet's root URL is configured in Vaire's Settings, not hardcoded here — every script reads it from the `TIMESHEET_URL` environment variable, which VaireApp sets on the process it launches (see `TimesheetScraper.timesheetProcessEnvironment()`). Running a script directly (e.g. for manual debugging) needs that variable set by hand: `TIMESHEET_URL=https://your-timesheet.example/ node src/scrapeCatalog.mjs`.
 
 ## Why a separate Chrome, not a spawned one
 
-`my.trask.cz` is Blazor Server — no REST endpoint, no CSV import, and login is Keycloak with 2FA. Rather than storing credentials or fighting 2FA in a headless browser, these scripts attach over the Chrome DevTools Protocol (CDP) to a real Chrome window you launch and log into by hand. No credentials ever touch Vaire or this code.
+Login is Keycloak with 2FA. Rather than storing credentials or fighting 2FA in a headless browser, these scripts attach over CDP to a real Chrome window you launch and log into by hand. No credentials ever touch Vaire or this code.
 
 ## One-time setup
 
@@ -20,7 +22,7 @@ npx playwright install chromium
    ```bash
    open -na "Google Chrome" --args --remote-debugging-port=9222 --user-data-dir="$HOME/chrome-timesheet-debug"
    ```
-2. In that window, go to `https://my.trask.cz/` and log in (first time only — the profile persists after that).
+2. In that window, go to your configured timesheet URL (the same one set in Vaire's Settings) and log in (first time only — the profile persists after that).
 3. Confirm the debug port is up:
    ```bash
    curl -s http://localhost:9222/json/version

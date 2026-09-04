@@ -25,19 +25,37 @@
 // when the user has enabled it in Settings and chosen an item. When it's
 // null/undefined, a login page is reported as-is for the user to handle by
 // hand in the Chrome window.
+//
+// Detection below matches the IdP picker's own rendered text rather than
+// hardcoding its domain (id.trask.cz) — Vaire only knows the timesheet's
+// configured root URL (Settings), not the identity-provider subdomain it
+// redirects to, and a text/element check works the same regardless.
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
-const TIMESHEET_IDP_PICKER_TEXT = 'Pracovníci Trask';
+// A prefix match, not the full "Pracovníci Trask" text, so this keeps
+// matching if the account-tile suffix ever changes (e.g. a different
+// domain in parentheses) — the picker's own wording ("Pracovníci ...") is
+// the stable part.
+const TIMESHEET_IDP_PICKER_TEXT = 'Pracovníci';
 const MS_EMAIL_INPUT_SELECTOR = 'input[name="loginfmt"]';
 const MS_PASSWORD_INPUT_SELECTOR = 'input[name="passwd"]';
 const MS_SUBMIT_SELECTOR = '#idSIButton9';
 
-function isOnAnyLoginPage(page) {
-  return page.url().includes('id.trask.cz/auth')
-    || page.url().includes('login.microsoftonline.com');
+/**
+ * Detects "on the IdP picker" or "on Microsoft's login page" without
+ * relying on the picker's own domain (id.trask.cz) — a URL Vaire has no
+ * reason to know or hardcode, since only the timesheet's own root URL
+ * (my.trask.cz) is configured in Settings. `login.microsoftonline.com` is
+ * kept as a literal check since that's Microsoft's own domain, not the
+ * timesheet's — any Keycloak realm brokering to Entra ID redirects there.
+ */
+async function isOnAnyLoginPage(page) {
+  if (page.url().includes('login.microsoftonline.com')) return true;
+  const picker = page.getByText(TIMESHEET_IDP_PICKER_TEXT, { exact: false });
+  return (await picker.count().catch(() => 0)) > 0;
 }
 
 /**
@@ -75,11 +93,10 @@ async function fetchOnePasswordCredential(itemId) {
 }
 
 /**
- * Clicks through the id.trask.cz identity-provider picker if present. A
- * no-op if the page has already moved past it (e.g. resumed mid-flow).
+ * Clicks through the Keycloak identity-provider picker if present. A no-op
+ * if the page has already moved past it (e.g. resumed mid-flow).
  */
 async function passIdpPickerIfPresent(page) {
-  if (!page.url().includes('id.trask.cz/auth')) return;
   const link = page.getByText(TIMESHEET_IDP_PICKER_TEXT, { exact: false });
   if (await link.count() > 0) {
     await link.first().click();
@@ -161,7 +178,7 @@ async function fillMicrosoftLogin(page, username, password) {
  *   { status: 'awaiting-2fa' }              — filled, but still on a login/MFA page
  */
 export async function loginIfNeeded(page, onePasswordItemId) {
-  if (!isOnAnyLoginPage(page)) {
+  if (!(await isOnAnyLoginPage(page))) {
     return { status: 'not-on-login-page' };
   }
 
@@ -174,7 +191,7 @@ export async function loginIfNeeded(page, onePasswordItemId) {
   await passIdpPickerIfPresent(page);
   await fillMicrosoftLogin(page, username, password);
 
-  if (isOnAnyLoginPage(page)) {
+  if (await isOnAnyLoginPage(page)) {
     return { status: 'awaiting-2fa' };
   }
   return { status: 'filled' };

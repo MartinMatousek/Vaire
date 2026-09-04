@@ -1,5 +1,5 @@
 // Entry point VaireApp calls before an upload begins: launches the debug
-// Chrome profile if needed, gets a my.trask.cz tab, and (if 1Password
+// Chrome profile if needed, gets a tab on the configured timesheet, and (if 1Password
 // autofill is enabled) attempts to log in. Prints one JSON line describing
 // the outcome so VaireApp can show a specific, correct message rather than
 // a generic failure — never clicks past 2FA, never guesses.

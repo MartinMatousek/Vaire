@@ -10,9 +10,9 @@
 // A stale/expired CDP connection or a missing/wrong tab are both routine,
 // expected failure modes here (the profile isn't running yet, the
 // timesheet logged the session out, etc.) — every export throws a plain
-// Error with an
-// actionable message rather than letting a raw Playwright timeout surface,
-// since VaireApp will show these messages to the user directly.
+// Error with an actionable message rather than letting a raw Playwright
+// timeout surface, since VaireApp will show these messages to the user
+// directly.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
@@ -28,7 +28,40 @@ const DEBUG_PORT = 9222;
 // an absolute path launches correctly in well under a second; the literal
 // "$HOME" string hangs indefinitely with no window ever opening.
 const PROFILE_DIR = path.join(os.homedir(), 'chrome-timesheet-debug');
-const TIMESHEET_URL = 'https://my.trask.cz/';
+
+/**
+ * Returns the user's configured timesheet root URL (Settings), throwing a
+ * clear, actionable error if it hasn't been set yet — Vaire has no
+ * built-in default, since the timesheet is specific to the user's own
+ * organization. Called lazily (not at module load) so importing this file
+ * never fails just because the setting is unset; only an actual attempt to
+ * use the timesheet does.
+ */
+export function timesheetURL() {
+  const url = process.env.TIMESHEET_URL;
+  if (!url) {
+    throw new Error(
+      'No timesheet URL configured. Set it in Vaire\'s Settings before uploading or scraping.'
+    );
+  }
+  return url;
+}
+
+/**
+ * Whether `pageURL` is on the configured timesheet's host — compares
+ * hostnames rather than a plain substring match, so a page on an unrelated
+ * site that merely contains the configured domain as a substring
+ * (theoretically) can't false-match. Returns false (never throws) for a
+ * malformed `pageURL`, e.g. Chrome's transient "about:blank" on a brand
+ * new tab.
+ */
+function isTimesheetHost(pageURL) {
+  try {
+    return new URL(pageURL).hostname === new URL(timesheetURL()).hostname;
+  } catch {
+    return false;
+  }
+}
 
 async function isDebugPortUp() {
   try {
@@ -89,24 +122,25 @@ export async function connectToDebugChrome() {
 
 /**
  * Connects to the debug Chrome, launching it first if needed, and returns
- * an open tab on my.trask.cz — navigating a fresh tab there if none exists
- * yet. This is the auto-launch entry point `ensureReady.mjs` uses; plain
- * `attachToTimesheetTab()` below stays as the "tab must already exist" variant
- * used by scripts that assume a prior successful ensureReady/login.
+ * an open tab on the configured timesheet — navigating a fresh tab there
+ * if none exists yet. This is the auto-launch entry point
+ * `ensureReady.mjs` uses; plain `attachToTimesheetTab()` below stays as
+ * the "tab must already exist" variant used by scripts that assume a
+ * prior successful ensureReady/login.
  */
 export async function ensureTimesheetTab() {
   await ensureDebugChrome();
   const browser = await connectToDebugChrome();
 
   // Repeated runs (retried logins, repeated uploads) can leave more than
-  // one my.trask.cz tab open — e.g. an old logged-out tab alongside a
+  // one timesheet tab open — e.g. an old logged-out tab alongside a
   // freshly-logged-in one. Prefer the most recently opened match rather
   // than the first one found, and close the rest so they don't keep
   // accumulating or get picked up by mistake on a later run.
   const matches = [];
   for (const context of browser.contexts()) {
     for (const page of context.pages()) {
-      if (page.url().includes('my.trask.cz')) {
+      if (isTimesheetHost(page.url())) {
         matches.push(page);
       }
     }
@@ -124,22 +158,22 @@ export async function ensureTimesheetTab() {
 
   const context = browser.contexts()[0] ?? (await browser.newContext());
   const page = await context.newPage();
-  await page.goto(TIMESHEET_URL);
+  await page.goto(timesheetURL());
   return { browser, page };
 }
 
 /**
- * Finds the open my.trask.cz timesheet tab among the debug Chrome's windows. Throws a
+ * Finds the open timesheet tab among the debug Chrome's windows. Throws a
  * clear, distinct message for "no such tab" vs. "tab is stuck on the
  * Keycloak login page" so the caller can show the right instruction.
  */
 export async function findTimesheetPage(browser) {
   for (const context of browser.contexts()) {
     for (const page of context.pages()) {
-      if (page.url().includes('my.trask.cz')) {
-        if (page.url().includes('id.trask.cz') || page.url().includes('/auth/')) {
+      if (isTimesheetHost(page.url())) {
+        if (page.url().includes('/auth/')) {
           throw new Error(
-            'The my.trask.cz tab is showing the Keycloak login page. ' +
+            'The timesheet tab is showing the Keycloak login page. ' +
             'Log in (including 2FA) in that Chrome window, then try again.'
           );
         }
@@ -148,8 +182,8 @@ export async function findTimesheetPage(browser) {
     }
   }
   throw new Error(
-    'No open tab found on my.trask.cz in the debug Chrome window. ' +
-    'Open https://my.trask.cz/ there and log in, then try again.'
+    `No open tab found on the configured timesheet (${timesheetURL()}) in the debug Chrome window. ` +
+    `Open ${timesheetURL()} there and log in, then try again.`
   );
 }
 
@@ -363,8 +397,8 @@ function formatTimesheetDate(dateISO) {
  * sequence's Save-confirm wait guards against).
  */
 export async function runFillEntry(page, entry) {
-  if (!page.url().endsWith('my.trask.cz/') && !page.url().includes('/timesheet')) {
-    await page.goto('https://my.trask.cz/');
+  if (!page.url().endsWith(timesheetURL()) && !page.url().includes('/timesheet')) {
+    await page.goto(timesheetURL());
     await page.waitForLoadState('networkidle');
   }
 

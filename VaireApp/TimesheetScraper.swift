@@ -106,12 +106,24 @@ enum TimesheetScraper {
         let note: String
     }
 
+    /// Inherited environment plus `TIMESHEET_URL`, so every VaireUpload
+    /// script reads the user's configured timesheet URL (Settings) instead
+    /// of a hardcoded literal — set even when unconfigured (empty string)
+    /// so a script's `process.env.TIMESHEET_URL` check is a plain falsy
+    /// test either way.
+    static func timesheetProcessEnvironment() -> [String: String] {
+        var environment = ProcessInfo.processInfo.environment
+        environment["TIMESHEET_URL"] = TimesheetURLSetting.current() ?? ""
+        return environment
+    }
+
     private static func runNode(scriptPath: String, arguments: [String]) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
             let quotedArguments = ([scriptPath] + arguments).map { "'\($0.replacingOccurrences(of: "'", with: "'\\''"))'" }
             process.arguments = ["-l", "-c", "node " + quotedArguments.joined(separator: " ")]
+            process.environment = timesheetProcessEnvironment()
 
             let stdout = Pipe()
             let stderr = Pipe()

@@ -36,6 +36,14 @@ public enum SharedStorage {
         try directory().appendingPathComponent("onePasswordSetting").path
     }
 
+    /// Path to the plain-text file holding the configured timesheet root
+    /// URL (e.g. "https://my.trask.cz/"). Empty/missing until the user sets
+    /// it in Settings — Vaire has no built-in default, since the timesheet
+    /// it talks to is specific to the user's own organization.
+    public static func timesheetURLPath() throws -> String {
+        try directory().appendingPathComponent("timesheetURL").path
+    }
+
     /// Path to the JSON result file for one `vaire://edit-block` request,
     /// one file per block id so a stale/timed-out request from a previous
     /// run can't be misread as the current one's answer. Written by the

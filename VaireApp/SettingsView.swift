@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var isRefreshingTimesheetCatalog = false
     @State private var timesheetError: String?
     @State private var timesheetRefreshMessage: String?
+    @State private var timesheetURL = TimesheetURLSetting.current() ?? ""
 
     var body: some View {
         ScrollView {
@@ -71,6 +72,8 @@ struct SettingsView: View {
 
             Text(Strings.timesheetSectionTitle)
                 .font(.headline)
+
+            TextField(Strings.timesheetURLLabel, text: timesheetURLBinding, prompt: Text(Strings.timesheetURLPlaceholder))
 
             ForEach(projects) { project in
                 timesheetPairingRow(project)
@@ -184,6 +187,16 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private var timesheetURLBinding: Binding<String> {
+        Binding(
+            get: { timesheetURL },
+            set: { newValue in
+                timesheetURL = newValue
+                try? TimesheetURLSetting.set(newValue)
+            }
+        )
     }
 
     private var onePasswordEnabledBinding: Binding<Bool> {

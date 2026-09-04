@@ -12,16 +12,16 @@
 // On failure: a human-readable error on stderr, exit code 1. Nothing is
 // printed to stdout on failure — callers should treat "empty stdout" as
 // well as a non-zero exit code as failure.
-import { attachToTimesheetTab, dropdownByInputName, selectDropdownOption, readDropdownOptions } from './attach.mjs';
+import { attachToTimesheetTab, timesheetURL, dropdownByInputName, selectDropdownOption, readDropdownOptions } from './attach.mjs';
 
 async function main() {
   const { browser, page } = await attachToTimesheetTab();
 
   // Reload to the timesheet root defensively — if the tab is on some other
-  // my.trask.cz page (e.g. Export, Dashboard) the Log-time form and its
-  // dropdowns won't exist yet.
-  if (!page.url().endsWith('my.trask.cz/') && !page.url().includes('/timesheet')) {
-    await page.goto('https://my.trask.cz/');
+  // page of the timesheet (e.g. Export, Dashboard) the Log-time form and
+  // its dropdowns won't exist yet.
+  if (!page.url().endsWith(timesheetURL()) && !page.url().includes('/timesheet')) {
+    await page.goto(timesheetURL());
     await page.waitForLoadState('networkidle');
   }
 

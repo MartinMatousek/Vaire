@@ -158,6 +158,11 @@ struct UploadFlowView: View {
     }
 
     private func checkPairings() {
+        guard TimesheetURLSetting.current() != nil else {
+            stage = .chromeNotReady(Strings.timesheetURLNotConfigured)
+            return
+        }
+
         let involvedProjects = Set(blocksToUpload.map(\.projectId)).compactMap { projects[$0] }
         let staleProjects = involvedProjects.filter { project in
             (try? TimesheetCatalog.validatePairing(db: AppEnvironment.db, project: project)) != nil

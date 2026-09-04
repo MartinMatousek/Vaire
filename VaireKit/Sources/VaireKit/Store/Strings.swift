@@ -165,6 +165,9 @@ public enum Strings {
     }
     public static var timesheetPairingStaleProject: String { pick(cs: "Timesheet projekt už neexistuje — přeparuj prosím.", en: "Timesheet project no longer exists — please re-pair.") }
     public static var timesheetPairingStaleTask: String { pick(cs: "Výchozí úkol už neexistuje — přeparuj prosím.", en: "Default task no longer exists — please re-pair.") }
+    public static var timesheetURLLabel: String { pick(cs: "URL timesheet", en: "Timesheet URL") }
+    public static var timesheetURLPlaceholder: String { pick(cs: "https://…", en: "https://…") }
+    public static var timesheetURLNotConfigured: String { pick(cs: "Nejprve nastav URL timesheet v Nastavení.", en: "Set your timesheet's URL in Settings first.") }
 
     // MARK: - Timesheet upload flow
 

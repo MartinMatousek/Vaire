@@ -135,6 +135,7 @@ actor TimesheetUploadSession {
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
         let quotedScriptPath = "'\(scriptPath.replacingOccurrences(of: "'", with: "'\\''"))'"
         process.arguments = ["-l", "-c", "node " + quotedScriptPath]
+        process.environment = TimesheetScraper.timesheetProcessEnvironment()
 
         let stdin = Pipe()
         let stdout = Pipe()
