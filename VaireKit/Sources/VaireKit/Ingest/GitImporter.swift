@@ -31,24 +31,28 @@ public func gitConfigValue(key: String, repoPath: String) throws -> String {
 }
 
 public protocol CommitLogRunning: Sendable {
-    func run(repoPath: String, author: String, since: Date) throws -> String
+    func run(repoPath: String, author: String, since: Date, until: Date?) throws -> String
 }
 
 public struct GitCommandLineRunner: CommitLogRunning {
     public init() {}
 
-    public func run(repoPath: String, author: String, since: Date) throws -> String {
+    public func run(repoPath: String, author: String, since: Date, until: Date?) throws -> String {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
 
         let isoFormatter = ISO8601DateFormatter()
-        process.arguments = [
+        var arguments = [
             "-C", repoPath,
             "log",
             "--author=\(author)",
-            "--since=\(isoFormatter.string(from: since))",
-            "--format=%H|%aI|%s"
+            "--since=\(isoFormatter.string(from: since))"
         ]
+        if let until {
+            arguments.append("--until=\(isoFormatter.string(from: until))")
+        }
+        arguments.append("--format=%H|%aI|%s")
+        process.arguments = arguments
 
         let stdout = Pipe()
         let stderr = Pipe()
@@ -97,9 +101,10 @@ public enum GitImporter {
         repoPath: String,
         author: String,
         since: Date,
+        until: Date? = nil,
         runner: CommitLogRunning = GitCommandLineRunner()
     ) throws -> [GitCommit] {
-        let output = try runner.run(repoPath: repoPath, author: author, since: since)
+        let output = try runner.run(repoPath: repoPath, author: author, since: since, until: until)
         return parseCommits(logOutput: output)
     }
 
