@@ -30,7 +30,7 @@ enum TraskScraper {
     /// relative to this source file's location in the repo. Works for a
     /// locally-built/run app; would need revisiting for a distributed build
     /// (see VaireUpload/README.md).
-    private static var vaireUploadDirectory: URL {
+    static var vaireUploadDirectory: URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent() // VaireApp/
             .deletingLastPathComponent() // repo root
@@ -104,46 +104,6 @@ enum TraskScraper {
     struct ExistingEntry: Equatable {
         let projectLabel: String
         let note: String
-    }
-
-    /// Runs `checkExistingEntries.mjs` ONCE, reading every already-logged
-    /// entry for the currently-visible week in a single pass — the caller
-    /// (`UploadFlowView`) uses this up front to skip duplicate fills
-    /// locally, rather than each `fillEntry` call re-checking Trask (and
-    /// reloading the page) before every single fill, which an earlier
-    /// version did and which didn't reliably prevent duplicates in
-    /// practice. A date not present as a key in the result wasn't in the
-    /// currently-visible week — callers get no dedup guarantee for it.
-    static func checkExistingEntries() async throws -> [String: [ExistingEntry]] {
-        let scriptPath = vaireUploadDirectory.appendingPathComponent("src/checkExistingEntries.mjs").path
-        guard FileManager.default.fileExists(atPath: scriptPath) else {
-            throw TraskScraperError.scriptNotFound(scriptPath)
-        }
-
-        let output = try await runNode(scriptPath: scriptPath, arguments: [])
-        guard let data = output.data(using: .utf8) else {
-            throw TraskScraperError.malformedOutput
-        }
-        struct RawEntry: Decodable { let projectLabel: String; let note: String }
-        let decoded = try JSONDecoder().decode([String: [RawEntry]].self, from: data)
-        return decoded.mapValues { entries in
-            entries.map { ExistingEntry(projectLabel: $0.projectLabel, note: $0.note) }
-        }
-    }
-
-    /// Runs `fillEntry.mjs` with the given entry JSON. Fully automatic —
-    /// the script fills the form, clicks Save, and confirms Trask
-    /// accepted it before returning.
-    static func fillEntry(entryJSON: String) async throws {
-        let scriptPath = vaireUploadDirectory.appendingPathComponent("src/fillEntry.mjs").path
-        guard FileManager.default.fileExists(atPath: scriptPath) else {
-            throw TraskScraperError.scriptNotFound(scriptPath)
-        }
-
-        let output = try await runNode(scriptPath: scriptPath, arguments: [entryJSON])
-        guard output.trimmingCharacters(in: .whitespacesAndNewlines) == "ready" else {
-            throw TraskScraperError.malformedOutput
-        }
     }
 
     private static func runNode(scriptPath: String, arguments: [String]) async throws -> String {

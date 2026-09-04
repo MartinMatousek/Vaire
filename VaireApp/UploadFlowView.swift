@@ -3,11 +3,13 @@ import SwiftUI
 import VaireKit
 
 /// Uploads a day (or several days, for a week) of logged blocks to Trask.
-/// Fully automatic: `TraskScraper.fillEntry` fills one Trask form and
-/// clicks Save, this view auto-advances to the next block on success and
-/// only stops to show a Retry/Skip choice on failure. Duplicate protection
-/// is the one-time batch check in `beginUpload()` (`isDuplicate`), not
-/// anything per-entry — see its doc comment for why.
+/// Fully automatic: `session.fillEntry` fills one Trask form and clicks
+/// Save, this view auto-advances to the next block on success and only
+/// stops to show a Retry/Skip choice on failure. One `TraskUploadSession`
+/// (a single long-lived Node/Playwright process) serves the whole batch —
+/// see its doc comment for why. Duplicate protection is the one-time batch
+/// check in `beginUpload()` (`isDuplicate`), not anything per-entry — see
+/// its doc comment for why.
 ///
 /// History: reverted to semi-automatic (2026-09-04) after a
 /// fully-automatic version created real duplicate entries in the user's
@@ -31,6 +33,7 @@ struct UploadFlowView: View {
     }
 
     @State private var stage: Stage = .checkingPairings
+    @State private var session = TraskUploadSession()
     @State private var currentIndex = 0
     @State private var fillError: String?
     @State private var isFilling = false
@@ -107,6 +110,13 @@ struct UploadFlowView: View {
         .padding()
         .frame(width: 420)
         .onAppear(perform: checkPairings)
+        .onDisappear {
+            // Backstop for every dismissal path (Cancel button, Done
+            // button, window closed directly) — `session.stop()` is
+            // idempotent, so this is safe even when a call site above
+            // already stopped it explicitly.
+            Task { await session.stop() }
+        }
     }
 
     private var uploadingBody: some View {
@@ -166,9 +176,13 @@ struct UploadFlowView: View {
     /// fill error. Never attempts to clear 2FA itself.
     private func prepareChrome() {
         stage = .preparingChrome
+        let onePasswordItemId: String? = {
+            let setting = OnePasswordSetting.current()
+            return setting.isEnabled ? setting.itemId : nil
+        }()
         Task {
             do {
-                let status = try await TraskScraper.ensureReady()
+                let status = try await session.start(onePasswordItemId: onePasswordItemId)
                 await MainActor.run {
                     switch status {
                     case .ready:
@@ -180,6 +194,7 @@ struct UploadFlowView: View {
                     }
                 }
             } catch {
+                await session.stop()
                 await MainActor.run {
                     stage = .chromeNotReady(Strings.uploadEnsureReadyFailed(error.localizedDescription))
                 }
@@ -192,7 +207,7 @@ struct UploadFlowView: View {
         Task {
             // Best-effort: a failure here shouldn't block the upload, just
             // means duplicates won't be auto-skipped this run.
-            let existing = (try? await TraskScraper.checkExistingEntries()) ?? [:]
+            let existing = (try? await session.checkExistingEntries()) ?? [:]
             await MainActor.run {
                 existingEntriesByDate = existing
                 fillCurrentEntry()
@@ -204,6 +219,7 @@ struct UploadFlowView: View {
         currentIndex += 1
         if currentIndex >= blocksToUpload.count {
             stage = .done
+            Task { await session.stop() }
             // Chrome holds focus through the fill/Save loop (that's where
             // the actual clicks happen) — bring Vaire's window back to
             // front so the done screen is actually seen once the batch
@@ -253,8 +269,8 @@ struct UploadFlowView: View {
 
         Task {
             do {
-                let entryJSON = try makeEntryJSON(block: block, project: project)
-                try await TraskScraper.fillEntry(entryJSON: entryJSON)
+                let (payload, _, _, _) = try makeEntryComponents(block: block, project: project)
+                try await session.fillEntry(payload: payload)
                 await MainActor.run {
                     isFilling = false
                     advance()
@@ -270,7 +286,7 @@ struct UploadFlowView: View {
 
     /// Looks up the Trask project/task labels, note, and dateISO for
     /// `block`, shared by `isDuplicate` (which only needs project+note)
-    /// and `makeEntryJSON` (which needs the full payload) so the DB
+    /// and `fillCurrentEntry` (which needs the full payload) so the DB
     /// lookups happen once per call site rather than being duplicated.
     private func makeEntryComponents(block: Block, project: Project) throws -> (payload: [String: Any], dateISO: String, projectLabel: String, note: String) {
         guard let traskProject = try traskProjectLabel(for: project) else {
@@ -296,12 +312,6 @@ struct UploadFlowView: View {
             "remoteWork": false,
         ]
         return (payload, dateISO, traskProject, note)
-    }
-
-    private func makeEntryJSON(block: Block, project: Project) throws -> String {
-        let (payload, _, _, _) = try makeEntryComponents(block: block, project: project)
-        let data = try JSONSerialization.data(withJSONObject: payload)
-        return String(data: data, encoding: .utf8) ?? "{}"
     }
 
     private func traskProjectLabel(for project: Project) throws -> String? {
