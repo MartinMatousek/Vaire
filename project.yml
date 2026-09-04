@@ -48,6 +48,7 @@ targets:
           - CFBundleURLName: com.martinmatousek.vaire.app
             CFBundleURLSchemes:
               - vaire
+        NSCalendarsFullAccessUsageDescription: Vaire reads your work calendar to suggest logging meetings as time entries.
 
   VaireWidgetExtension:
     type: app-extension
