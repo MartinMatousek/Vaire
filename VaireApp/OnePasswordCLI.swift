@@ -45,19 +45,30 @@ enum OnePasswordCLI {
     private static func run(arguments: [String]) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-            process.arguments = ["op"] + arguments
+            process.executableURL = URL(fileURLWithPath: "/bin/zsh")
+            let quotedArguments = arguments.map { "'\($0.replacingOccurrences(of: "'", with: "'\\''"))'" }
+            process.arguments = ["-l", "-c", "op " + quotedArguments.joined(separator: " ")]
 
             let stdout = Pipe()
             let stderr = Pipe()
             process.standardOutput = stdout
             process.standardError = stderr
 
+            let stdoutData = ThreadSafeBox(Data())
+            let stderrData = ThreadSafeBox(Data())
+
+            stdout.fileHandleForReading.readabilityHandler = { handle in
+                stdoutData.append(handle.availableData)
+            }
+            stderr.fileHandleForReading.readabilityHandler = { handle in
+                stderrData.append(handle.availableData)
+            }
+
             process.terminationHandler = { proc in
-                let stdoutData = stdout.fileHandleForReading.readDataToEndOfFile()
-                let stderrData = stderr.fileHandleForReading.readDataToEndOfFile()
-                let stdoutString = String(data: stdoutData, encoding: .utf8) ?? ""
-                let stderrString = String(data: stderrData, encoding: .utf8)?
+                stdout.fileHandleForReading.readabilityHandler = nil
+                stderr.fileHandleForReading.readabilityHandler = nil
+                let stdoutString = String(data: stdoutData.value, encoding: .utf8) ?? ""
+                let stderrString = String(data: stderrData.value, encoding: .utf8)?
                     .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
                 if proc.terminationStatus == 0 {
