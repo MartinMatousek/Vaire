@@ -4,7 +4,8 @@ import GRDB
 public struct FinishSuggestion: Identifiable, Equatable, Sendable {
     public enum Kind: Equatable, Sendable {
         case gitCommit(shas: [String], suggestedNote: String)
-        case prolong(blockId: UUID, currentEnd: Date)
+        case prolong(blockId: UUID, currentStart: Date, currentEnd: Date)
+        case meeting(eventIdentifier: String, title: String)
         case manual
     }
 
@@ -63,6 +64,8 @@ public enum DayFinisher {
         db: AppDatabase,
         day: Date,
         commitsByProject: [UUID: [GitCommit]],
+        meetings: [MeetingCandidate] = [],
+        defaultMeetingProjectId: UUID? = nil,
         targetHours: Double = 8,
         calendar: Calendar = .current
     ) throws -> [FinishSuggestion] {
@@ -71,6 +74,22 @@ public enum DayFinisher {
         let dayBlocks = allBlocks.filter { $0.start < dayEnd && $0.end > dayStart }
 
         var suggestions: [FinishSuggestion] = []
+
+        if let defaultMeetingProjectId {
+            for meeting in meetings {
+                let overlapsAnyBlock = allBlocks.contains { $0.start < meeting.end && $0.end > meeting.start }
+                guard !overlapsAnyBlock else { continue }
+                let totalMinutes = Int(meeting.end.timeIntervalSince(meeting.start) / 60)
+                let rounded = DurationRounding.roundedUp(totalMinutes: totalMinutes)
+                suggestions.append(FinishSuggestion(
+                    kind: .meeting(eventIdentifier: meeting.eventIdentifier, title: meeting.title),
+                    projectId: defaultMeetingProjectId,
+                    start: meeting.start,
+                    durationMinutes: rounded.hours * 60 + rounded.minutes,
+                    note: "[Meeting] \(meeting.title)"
+                ))
+            }
+        }
 
         for (projectId, commits) in commitsByProject {
             let dayCommits = commits.filter { $0.date >= dayStart && $0.date < dayEnd }
@@ -93,7 +112,7 @@ public enum DayFinisher {
         let mostRecentFirst = dayBlocks.sorted { $0.start > $1.start }
         for block in mostRecentFirst {
             suggestions.append(FinishSuggestion(
-                kind: .prolong(blockId: block.id, currentEnd: block.end),
+                kind: .prolong(blockId: block.id, currentStart: block.start, currentEnd: block.end),
                 projectId: block.projectId,
                 start: block.end,
                 durationMinutes: 0,
@@ -139,12 +158,24 @@ public enum DayFinisher {
             try db.dbQueue.write { try block.insert($0) }
             return block
 
-        case .prolong(let blockId, let currentEnd):
+        case .prolong(let blockId, _, let currentEnd):
             guard let existing = try db.dbQueue.read({ try Block.fetchOne($0, key: blockId) }) else {
                 throw BlockEditorError.blockNotFound
             }
             let newEnd = currentEnd.addingTimeInterval(durationSeconds)
             return try BlockEditor.setTimes(db: db, blockId: blockId, start: existing.start, end: newEnd)
+
+        case .meeting:
+            let block = Block(
+                projectId: suggestion.projectId,
+                start: suggestion.start,
+                end: suggestion.start.addingTimeInterval(durationSeconds),
+                source: .meeting,
+                note: suggestion.note.isEmpty ? nil : suggestion.note,
+                isManual: true
+            )
+            try db.dbQueue.write { try block.insert($0) }
+            return block
 
         case .manual:
             let block = Block(

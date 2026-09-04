@@ -126,6 +126,7 @@ public enum Strings {
     // MARK: - Finish day/week flow
 
     public static var finishDay: String { pick(cs: "Doplň den…", en: "Fill day…") }
+    public static var finishDayShort: String { pick(cs: "Doplnit", en: "Fill") }
     public static var finishDayHelp: String { pick(cs: "Projde návrhy, jak doplnit den do cílových hodin.", en: "Walks through suggestions to fill the day up to target hours.") }
     public static var finishWeek: String { pick(cs: "Doplň týden…", en: "Fill week…") }
     public static var finishWeekHelp: String { pick(cs: "Projde dny v týdnu, které ještě nedosáhly cíle.", en: "Walks through the week's days that haven't hit target yet.") }
@@ -135,7 +136,9 @@ public enum Strings {
     public static var finishDayNoMoreSuggestions: String { pick(cs: "Žádné další návrhy — doplň zbytek ručně.", en: "No more suggestions — fill the rest manually.") }
     public static var finishDaySuggestionGitCommit: String { pick(cs: "Nezalogovaný commit", en: "Unlogged commit") }
     public static func finishDaySuggestionProlong(_ project: String) -> String { pick(cs: "Prodloužit poslední záznam (\(project))", en: "Prolong last entry (\(project))") }
+    public static var finishDayProlongExplanation: String { pick(cs: "Přidá čas ke konci existujícího záznamu — projekt ani poznámka se nemění.", en: "Adds time to the end of the existing entry — its project and note stay unchanged.") }
     public static var finishDaySuggestionManual: String { pick(cs: "Ruční záznam", en: "Manual entry") }
+    public static func finishDaySuggestionMeeting(_ title: String) -> String { pick(cs: "Schůzka: \(title)", en: "Meeting: \(title)") }
     public static var finishDaySkip: String { pick(cs: "Přeskočit", en: "Skip") }
     public static var finishDayAddAndNext: String { pick(cs: "Přidat a další", en: "Add & next") }
     public static var finishDayDone: String { pick(cs: "Hotovo", en: "Done") }
@@ -166,15 +169,23 @@ public enum Strings {
     // MARK: - Trask upload flow
 
     public static var uploadDay: String { pick(cs: "Nahrát den…", en: "Upload day…") }
+    public static var uploadDayShort: String { pick(cs: "Nahrát", en: "Upload") }
     public static var uploadWeek: String { pick(cs: "Nahrát týden…", en: "Upload week…") }
     public static var uploadNeedsRepairing: String { pick(cs: "Tyto projekty je potřeba přeparovat s Trask, než bude možné nahrát čas:", en: "These projects need re-pairing with Trask before time can be uploaded:") }
     public static var uploadOpenSettings: String { pick(cs: "Otevřít nastavení", en: "Open Settings") }
     public static func uploadEntryProgress(current: Int, total: Int) -> String { pick(cs: "Záznam \(current) z \(total)", en: "Entry \(current) of \(total)") }
     public static var uploadEntryFilled: String { pick(cs: "Vyplněno — zkontroluj okno Chrome, klikni tam na Uložit, pak pokračuj.", en: "Filled — check the Chrome window, click Save there, then continue.") }
     public static var uploadNext: String { pick(cs: "Další", en: "Next") }
+    public static var uploadRetry: String { pick(cs: "Zkusit znovu", en: "Retry") }
     public static var uploadSkipEntry: String { pick(cs: "Přeskočit záznam", en: "Skip entry") }
     public static var uploadCancel: String { pick(cs: "Zrušit nahrávání", en: "Cancel upload") }
     public static func uploadFillFailed(_ message: String) -> String { pick(cs: "Vyplnění selhalo: \(message)", en: "Filling failed: \(message)") }
+    public static func uploadDuplicatesSkipped(_ count: Int) -> String {
+        pick(
+            cs: count == 1 ? "1 záznam byl v Trask už zalogován, přeskočen." : "\(count) záznamů bylo v Trask už zalogováno, přeskočeny.",
+            en: count == 1 ? "1 entry was already logged in Trask, skipped." : "\(count) entries were already logged in Trask, skipped."
+        )
+    }
     public static var uploadComplete: String { pick(cs: "Nahrávání dokončeno.", en: "Upload complete.") }
 
     // MARK: - 1Password login autofill (Settings)

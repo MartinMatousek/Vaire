@@ -3,4 +3,5 @@ public enum Source: String, Codable, Sendable {
     case gitCommit
     case manual
     case appFocus
+    case meeting
 }
