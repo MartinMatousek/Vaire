@@ -117,6 +117,7 @@ export async function ensureTraskTab() {
       await stale.close().catch(() => {});
     }
     await page.bringToFront();
+    await recoverFromStaleConnection(page);
     return { browser, page };
   }
 
@@ -152,6 +153,33 @@ export async function findTraskPage(browser) {
 }
 
 /**
+ * Blazor Server's SignalR connection drops after the tab sits idle for a
+ * while (confirmed live: a debug Chrome tab left open across several
+ * automation runs) and Trask throws up its own reconnect overlay
+ * (`#components-reconnect-modal`) covering the whole page. The overlay
+ * intercepts every click but doesn't remove any existing DOM content, so a
+ * script reading text/attributes off the stale page looks like it's
+ * succeeding right up until the actual click — which then hangs for the
+ * full actionability timeout waiting on a target that's permanently
+ * covered. A plain reload re-establishes the connection and is safe/
+ * idempotent for Trask's timesheet page.
+ */
+async function recoverFromStaleConnection(page) {
+  const modal = page.locator('#components-reconnect-modal');
+  if (await modal.isVisible().catch(() => false)) {
+    // 'networkidle' isn't a reliable signal for a Blazor Server page — it
+    // keeps a persistent SignalR WebSocket open, which can make the page
+    // look "network idle" before the app has actually finished
+    // re-rendering after reconnecting. Wait for the modal to be gone and
+    // for the project dropdown (present on every load of this page) to
+    // reappear, rather than trusting a load-state heuristic.
+    await page.reload();
+    await modal.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+    await page.locator('input[name="DropDownProject"]').waitFor({ state: 'attached', timeout: 15000 });
+  }
+}
+
+/**
  * Convenience wrapper: connect + find the tab + bring it to front, the
  * common case for every script here.
  */
@@ -159,6 +187,7 @@ export async function attachToTraskTab() {
   const browser = await connectToDebugChrome();
   const page = await findTraskPage(browser);
   await page.bringToFront();
+  await recoverFromStaleConnection(page);
   return { browser, page };
 }
 
@@ -183,10 +212,49 @@ export function dropdownByInputName(page, inputName) {
  * in this codebase — do not reintroduce index-based selection.
  */
 export async function selectDropdownOption(page, dropdown, label) {
-  await dropdown.click();
-  const popup = page.locator('.rz-dropdown-panel:visible').first();
-  await popup.waitFor({ state: 'visible', timeout: 5000 });
-  await popup.getByRole('option', { name: label, exact: true }).click();
+  // Confirmed live (2026-09-04) that this exact click sequence — dropdown
+  // opens, options render, the target option resolves with a clean match
+  // count of 1, `.click()` runs with no error — can still be silently
+  // ignored by Radzen/Blazor (no exception, no visible change) for the
+  // calendar's month/year dropdowns specifically, reproducibly, though the
+  // identical sequence never failed for the Project/Task dropdowns
+  // elsewhere in this codebase. Root cause not pinned down. Retrying the
+  // whole open-and-click sequence a few times, checking the dropdown's own
+  // displayed label actually changed, reliably recovers — a single retry
+  // was enough in every reproduction. Only the calendar's dropdowns
+  // actually populate `.rz-dropdown-label` with the selected value
+  // (confirmed live the Project dropdown's is blank even after a
+  // successful selection, showing its choice in the input instead), so
+  // the verification is skipped — falling back to trusting a single
+  // attempt, same as before — whenever that label is empty.
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    await dropdown.click();
+    const popup = page.locator('.rz-dropdown-panel:visible').first();
+    await popup.waitFor({ state: 'visible', timeout: 5000 });
+    // The panel itself becomes visible before Radzen finishes populating
+    // its option list — wait for at least one option to actually be
+    // present before searching for the specific one.
+    await popup.locator('li[role="option"]').first().waitFor({ state: 'visible', timeout: 5000 });
+
+    // Confirmed live (2026-09-03) that a label coming from Vaire (Swift ->
+    // JSON -> shell arg -> process.argv) can arrive NFD-decomposed (e.g.
+    // "Č" as "C" + combining caron, 2 codepoints) while Trask's DOM
+    // renders the same text NFC-precomposed (1 codepoint) — visually and
+    // even in a plain string diff they look identical, but a CSS
+    // attribute selector or getByRole's accessible-name match against the
+    // raw (non-normalized) label finds zero matches, and the click then
+    // hangs for the full actionability timeout waiting on a match that
+    // never appears. Normalize before matching so both forms compare
+    // equal.
+    const normalizedLabel = label.normalize('NFC');
+    const target = popup.locator(`li[aria-label="${normalizedLabel.replace(/"/g, '\\"')}"]`);
+    await target.click();
+
+    const selectedLabel = (await dropdown.locator('.rz-dropdown-label').innerText().catch(() => '')).trim();
+    if (!selectedLabel || selectedLabel === normalizedLabel || attempt === maxAttempts) return;
+    await page.waitForTimeout(200);
+  }
 }
 
 /**
@@ -200,4 +268,108 @@ export async function readDropdownOptions(page, dropdown) {
   const labels = await popup.locator('li[role="option"]').allInnerTexts();
   await page.keyboard.press('Escape');
   return labels.map((label) => label.trim());
+}
+
+/**
+ * Sets Trask's date field to `dateISO` by typing directly into the input
+ * and pressing Tab, rather than driving the calendar popup — confirmed
+ * live (2026-09-04) that `input.rz-daterangepicker-single-input` accepts a
+ * typed "dd.mm.yyyy" value and Tab commits it cleanly, closing the popup
+ * with no month/year navigation needed at all. Not Enter — the Save
+ * button is `type="submit"`, so Enter inside any form field risks
+ * submitting the form before the rest of it is filled. An earlier implementation
+ * drove the popup's calendar grid (prev/next clicks, then later
+ * month/year dropdowns) and hit multiple confirmed-live Radzen/Blazor
+ * quirks — clicks that resolved and ran with no error but were silently
+ * ignored, a range-picker mode that activated unexpectedly on a second
+ * click — none of which apply to typing into the field directly.
+ */
+export async function setDatePickerDate(page, dateISO) {
+  const [year, month, day] = dateISO.split('-').map(Number);
+  const expected = `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${String(year)}`;
+
+  const dateInput = page.locator('input.rz-daterangepicker-single-input');
+  await dateInput.click();
+  await dateInput.fill(expected);
+  await page.keyboard.press('Tab');
+
+  // Confirmed live the input's value updates asynchronously right after
+  // Tab — reading it immediately can catch it mid-update. Poll briefly
+  // instead of trusting a single synchronous read.
+  const deadline = Date.now() + 3000;
+  let finalValue = '';
+  while (Date.now() < deadline) {
+    finalValue = (await dateInput.inputValue()).trim();
+    if (finalValue === expected) break;
+    await page.waitForTimeout(100);
+  }
+
+  if (finalValue !== expected) {
+    throw new Error(`Date field shows "${finalValue}" after typing "${expected}", expected them to match.`);
+  }
+}
+
+/**
+ * Reads the already-logged Trask entries for every day in the currently-
+ * visible week in one pass, returning
+ * `{ [dateISO]: { projectLabel, note }[] }`. Meant to be called ONCE per
+ * upload batch (by checkExistingEntries.mjs), not once per entry — an
+ * earlier version checked before every single fill, reloading the page
+ * each time, which was both unnecessary (the caller already knows the
+ * whole batch up front) and the wrong layer to guarantee fresh data at:
+ * reloading between fills didn't reliably prevent duplicates in practice
+ * and added a full-page reload's latency to every entry.
+ *
+ * A date outside the currently-visible week simply doesn't appear as a
+ * key in the returned object — callers checking such a date get no dedup
+ * guarantee for it, same as before this function existed.
+ *
+ * Confirmed live (2026-09-04):
+ * - "Timesheet" is the page's default view — the 7-day-column entries
+ *   list (`.rz-events` / `.calendar-daysInTheWeek-field`) reads directly
+ *   with no toggle click needed.
+ * - The 7 day columns are `.rz-events` containers, Monday-to-Sunday
+ *   order, matching `.calendar-daysInTheWeek-field`'s own date labels
+ *   (also 7, same order, "dd.mm.yyyy" format in each field's text).
+ * - An already-logged entry's `.rz-event-content` text is
+ *   "Project label | Note text" (a literal " | " separator) — this is
+ *   the entry's free-text note/description, NOT its Trask task category.
+ *   An earlier version of this function assumed the text after " | " was
+ *   the task, which is wrong: the task category isn't shown in this
+ *   compact view at all, so comparing it against Vaire's task label
+ *   produced systematic false negatives (every real duplicate compared
+ *   the task category against a description and never matched). An
+ *   unlogged Microsoft Calendar-only item has no separator and a
+ *   distinct grey inline style — this function only returns the logged
+ *   ones.
+ */
+export async function findExistingLoggedEntries(page) {
+  await page.locator('.calendar-daysInTheWeek-field').first().waitFor({ state: 'visible', timeout: 15000 });
+
+  const dayFields = page.locator('.calendar-daysInTheWeek-field');
+  const dayCount = await dayFields.count();
+  const eventsContainers = page.locator('.rz-events');
+  const eventsCount = await eventsContainers.count();
+
+  const byDate = {};
+  for (let i = 0; i < dayCount && i < eventsCount; i++) {
+    const fieldText = await dayFields.nth(i).innerText();
+    const dateMatch = fieldText.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+    if (!dateMatch) continue;
+    const [, day, month, year] = dateMatch;
+    const dateISO = `${year}-${month}-${day}`;
+
+    const contents = await eventsContainers.nth(i).locator('.rz-event-content').allInnerTexts();
+    const logged = [];
+    for (const text of contents) {
+      const separatorIndex = text.indexOf(' | ');
+      if (separatorIndex === -1) continue; // unlogged calendar-only item
+      logged.push({
+        projectLabel: text.slice(0, separatorIndex).trim(),
+        note: text.slice(separatorIndex + 3).trim(),
+      });
+    }
+    byDate[dateISO] = logged;
+  }
+  return byDate;
 }

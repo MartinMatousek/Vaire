@@ -97,9 +97,43 @@ enum TraskScraper {
         return status
     }
 
-    /// Runs `fillEntry.mjs` with the given entry JSON. Returns once the
-    /// script prints "ready" — the form is filled in the user's Chrome
-    /// window and awaiting their own Save click.
+    /// One already-logged Trask entry, as read by `checkExistingEntries()`.
+    /// `note` is the entry's free-text description as Trask's calendar
+    /// view shows it, NOT its task category — confirmed live that view
+    /// never exposes the task category at all, only "Project | Note".
+    struct ExistingEntry: Equatable {
+        let projectLabel: String
+        let note: String
+    }
+
+    /// Runs `checkExistingEntries.mjs` ONCE, reading every already-logged
+    /// entry for the currently-visible week in a single pass — the caller
+    /// (`UploadFlowView`) uses this up front to skip duplicate fills
+    /// locally, rather than each `fillEntry` call re-checking Trask (and
+    /// reloading the page) before every single fill, which an earlier
+    /// version did and which didn't reliably prevent duplicates in
+    /// practice. A date not present as a key in the result wasn't in the
+    /// currently-visible week — callers get no dedup guarantee for it.
+    static func checkExistingEntries() async throws -> [String: [ExistingEntry]] {
+        let scriptPath = vaireUploadDirectory.appendingPathComponent("src/checkExistingEntries.mjs").path
+        guard FileManager.default.fileExists(atPath: scriptPath) else {
+            throw TraskScraperError.scriptNotFound(scriptPath)
+        }
+
+        let output = try await runNode(scriptPath: scriptPath, arguments: [])
+        guard let data = output.data(using: .utf8) else {
+            throw TraskScraperError.malformedOutput
+        }
+        struct RawEntry: Decodable { let projectLabel: String; let note: String }
+        let decoded = try JSONDecoder().decode([String: [RawEntry]].self, from: data)
+        return decoded.mapValues { entries in
+            entries.map { ExistingEntry(projectLabel: $0.projectLabel, note: $0.note) }
+        }
+    }
+
+    /// Runs `fillEntry.mjs` with the given entry JSON. Fully automatic —
+    /// the script fills the form, clicks Save, and confirms Trask
+    /// accepted it before returning.
     static func fillEntry(entryJSON: String) async throws {
         let scriptPath = vaireUploadDirectory.appendingPathComponent("src/fillEntry.mjs").path
         guard FileManager.default.fileExists(atPath: scriptPath) else {
@@ -115,19 +149,30 @@ enum TraskScraper {
     private static func runNode(scriptPath: String, arguments: [String]) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-            process.arguments = ["node", scriptPath] + arguments
+            process.executableURL = URL(fileURLWithPath: "/bin/zsh")
+            let quotedArguments = ([scriptPath] + arguments).map { "'\($0.replacingOccurrences(of: "'", with: "'\\''"))'" }
+            process.arguments = ["-l", "-c", "node " + quotedArguments.joined(separator: " ")]
 
             let stdout = Pipe()
             let stderr = Pipe()
             process.standardOutput = stdout
             process.standardError = stderr
 
+            let stdoutData = ThreadSafeBox(Data())
+            let stderrData = ThreadSafeBox(Data())
+
+            stdout.fileHandleForReading.readabilityHandler = { handle in
+                stdoutData.append(handle.availableData)
+            }
+            stderr.fileHandleForReading.readabilityHandler = { handle in
+                stderrData.append(handle.availableData)
+            }
+
             process.terminationHandler = { proc in
-                let stdoutData = stdout.fileHandleForReading.readDataToEndOfFile()
-                let stderrData = stderr.fileHandleForReading.readDataToEndOfFile()
-                let stdoutString = String(data: stdoutData, encoding: .utf8) ?? ""
-                let stderrString = String(data: stderrData, encoding: .utf8)?
+                stdout.fileHandleForReading.readabilityHandler = nil
+                stderr.fileHandleForReading.readabilityHandler = nil
+                let stdoutString = String(data: stdoutData.value, encoding: .utf8) ?? ""
+                let stderrString = String(data: stderrData.value, encoding: .utf8)?
                     .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
                 if proc.terminationStatus == 0 {
