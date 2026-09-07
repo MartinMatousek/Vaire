@@ -208,6 +208,7 @@ public enum Strings {
     public static var calendarSectionTitle: String { pick(cs: "Kalendář", en: "Calendar") }
     public static var calendarImportMeetings: String { pick(cs: "Importovat schůzky z kalendáře", en: "Import meetings from calendar") }
     public static var calendarNameLabel: String { pick(cs: "Název kalendáře", en: "Calendar name") }
+    public static func calendarLoadFailed(_ message: String) -> String { pick(cs: "Načtení kalendářů selhalo: \(message)", en: "Loading calendars failed: \(message)") }
 
     // MARK: - Widget
 

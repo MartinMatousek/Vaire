@@ -18,6 +18,9 @@ struct SettingsView: View {
     @State private var timesheetRefreshMessage: String?
     @State private var timesheetURL = TimesheetURLSetting.current() ?? ""
     @State private var calendarSetting = CalendarSetting.current()
+    @State private var availableCalendarTitles: [String] = []
+    @State private var isLoadingCalendarTitles = false
+    @State private var calendarError: String?
 
     var body: some View {
         ScrollView {
@@ -29,6 +32,9 @@ struct SettingsView: View {
         .frame(width: 520, height: 480)
         .onAppear {
             reload()
+            if calendarSetting.isEnabled {
+                loadCalendarTitles()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .vaireDataChanged)) { _ in
             reload()
@@ -123,7 +129,22 @@ struct SettingsView: View {
                 .toggleStyle(.checkbox)
 
             if calendarSetting.isEnabled {
-                TextField(Strings.calendarNameLabel, text: calendarNameBinding)
+                HStack {
+                    Picker(Strings.calendarNameLabel, selection: calendarNameBinding) {
+                        ForEach(calendarTitlesForPicker, id: \.self) { title in
+                            Text(title).tag(title)
+                        }
+                    }
+                    .labelsHidden()
+                    .disabled(isLoadingCalendarTitles)
+
+                    if isLoadingCalendarTitles {
+                        ProgressView().controlSize(.small)
+                    }
+                }
+                if let calendarError {
+                    Text(calendarError).font(.caption).foregroundStyle(.red)
+                }
             }
 
             Divider()
@@ -228,8 +249,42 @@ struct SettingsView: View {
             set: { newValue in
                 calendarSetting.isEnabled = newValue
                 try? CalendarSetting.set(calendarSetting)
+                if newValue, availableCalendarTitles.isEmpty {
+                    loadCalendarTitles()
+                }
             }
         )
+    }
+
+    // Always includes the currently-selected title, even before the async
+    // fetch completes or if it no longer matches an actual calendar (e.g.
+    // deleted since it was chosen) — otherwise the Picker would silently
+    // fall back to whatever title happens to be first in the list.
+    private var calendarTitlesForPicker: [String] {
+        var titles = availableCalendarTitles
+        if !titles.contains(calendarSetting.calendarName) {
+            titles.insert(calendarSetting.calendarName, at: 0)
+        }
+        return titles
+    }
+
+    private func loadCalendarTitles() {
+        calendarError = nil
+        isLoadingCalendarTitles = true
+        Task {
+            do {
+                let titles = try await MeetingImporter.fetchCalendarTitles()
+                await MainActor.run {
+                    availableCalendarTitles = titles
+                    isLoadingCalendarTitles = false
+                }
+            } catch {
+                await MainActor.run {
+                    calendarError = Strings.calendarLoadFailed(error.localizedDescription)
+                    isLoadingCalendarTitles = false
+                }
+            }
+        }
     }
 
     private var calendarNameBinding: Binding<String> {

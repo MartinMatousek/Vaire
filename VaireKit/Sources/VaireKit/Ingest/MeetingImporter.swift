@@ -37,6 +37,21 @@ public enum MeetingImporter {
     /// specific calendars (e.g. the work Exchange calendar) since a synced
     /// account can also carry delegate/shared calendars that only expose
     /// free/busy placeholders.
+    /// Requests calendar access if needed, then returns the titles of all
+    /// event calendars available to the user (across every synced
+    /// account), sorted for display in a picker. Includes delegate/shared
+    /// calendars that only expose free/busy placeholders — Settings can't
+    /// tell those apart from a real one without inspecting events, so it's
+    /// up to the user to pick the right title, same as before when they
+    /// typed it in by hand.
+    public static func fetchCalendarTitles() async throws -> [String] {
+        let store = EKEventStore()
+        guard try await store.requestFullAccessToEvents() else {
+            throw MeetingImporterError.accessDenied
+        }
+        return store.calendars(for: .event).map(\.title).sorted()
+    }
+
     public static func fetchMeetings(
         day: Date,
         calendarTitles: Set<String>,
