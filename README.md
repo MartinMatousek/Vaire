@@ -26,6 +26,9 @@ daily progress ring.
 - **Timesheet upload** (optional) — semi-automatically logs your time
   into an external web-based timesheet via a Chrome window you review
   and confirm, with optional 1Password autofill for the login step.
+- **Calendar meeting import** (optional) — the Fill day/week wizard can
+  suggest your calendar meetings as blocks too, once you enable it and
+  pick a calendar in Settings.
 
 ## Install
 
@@ -47,44 +50,16 @@ macOS will block the first launch. To open it:
 
 ### Claude Code integration (optional)
 
-To have Vaire automatically log time from Claude Code sessions, install the
-CLI and register the hooks:
+If you installed Vaire via the Homebrew cask, follow the "Claude Code
+integration" section in
+[the tap's README](https://github.com/MartinMatousek/homebrew-vaire#claude-code-integration-optional)
+to install the CLI and register the hooks.
 
-```
-./scripts/install_cli.sh
-```
-
-This installs `vaire` to `~/.local/bin/`. Then register these scripts in
-your `~/.claude/settings.json`, with a generous `timeout` (the
-SessionStart/SessionEnd hooks open VaireApp's real note/edit windows via a
-`vaire://` URL and wait up to 180s for you to act on them — 200s+ is a
-safe margin):
-
-- `hooks/vaire-session-start.sh` under `SessionStart`
-- `hooks/vaire-session-end.sh` under `SessionEnd`
-- `hooks/vaire-stop-enforce-estimate.sh` under `Stop` (optional — nudges
-  Claude to record a time-saved estimate before ending a task; skip it if
-  you don't want that)
-
-`hooks/vaire-stop-and-review.sh` isn't registered directly — it's shared
-logic the other scripts source. See the project structure section below
-for what each one does.
-
-Hooks only track repositories you've explicitly opted in — they stay
-silent for every other `cwd` instead of prompting on each session. To
-enable a repository:
-
-1. Open Vaire's Settings window.
-2. Add the repository if it isn't listed yet — either it will already be
-   there from a prior Claude Code session (auto-created but disabled), or
-   pick its folder with **Choose…** and click **Add**.
-3. Check the **Track** box next to it.
-
-Only repositories with **Track** checked will show the SessionStart /
-SessionEnd dialogs and log time. The menu bar dropdown's project list only
-shows followed repositories too, each with a **Remove** link to unfollow
-it (disabled while its timer is running) — equivalent to unchecking
-**Track** in Settings.
+Working from this checkout instead (development, or building from
+source)? Run `./scripts/install_cli.sh` directly — it installs `vaire` to
+`~/.local/bin/`. Then register the scripts under `hooks/` in your
+`~/.claude/settings.json` as described there; see the project structure
+section below for what each one does.
 
 ### Importing from git
 
@@ -133,6 +108,17 @@ brew install --cask 1password-cli
 Then enable **Integrate with 1Password CLI** in 1Password.app → Settings
 → Developer. See [`VaireUpload/README.md`](VaireUpload/README.md) for
 the underlying automation details.
+
+### Calendar meeting import
+
+The **Fill day…** / **Fill week…** wizard (see above) can also suggest
+your calendar meetings as candidate blocks, alongside git commits. It's
+off by default — enable **Import meetings from calendar** in Settings and
+pick which calendar to read from (a dropdown of your actual calendars —
+useful if a synced Exchange/Google account exposes more than one).
+Meetings with neither a location nor another attendee are treated as
+personal busy-time blocks and skipped, since those aren't meetings
+someone else called.
 
 ### Language
 

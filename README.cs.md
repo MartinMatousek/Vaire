@@ -27,6 +27,9 @@ WidgetKit widget s denním ukazatelem postupu.
   do externího webového timesheetu přes okno Chrome, které zkontroluješ
   a potvrdíš, s volitelným automatickým vyplněním přihlášení přes
   1Password.
+- **Import schůzek z kalendáře** (volitelné) — průvodce doplněním dne/
+  týdne umí navrhnout i schůzky z kalendáře jako bloky, po zapnutí a
+  výběru kalendáře v Nastavení.
 
 ## Instalace
 
@@ -47,43 +50,16 @@ macOS zablokuje první spuštění. Jak ho otevřít:
 
 ### Integrace s Claude Code (volitelné)
 
-Aby Vaire automaticky loggoval čas z Claude Code sessions, nainstaluj CLI
-a zaregistruj hooky:
+Pokud jsi Vaire nainstaloval přes Homebrew cask, postupuj podle sekce
+"Claude Code integration" v
+[README tapu](https://github.com/MartinMatousek/homebrew-vaire#claude-code-integration-optional)
+— tam je popsaná instalace CLI a registrace hooků.
 
-```
-./scripts/install_cli.sh
-```
-
-Tím se nainstaluje `vaire` do `~/.local/bin/`. Pak zaregistruj tyto
-skripty v `~/.claude/settings.json`, s velkorysým `timeout`
-(SessionStart/SessionEnd hooky otevřou skutečné okno Vaire přes `vaire://`
-URL a čekají až 180s, než na něj zareaguješ — 200s+ je bezpečná rezerva):
-
-- `hooks/vaire-session-start.sh` pod `SessionStart`
-- `hooks/vaire-session-end.sh` pod `SessionEnd`
-- `hooks/vaire-stop-enforce-estimate.sh` pod `Stop` (volitelné — pobídne
-  Claude, aby před ukončením tasku zapsal odhad úspory času; pokud to
-  nechceš, vynech ho)
-
-`hooks/vaire-stop-and-review.sh` se neregistruje přímo — je to sdílená
-logika, kterou ostatní skripty sourcují. Co který skript dělá, viz sekce
-o struktuře projektu níže.
-
-Hooky sledují jen repozitáře, které jsi výslovně zapnul — u ostatních
-`cwd` zůstávají zticha místo aby se ptaly při každé session. Jak zapnout
-repozitář:
-
-1. Otevři okno Nastavení ve Vaire.
-2. Přidej repozitář, pokud tam ještě není — buď tam už bude z dřívější
-   Claude Code session (automaticky vytvořený, ale vypnutý), nebo vyber
-   jeho složku přes **Choose…** a klikni na **Add**.
-3. Zaškrtni vedle něj **Track**.
-
-Jen repozitáře se zaškrtnutým **Track** budou zobrazovat dialogy
-SessionStart / SessionEnd a loggovat čas. Seznam projektů v menu baru
-taky zobrazuje jen sledované repozitáře, každý s odkazem **Remove** pro
-odhlášení (vypnutý, dokud běží jeho časovač) — funguje stejně jako
-odškrtnutí **Track** v Nastavení.
+Pracuješ místo toho přímo v tomto checkoutu (vývoj nebo build ze zdroje)?
+Spusť rovnou `./scripts/install_cli.sh` — nainstaluje `vaire` do
+`~/.local/bin/`. Pak zaregistruj skripty ze složky `hooks/` v
+`~/.claude/settings.json` podle stejného popisu; co který skript dělá,
+viz sekce o struktuře projektu níže.
 
 ### Import z gitu
 
@@ -132,6 +108,17 @@ brew install --cask 1password-cli
 Pak zapni **Integrate with 1Password CLI** v 1Password.app → Settings →
 Developer. Podrobnosti o automatizaci viz
 [`VaireUpload/README.md`](VaireUpload/README.md).
+
+### Import schůzek z kalendáře
+
+Průvodce **Doplň den…** / **Doplň týden…** (viz výše) umí navrhnout i
+schůzky z kalendáře jako kandidátní bloky, vedle git commitů. Ve výchozím
+stavu je vypnutý — zapni **Importovat schůzky z kalendáře** v Nastavení a
+vyber, ze kterého kalendáře číst (rozbalovací seznam tvých skutečných
+kalendářů — užitečné, pokud synchronizovaný Exchange/Google účet
+nabízí víc než jeden). Schůzky bez místa a bez dalšího účastníka se
+berou jako osobní bloky obsazeného času a přeskočí se, protože to nejsou
+schůzky, které svolal někdo jiný.
 
 ### Jazyk
 
