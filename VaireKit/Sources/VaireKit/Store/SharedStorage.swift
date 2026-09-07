@@ -44,6 +44,13 @@ public enum SharedStorage {
         try directory().appendingPathComponent("timesheetURL").path
     }
 
+    /// Path to the plain-text file holding the calendar meeting-import
+    /// setting ("enabled\n<calendar-name>"), same format as
+    /// `onePasswordSettingPath`.
+    public static func calendarSettingPath() throws -> String {
+        try directory().appendingPathComponent("calendarSetting").path
+    }
+
     /// Path to the JSON result file for one `vaire://edit-block` request,
     /// one file per block id so a stale/timed-out request from a previous
     /// run can't be misread as the current one's answer. Written by the

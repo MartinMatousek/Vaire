@@ -171,10 +171,16 @@ struct FinishDayView: View {
                 }
             }
 
-            let meetings = (try? await MeetingImporter.fetchMeetings(
-                day: day,
-                calendarTitles: MeetingImporter.workCalendarTitles
-            )) ?? []
+            let calendarSetting = CalendarSetting.current()
+            let meetings: [MeetingCandidate]
+            if calendarSetting.isEnabled {
+                meetings = (try? await MeetingImporter.fetchMeetings(
+                    day: day,
+                    calendarTitles: [calendarSetting.calendarName]
+                )) ?? []
+            } else {
+                meetings = []
+            }
 
             suggestions = try DayFinisher.suggestions(
                 db: AppEnvironment.db,

@@ -20,13 +20,14 @@ public enum MeetingImporterError: Error {
 }
 
 public enum MeetingImporter {
-    /// Titles of the calendars that carry real meeting content for this
-    /// user. A synced Exchange account can also expose delegate/shared
-    /// calendars (e.g. a colleague's, viewed for scheduling) that only
-    /// return free/busy placeholders ("Free"/"Tentative" as the title) —
-    /// those must be excluded rather than filtered after the fact, since
-    /// there's no reliable per-event signal that distinguishes them.
-    public static let workCalendarTitles: Set<String> = ["Work"]
+    /// Default title of the calendar that carries real meeting content,
+    /// used until the user configures their own in Settings
+    /// (`CalendarSetting`). A synced Exchange account can also expose
+    /// delegate/shared calendars (e.g. a colleague's, viewed for scheduling)
+    /// that only return free/busy placeholders ("Free"/"Tentative" as the
+    /// title) — those must be excluded rather than filtered after the fact,
+    /// since there's no reliable per-event signal that distinguishes them.
+    public static let defaultCalendarTitle = "Work"
 
     /// Requests calendar access if needed, then fetches "real meeting"
     /// events for `day`: canceled and all-day events are dropped, as are

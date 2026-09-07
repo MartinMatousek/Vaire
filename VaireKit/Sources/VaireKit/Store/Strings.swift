@@ -203,6 +203,12 @@ public enum Strings {
     public static var uploadLoginRequired: String { pick(cs: "Přihlas se prosím do timesheet v okně Chrome, nebo zapni automatické vyplnění pomocí 1Password v Nastavení.", en: "Please log into the timesheet in the Chrome window, or enable 1Password autofill in Settings.") }
     public static func uploadEnsureReadyFailed(_ message: String) -> String { pick(cs: "Příprava nahrávání selhala: \(message)", en: "Preparing the upload failed: \(message)") }
 
+    // MARK: - Calendar meeting import (Settings)
+
+    public static var calendarSectionTitle: String { pick(cs: "Kalendář", en: "Calendar") }
+    public static var calendarImportMeetings: String { pick(cs: "Importovat schůzky z kalendáře", en: "Import meetings from calendar") }
+    public static var calendarNameLabel: String { pick(cs: "Název kalendáře", en: "Calendar name") }
+
     // MARK: - Widget
 
     public static func widgetProjectLine(project: String, hours: String) -> String { "\(project): \(hours)" }

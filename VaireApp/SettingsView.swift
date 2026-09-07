@@ -17,6 +17,7 @@ struct SettingsView: View {
     @State private var timesheetError: String?
     @State private var timesheetRefreshMessage: String?
     @State private var timesheetURL = TimesheetURLSetting.current() ?? ""
+    @State private var calendarSetting = CalendarSetting.current()
 
     var body: some View {
         ScrollView {
@@ -115,6 +116,18 @@ struct SettingsView: View {
 
             Divider()
 
+            Text(Strings.calendarSectionTitle)
+                .font(.headline)
+
+            Toggle(Strings.calendarImportMeetings, isOn: calendarEnabledBinding)
+                .toggleStyle(.checkbox)
+
+            if calendarSetting.isEnabled {
+                TextField(Strings.calendarNameLabel, text: calendarNameBinding)
+            }
+
+            Divider()
+
             HStack {
                 Button(Strings.exportCSV) { export(format: .csv) }
                 Button(Strings.exportJSON) { export(format: .json) }
@@ -205,6 +218,26 @@ struct SettingsView: View {
             set: { newValue in
                 onePasswordSetting.isEnabled = newValue
                 try? OnePasswordSetting.set(onePasswordSetting)
+            }
+        )
+    }
+
+    private var calendarEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { calendarSetting.isEnabled },
+            set: { newValue in
+                calendarSetting.isEnabled = newValue
+                try? CalendarSetting.set(calendarSetting)
+            }
+        )
+    }
+
+    private var calendarNameBinding: Binding<String> {
+        Binding(
+            get: { calendarSetting.calendarName },
+            set: { newValue in
+                calendarSetting.calendarName = newValue
+                try? CalendarSetting.set(calendarSetting)
             }
         )
     }
