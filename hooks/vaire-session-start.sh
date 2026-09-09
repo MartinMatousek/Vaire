@@ -21,6 +21,19 @@ if [ "$enabled" != "true" ]; then
     exit 0
 fi
 
+# /clear and /compact mint a new session_id but the previous one's timer is
+# still running (its SessionEnd either hasn't fired yet or never will for
+# this reset) — re-key it onto the new session_id instead of popping the
+# dialog again and leaving the old row orphaned.
+active=$(vaire find-active "$cwd" 2>/dev/null)
+if [ "$active" != "none" ] && [ -n "$active" ]; then
+    old_session_id=$(echo "$active" | sed -n 's/^session_id=//p')
+    if [ -n "$old_session_id" ] && [ "$old_session_id" != "$session_id" ]; then
+        vaire continue-session "$old_session_id" "$session_id" >/dev/null 2>&1
+        exit 0
+    fi
+fi
+
 result_dir="$HOME/Library/Application Support/Vaire/start-results"
 result_file="$result_dir/${session_id}.json"
 mkdir -p "$result_dir"
