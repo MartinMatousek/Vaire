@@ -9,7 +9,7 @@ enum TimesheetScraperError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .scriptNotFound(let path):
-            return "VaireUpload script not found at \(path)."
+            return Strings.vaireUploadScriptNotFound(path)
         case .processFailed(_, let stderr):
             return stderr.isEmpty ? "The timesheet automation script failed." : stderr
         case .malformedOutput:
@@ -27,14 +27,26 @@ enum TimesheetScraperError: Error, LocalizedError {
 /// ever needs to ship inside the app bundle for other machines.
 enum TimesheetScraper {
     /// Directory containing package.json/src for VaireUpload, resolved
-    /// relative to this source file's location in the repo. Works for a
-    /// locally-built/run app; would need revisiting for a distributed build
-    /// (see VaireUpload/README.md).
-    static var vaireUploadDirectory: URL {
+    /// relative to this source file's location in the repo. Correct for a
+    /// locally-built/run app, but wrong for the distributed Homebrew cask
+    /// build, where `#filePath` bakes in the build machine's path — so this
+    /// is only the fallback default; `vaireUploadDirectory` below prefers
+    /// the user's own Settings value when one is configured.
+    private static var buildTimeDefaultUploadDirectory: URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent() // VaireApp/
             .deletingLastPathComponent() // repo root
             .appendingPathComponent("VaireUpload")
+    }
+
+    /// Directory containing package.json/src for VaireUpload. Prefers the
+    /// user-configured `VaireUploadDirectorySetting` (needed for the
+    /// distributed cask build, which ships only Vaire.app — the Node
+    /// scripts live in the source repo the user must clone separately) and
+    /// falls back to `buildTimeDefaultUploadDirectory` when unset, which is
+    /// correct for a local source build.
+    static var vaireUploadDirectory: URL {
+        VaireUploadDirectorySetting.resolvedDirectory(defaultDirectory: buildTimeDefaultUploadDirectory)
     }
 
     /// Runs `scrapeCatalog.mjs` and parses its JSON into scraped-project

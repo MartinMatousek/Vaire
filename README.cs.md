@@ -109,6 +109,14 @@ Pak zapni **Integrate with 1Password CLI** v 1Password.app → Settings →
 Developer. Podrobnosti o automatizaci viz
 [`VaireUpload/README.md`](VaireUpload/README.md).
 
+Pokud jsi Vaire nainstaloval přes Homebrew cask, ten obsahuje jen
+Vaire.app — skripty ve `VaireUpload/` žijí v tomto repozitáři, takže si
+ho naklonuj, spusť v `VaireUpload/` `npm install` a
+`npx playwright install chromium`, a pak v Nastavení vyplň pole
+**Složka VaireUpload** cestou k té složce. Build ze zdrojáků nevyžaduje
+žádné nastavení navíc — Vaire si `VaireUpload/` najde sám vedle svých
+zdrojů.
+
 ### Import schůzek z kalendáře
 
 Průvodce **Doplň den…** / **Doplň týden…** (viz výše) umí navrhnout i

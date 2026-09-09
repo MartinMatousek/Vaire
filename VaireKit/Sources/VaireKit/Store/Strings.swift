@@ -168,6 +168,10 @@ public enum Strings {
     public static var timesheetURLLabel: String { pick(cs: "URL timesheet", en: "Timesheet URL") }
     public static var timesheetURLPlaceholder: String { pick(cs: "https://…", en: "https://…") }
     public static var timesheetURLNotConfigured: String { pick(cs: "Nejprve nastav URL timesheet v Nastavení.", en: "Set your timesheet's URL in Settings first.") }
+    public static var vaireUploadDirectoryLabel: String { pick(cs: "Složka VaireUpload", en: "VaireUpload folder") }
+    public static var vaireUploadDirectoryPlaceholder: String { pick(cs: "např. ~/projects/Vaire/VaireUpload", en: "e.g. ~/projects/Vaire/VaireUpload") }
+    public static var vaireUploadDirectoryHint: String { pick(cs: "Cesta ke složce VaireUpload z naklonovaného repozitáře Vaire (Homebrew cask instaluje jen aplikaci). Nech prázdné, pokud aplikaci sestavuješ ze zdrojáků.", en: "Path to the VaireUpload folder of your Vaire repository clone (the Homebrew cask installs only the app). Leave empty when running a build from source.") }
+    public static func vaireUploadScriptNotFound(_ path: String) -> String { pick(cs: "Skript VaireUpload nenalezen: \(path). Nastav složku VaireUpload v Nastavení (a spusť v ní npm install).", en: "VaireUpload script not found at \(path). Set the VaireUpload folder in Settings (and run npm install there).") }
 
     // MARK: - Timesheet upload flow
 

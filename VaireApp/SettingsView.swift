@@ -17,6 +17,7 @@ struct SettingsView: View {
     @State private var timesheetError: String?
     @State private var timesheetRefreshMessage: String?
     @State private var timesheetURL = TimesheetURLSetting.current() ?? ""
+    @State private var vaireUploadDirectory = VaireUploadDirectorySetting.current() ?? ""
     @State private var calendarSetting = CalendarSetting.current()
     @State private var availableCalendarTitles: [String] = []
     @State private var isLoadingCalendarTitles = false
@@ -81,6 +82,14 @@ struct SettingsView: View {
                 .font(.headline)
 
             TextField(Strings.timesheetURLLabel, text: timesheetURLBinding, prompt: Text(Strings.timesheetURLPlaceholder))
+
+            HStack {
+                TextField(Strings.vaireUploadDirectoryLabel, text: vaireUploadDirectoryBinding, prompt: Text(Strings.vaireUploadDirectoryPlaceholder))
+                Button(Strings.choose) { pickVaireUploadDirectory() }
+            }
+            Text(Strings.vaireUploadDirectoryHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
             ForEach(projects) { project in
                 timesheetPairingRow(project)
@@ -229,6 +238,16 @@ struct SettingsView: View {
             set: { newValue in
                 timesheetURL = newValue
                 try? TimesheetURLSetting.set(newValue)
+            }
+        )
+    }
+
+    private var vaireUploadDirectoryBinding: Binding<String> {
+        Binding(
+            get: { vaireUploadDirectory },
+            set: { newValue in
+                vaireUploadDirectory = newValue
+                try? VaireUploadDirectorySetting.set(newValue)
             }
         )
     }
@@ -435,6 +454,18 @@ struct SettingsView: View {
         if newProjectName.isEmpty {
             newProjectName = url.lastPathComponent
         }
+    }
+
+    private func pickVaireUploadDirectory() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        vaireUploadDirectory = url.path
+        try? VaireUploadDirectorySetting.set(url.path)
     }
 
     private func hooksEnabledBinding(for project: Project) -> Binding<Bool> {
