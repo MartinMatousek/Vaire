@@ -109,6 +109,13 @@ Then enable **Integrate with 1Password CLI** in 1Password.app → Settings
 → Developer. See [`VaireUpload/README.md`](VaireUpload/README.md) for
 the underlying automation details.
 
+If you installed Vaire via the Homebrew cask, the cask ships only
+Vaire.app — the `VaireUpload/` scripts live in this source repo, so
+clone it, run `npm install` and `npx playwright install chromium`
+inside `VaireUpload/`, then set the **VaireUpload folder** field in
+Settings to that directory. A build from source needs no extra setup;
+Vaire finds `VaireUpload/` next to its own sources automatically.
+
 ### Calendar meeting import
 
 The **Fill day…** / **Fill week…** wizard (see above) can also suggest

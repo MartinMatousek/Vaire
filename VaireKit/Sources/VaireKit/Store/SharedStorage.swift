@@ -51,6 +51,14 @@ public enum SharedStorage {
         try directory().appendingPathComponent("calendarSetting").path
     }
 
+    /// Path to the plain-text file holding the user-configured VaireUpload
+    /// folder (a local clone's `VaireUpload/` directory), same format as
+    /// `timesheetURLPath`. Empty/missing means "use the build's own
+    /// `#filePath`-derived default" — see `VaireUploadDirectorySetting`.
+    public static func vaireUploadDirectoryPath() throws -> String {
+        try directory().appendingPathComponent("vaireUploadDirectory").path
+    }
+
     /// Path to the JSON result file for one `vaire://edit-block` request,
     /// one file per block id so a stale/timed-out request from a previous
     /// run can't be misread as the current one's answer. Written by the
