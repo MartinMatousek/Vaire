@@ -42,7 +42,7 @@ import Testing
 
     #expect(result?.block.note == "fixing batch update bug")
     #expect(result?.block.source == .claudeSession)
-    #expect(result?.block.isManual == false)
+    #expect(result?.block.isManual == true)
     #expect(result?.project.path == "/tmp/repo")
 
     #expect(!(try AgentSessionRecorder.isTracking(db: db, sessionId: "sess-1")))

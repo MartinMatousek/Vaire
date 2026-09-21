@@ -1,5 +1,22 @@
 import Foundation
 
+/// A block of work derived from commit timestamps: `cwd`/`gitBranch` are
+/// unused here (git commits carry no session cwd) but kept so this shape
+/// matches what a review UI expects from any block candidate.
+public struct SessionizedBlock: Equatable, Sendable {
+    public let start: Date
+    public let end: Date
+    public let cwd: String?
+    public let gitBranch: String?
+
+    public init(start: Date, end: Date, cwd: String?, gitBranch: String?) {
+        self.start = start
+        self.end = end
+        self.cwd = cwd
+        self.gitBranch = gitBranch
+    }
+}
+
 public struct GitCommit: Equatable, Sendable {
     public let sha: String
     public let date: Date

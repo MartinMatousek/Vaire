@@ -24,7 +24,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         StatusBarController.shared.start()
-        LiveImportCoordinator.shared.start()
         DailyReviewScheduler.shared.start()
 
         // The CLI (used by Claude Code hooks) has no app bundle context and

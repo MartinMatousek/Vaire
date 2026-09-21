@@ -18,10 +18,19 @@ private struct UploadRequest: Identifiable {
     let blocks: [Block]
 }
 
+/// One day-column's share of a still-running session — the tracking plus
+/// the segment of its total elapsed time to render in this column. See
+/// `LiveSessionSplitter`.
+struct LiveTrackingSegment: Identifiable {
+    let tracking: AgentSessionTracking
+    let segment: LiveSessionSegment
+    var id: String { "\(tracking.sessionId)-\(segment.dayIndex)" }
+}
+
 struct DayColumn: Identifiable {
     let date: Date
     var blocks: [Block]
-    var liveTrackings: [AgentSessionTracking]
+    var liveSegments: [LiveTrackingSegment]
     var id: Date { date }
 }
 
@@ -245,9 +254,7 @@ struct WeekView: View {
     /// determines how many hour-marks the ruler needs to cover.
     private func stackedHours(for day: DayColumn) -> Double {
         let blockHours = day.blocks.reduce(0.0) { $0 + displayHours(for: $1.duration / 3600) }
-        let liveHours = day.liveTrackings.reduce(0.0) { total, tracking in
-            total + max(Date().timeIntervalSince(tracking.start) / 3600, minBlockHours)
-        }
+        let liveHours = day.liveSegments.reduce(0.0) { $0 + $1.segment.hours }
         return blockHours + liveHours
     }
 
@@ -346,8 +353,8 @@ struct WeekView: View {
                     ForEach(day.blocks) { block in
                         blockRow(block)
                     }
-                    ForEach(day.liveTrackings, id: \.sessionId) { tracking in
-                        liveBlockRow(tracking)
+                    ForEach(day.liveSegments) { liveSegment in
+                        liveBlockRow(liveSegment)
                     }
                 }
             }
@@ -440,15 +447,30 @@ struct WeekView: View {
     /// distinct from finished, editable ones: a pulsing green border and a
     /// "Běží" badge instead of the neutral gray background, and no
     /// tap/drag/context-menu since there's no Block to act on yet.
-    private func liveBlockRow(_ tracking: AgentSessionTracking) -> some View {
-        let elapsedHours = Date().timeIntervalSince(tracking.start) / 3600
-        let barHeight = max(elapsedHours, minBlockHours) * pixelsPerHour
+    private func liveBlockRow(_ liveSegment: LiveTrackingSegment) -> some View {
+        let tracking = liveSegment.tracking
+        let segment = liveSegment.segment
+        let barHeight = segment.hours * pixelsPerHour
         let hasNote = !(tracking.note?.isEmpty ?? true)
         let extraLines = linesThatFit(in: barHeight, maxLines: hasNote ? 8 : 0)
         let projectName = projects[tracking.projectId]?.name ?? "?"
+        let label: String
+        if segment.dayCount > 1 {
+            let elapsedHours = Date().timeIntervalSince(tracking.start) / 3600
+            let countedHours = LiveSessionSplitter.countedHours(elapsedHours: elapsedHours, targetHours: targetHours)
+            label = Strings.runningLabelMultiDay(
+                project: projectName,
+                hours: DurationFormatter.hoursMinutes(segment.hours),
+                dayIndex: segment.dayIndex + 1,
+                dayCount: segment.dayCount,
+                totalHours: DurationFormatter.hoursMinutes(countedHours)
+            )
+        } else {
+            label = Strings.runningLabel(project: projectName, hours: DurationFormatter.hoursMinutes(segment.hours))
+        }
 
         return VStack(alignment: .leading, spacing: 2) {
-            Text(Strings.runningLabel(project: projectName, hours: DurationFormatter.hoursMinutes(elapsedHours)))
+            Text(label)
                 .font(.system(size: 8))
                 .bold()
                 .foregroundStyle(.green)
@@ -647,13 +669,38 @@ struct WeekView: View {
         }
         let allLive = claudeTrackings + manualTrackings
 
+        // Each running tracking is split into per-day segments capped at
+        // targetHours (see LiveSessionSplitter) so a long-running session
+        // fills at most one day's worth of a column instead of growing
+        // that column — and via gridHours, the whole week's ruler — to
+        // match its raw elapsed time.
+        let segmentsByDayOffset: [Int: [LiveTrackingSegment]] = allLive.reduce(into: [:]) { result, tracking in
+            let elapsedHours = Date().timeIntervalSince(tracking.start) / 3600
+            let startOffset = calendar.dateComponents([.day], from: weekStart, to: calendar.startOfDay(for: tracking.start)).day ?? 0
+            for segment in LiveSessionSplitter.segments(elapsedHours: elapsedHours, targetHours: targetHours, minHours: minBlockHours) {
+                // Confirmed live: a session starting late in the displayed
+                // week (e.g. Saturday) that runs long enough to split into
+                // multiple targetHours-sized segments can push a segment's
+                // absolute offset past 6 — the last column `days` below
+                // reads. LiveSessionSplitter has no notion of a 7-day
+                // limit (its own doc comment: presentational only, not
+                // tied to literal calendar days), so without this clamp
+                // that overflow segment's hours were silently dropped from
+                // both the UI and gridHours' week total while the session
+                // was still actively running. Clamp into the last visible
+                // day instead — still running, off the edge of this week.
+                let clampedOffset = min(startOffset + segment.dayIndex, 6)
+                result[clampedOffset, default: []].append(LiveTrackingSegment(tracking: tracking, segment: segment))
+            }
+        }
+
         days = (0..<7).map { offset in
             let date = calendar.date(byAdding: .day, value: offset, to: weekStart)!
             let dayBlocks = allBlocks.filter { calendar.isDate($0.start, inSameDayAs: date) }
                 .sorted { $0.start < $1.start }
-            let dayLive = allLive.filter { calendar.isDate($0.start, inSameDayAs: date) }
-                .sorted { $0.start < $1.start }
-            return DayColumn(date: date, blocks: dayBlocks, liveTrackings: dayLive)
+            let dayLiveSegments = (segmentsByDayOffset[offset] ?? [])
+                .sorted { $0.tracking.start < $1.tracking.start }
+            return DayColumn(date: date, blocks: dayBlocks, liveSegments: dayLiveSegments)
         }
     }
 

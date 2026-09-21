@@ -79,14 +79,7 @@ public enum BlockEditor {
             survivor.isManual = true
             try survivor.update(conn)
 
-            // Same reasoning as BlockEditor.delete: a merged-away auto
-            // block still exists in its source transcript, so without a
-            // tombstone the next reimport would re-derive and re-insert
-            // it as a duplicate alongside the manual survivor.
             for block in blocks where block.id != survivor.id {
-                if !block.isManual {
-                    try DeletedBlockRange(projectId: block.projectId, start: block.start, end: block.end).insert(conn)
-                }
                 try block.delete(conn)
             }
 
@@ -112,6 +105,7 @@ public enum BlockEditor {
                 throw BlockEditorError.blockNotFound
             }
             block.note = (note?.isEmpty ?? true) ? nil : note
+            block.isManual = true
             try block.update(conn)
             return block
         }
@@ -134,17 +128,11 @@ public enum BlockEditor {
         }
     }
 
-    /// Deletes a block. For an auto-sourced block (isManual == false) this
-    /// also records a tombstone of its time range — otherwise the next
-    /// live reimport of the same source transcript would re-derive and
-    /// re-insert the exact same block, making the delete not stick.
+    /// Deletes a block.
     public static func delete(db: AppDatabase, blockId: UUID) throws {
         try db.dbQueue.write { conn in
             guard let block = try Block.fetchOne(conn, key: blockId) else {
                 throw BlockEditorError.blockNotFound
-            }
-            if !block.isManual {
-                try DeletedBlockRange(projectId: block.projectId, start: block.start, end: block.end).insert(conn)
             }
             try block.delete(conn)
         }

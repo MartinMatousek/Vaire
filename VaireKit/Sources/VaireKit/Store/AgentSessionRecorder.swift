@@ -38,13 +38,16 @@ public enum AgentSessionRecorder {
                 return nil
             }
 
+            // isManual: true, same as TimerController's manual-timer stop path —
+            // a hook-tracked session the user explicitly started and stopped is
+            // just as confirmed as a manual timer.
             let block = Block(
                 projectId: tracking.projectId,
                 start: tracking.start,
                 end: now,
                 source: .claudeSession,
                 note: tracking.note,
-                isManual: false,
+                isManual: true,
                 estimatedHoursWithoutAI: tracking.estimatedHoursWithoutAI
             )
             try block.insert(conn)
