@@ -83,6 +83,13 @@ struct SettingsView: View {
 
             TextField(Strings.timesheetURLLabel, text: timesheetURLBinding, prompt: Text(Strings.timesheetURLPlaceholder))
 
+            if !timesheetURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               TimesheetURLSetting.normalize(timesheetURL) == nil {
+                Text(Strings.timesheetURLInvalid)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+
             HStack {
                 TextField(Strings.vaireUploadDirectoryLabel, text: vaireUploadDirectoryBinding, prompt: Text(Strings.vaireUploadDirectoryPlaceholder))
                 Button(Strings.choose) { pickVaireUploadDirectory() }
@@ -237,6 +244,22 @@ struct SettingsView: View {
             get: { timesheetURL },
             set: { newValue in
                 timesheetURL = newValue
+                // Persist the normalized form (e.g. a bare host gets
+                // "https://" prepended) so a value that only fails to parse
+                // downstream never reaches disk again — see
+                // TimesheetURLSetting.normalize. The @State above keeps
+                // showing exactly what was typed; only storage is corrected.
+                //
+                // Only write when the new text is blank (deliberate clear)
+                // or normalizes to something real. Confirmed live: without
+                // this guard, select-all-and-retype on a working URL wrote
+                // an empty string to disk on the very first keystroke of
+                // the replacement, since that partial text fails to parse
+                // — a quit or focus change before finishing the retype
+                // permanently lost the previously-working URL even though
+                // the field on screen still showed the in-progress text.
+                let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard trimmed.isEmpty || TimesheetURLSetting.normalize(newValue) != nil else { return }
                 try? TimesheetURLSetting.set(newValue)
             }
         )

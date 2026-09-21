@@ -44,6 +44,21 @@ export function timesheetURL() {
       'No timesheet URL configured. Set it in Vaire\'s Settings before uploading or scraping.'
     );
   }
+  // Defense in depth: the Swift side (TimesheetURLSetting.normalize) should
+  // never send an unparseable value, but a bad TIMESHEET_URL reaching here
+  // used to fail silently downstream instead — isTimesheetHost() below
+  // swallows a URL parse error and returns false, so every open tab looked
+  // like a non-match and the flow surfaced as "no tab found" / "can't open
+  // the timesheet" with no hint the URL itself was the problem. Fail loudly
+  // here instead, with the same actionable message.
+  try {
+    // eslint-disable-next-line no-new
+    new URL(url);
+  } catch {
+    throw new Error(
+      `Configured timesheet URL "${url}" is not a valid URL. Set it in Vaire's Settings before uploading or scraping.`
+    );
+  }
   return url;
 }
 

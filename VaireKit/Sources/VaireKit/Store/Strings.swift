@@ -97,6 +97,12 @@ public enum Strings {
     public static func blockLabel(project: String, duration: String) -> String { "\(project) — \(duration)" }
     public static var edit: String { pick(cs: "Upravit…", en: "Edit…") }
     public static func runningLabel(project: String, hours: String) -> String { pick(cs: "● Běží: \(project) — \(hours)", en: "● Running: \(project) — \(hours)") }
+    public static func runningLabelMultiDay(project: String, hours: String, dayIndex: Int, dayCount: Int, totalHours: String) -> String {
+        pick(
+            cs: "● Běží: \(project) — \(hours) (den \(dayIndex)/\(dayCount), celkem \(totalHours))",
+            en: "● Running: \(project) — \(hours) (day \(dayIndex)/\(dayCount), \(totalHours) total)"
+        )
+    }
     public static var activityDescriptionLabel: String { pick(cs: "Popis aktivity", en: "Activity description") }
     public static var timeLabel: String { pick(cs: "Čas", en: "Time") }
     public static func actionFailedStale(_ action: String) -> String { pick(cs: "\(action) se nepodařilo — záznam se mezitím aktualizoval (např. živým importem). Zkus to prosím znovu.", en: "\(action) failed — the record was updated in the meantime (e.g. by a live import). Please try again.") }
@@ -168,6 +174,7 @@ public enum Strings {
     public static var timesheetURLLabel: String { pick(cs: "URL timesheet", en: "Timesheet URL") }
     public static var timesheetURLPlaceholder: String { pick(cs: "https://…", en: "https://…") }
     public static var timesheetURLNotConfigured: String { pick(cs: "Nejprve nastav URL timesheet v Nastavení.", en: "Set your timesheet's URL in Settings first.") }
+    public static var timesheetURLInvalid: String { pick(cs: "Tohle nevypadá jako platná URL.", en: "This doesn't look like a valid URL.") }
     public static var vaireUploadDirectoryLabel: String { pick(cs: "Složka VaireUpload", en: "VaireUpload folder") }
     public static var vaireUploadDirectoryPlaceholder: String { pick(cs: "např. ~/projects/Vaire/VaireUpload", en: "e.g. ~/projects/Vaire/VaireUpload") }
     public static var vaireUploadDirectoryHint: String { pick(cs: "Cesta ke složce VaireUpload z naklonovaného repozitáře Vaire (Homebrew cask instaluje jen aplikaci). Nech prázdné, pokud aplikaci sestavuješ ze zdrojáků.", en: "Path to the VaireUpload folder of your Vaire repository clone (the Homebrew cask installs only the app). Leave empty when running a build from source.") }
