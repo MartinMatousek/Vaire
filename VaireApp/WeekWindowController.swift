@@ -36,7 +36,7 @@ final class WeekWindowController {
         let hostedView = WeekView().environment(\.weekUndoManager, windowUndoManager)
         window.contentView = NSHostingView(rootView: hostedView)
         window.center()
-        window.isReleasedWhenClosed = false
+        configureFloatingWindow(window)
         self.window = window
 
         window.makeKeyAndOrderFront(nil)

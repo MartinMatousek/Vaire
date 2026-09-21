@@ -36,7 +36,7 @@ final class StartSessionWindowController: NSObject, NSWindowDelegate {
             self?.finish(sessionId: sessionId, outcome: outcome)
         })
         window.center()
-        window.isReleasedWhenClosed = false
+        configureFloatingWindow(window)
         window.delegate = self
         self.window = window
 

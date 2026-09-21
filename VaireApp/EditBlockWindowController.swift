@@ -37,7 +37,7 @@ final class EditBlockWindowController: NSObject, NSWindowDelegate {
             self?.finish(blockId: id, outcome: outcome)
         })
         window.center()
-        window.isReleasedWhenClosed = false
+        configureFloatingWindow(window)
         window.delegate = self
         self.window = window
 

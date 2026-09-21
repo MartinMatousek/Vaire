@@ -24,7 +24,7 @@ final class SettingsWindowController {
         window.title = Strings.settingsWindowTitle
         window.contentView = NSHostingView(rootView: SettingsView())
         window.center()
-        window.isReleasedWhenClosed = false
+        configureFloatingWindow(window)
         self.window = window
 
         window.makeKeyAndOrderFront(nil)
