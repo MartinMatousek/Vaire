@@ -348,7 +348,19 @@ export async function setDatePickerDate(page, dateISO) {
   // though the input itself shows the correct single date. Escape closes
   // the popup without touching the input's typed value.
   await page.keyboard.press('Escape');
-  await dateInput.fill(expected);
+  // Also confirmed live (2026-09-25): the error recurred even with the
+  // Escape above, and separately Hours/Minutes' `.fill()` was shown to
+  // leave the DOM input reading correctly while Radzen's bound value
+  // behind it stayed stale — the same gap likely applies here: `.fill()`
+  // sets the DOM value directly without necessarily telling the
+  // range-picker component "this is one single confirmed date," so its
+  // internal range-vs-single state can stay ambiguous. Select-all via
+  // keyboard and real keystrokes, same as the numeric fields, so the
+  // component observes the same input events a real user typing would.
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Shift+End');
+  await page.keyboard.press('Backspace');
+  await dateInput.pressSequentially(expected);
   await page.keyboard.press('Tab');
 
   // Confirmed live the input's value updates asynchronously right after
@@ -501,20 +513,26 @@ export async function runFillEntry(page, entry) {
     // focused on the second attempt.
     let isFocused = false;
     for (let attempt = 1; attempt <= 2 && !isFocused; attempt++) {
-      // Confirmed live (2026-09-25): Meta+A to select existing text before
-      // typing didn't reliably select it in these Radzen numeric spinners —
-      // a field already showing "1" then typed "0" became "10" instead of
-      // replacing it. Triple-click is the standard, widget-agnostic way to
-      // select an input's full text and is more reliable here than a
-      // select-all keyboard shortcut a custom spinner component may not
-      // wire up the same way a plain text input does.
-      await locator.click({ clickCount: 3 });
+      // Confirmed live (2026-09-25): neither Meta+A nor a triple-click
+      // reliably selected these Radzen numeric spinners' existing text
+      // before typing — Meta+A left it unselected (typed "0" onto an
+      // existing "1" became "10"), and triple-click was worse: a spinner
+      // widget's click handling isn't a plain text input's, so 3 rapid
+      // clicks were read at least in part as clicks on its own
+      // increment/decrement control, corrupting the value before typing
+      // even started (a field showed "24" after typing "6"). A single
+      // plain click plus explicit keyboard selection (Home, Shift+End)
+      // avoids relying on click semantics entirely.
+      await locator.click({ clickCount: 1 });
       isFocused = await page.evaluate((id) => document.activeElement?.id === id, fieldId);
       if (!isFocused && attempt < 2) await page.waitForTimeout(200);
     }
     if (!isFocused) {
       throw new Error(`Clicking #${fieldId} did not focus it (focus landed elsewhere) — refusing to type "${value}" into the wrong field.`);
     }
+    await page.keyboard.press('Home');
+    await page.keyboard.press('Shift+End');
+    await page.keyboard.press('Backspace');
     await locator.pressSequentially(value);
     await page.keyboard.press('Tab');
     const finalValue = (await locator.inputValue()).trim();
