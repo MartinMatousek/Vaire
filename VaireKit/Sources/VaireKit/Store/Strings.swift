@@ -188,6 +188,13 @@ public enum Strings {
     public static var uploadNeedsRepairing: String { pick(cs: "Tyto projekty je potřeba přeparovat s timesheet, než bude možné nahrát čas:", en: "These projects need re-pairing with the timesheet before time can be uploaded:") }
     public static var uploadOpenSettings: String { pick(cs: "Otevřít nastavení", en: "Open Settings") }
     public static func uploadEntryProgress(current: Int, total: Int) -> String { pick(cs: "Záznam \(current) z \(total)", en: "Entry \(current) of \(total)") }
+    public static func uploadReadyCount(_ count: Int) -> String {
+        pick(
+            cs: count == 1 ? "1 záznam připraven k nahrání." : "\(count) záznamů připraveno k nahrání.",
+            en: count == 1 ? "1 entry ready to upload." : "\(count) entries ready to upload."
+        )
+    }
+    public static var uploadStart: String { pick(cs: "Nahrát", en: "Upload") }
     public static var uploadEntryFilled: String { pick(cs: "Vyplněno — zkontroluj okno Chrome, klikni tam na Uložit, pak pokračuj.", en: "Filled — check the Chrome window, click Save there, then continue.") }
     public static var uploadNext: String { pick(cs: "Další", en: "Next") }
     public static var uploadRetry: String { pick(cs: "Zkusit znovu", en: "Retry") }

@@ -24,6 +24,7 @@ struct UploadFlowView: View {
     @Environment(\.dismiss) private var dismiss
 
     private enum Stage {
+        case ready
         case checkingPairings
         case needsRepairing([Project])
         case preparingChrome
@@ -32,7 +33,7 @@ struct UploadFlowView: View {
         case done
     }
 
-    @State private var stage: Stage = .checkingPairings
+    @State private var stage: Stage = .ready
     @State private var session = TimesheetUploadSession()
     @State private var currentIndex = 0
     @State private var fillError: String?
@@ -57,6 +58,16 @@ struct UploadFlowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             switch stage {
+            case .ready:
+                Text(Strings.uploadReadyCount(blocksToUpload.count))
+                    .font(.headline)
+                HStack {
+                    Spacer()
+                    Button(Strings.cancel) { dismiss() }
+                    Button(Strings.uploadStart) { checkPairings() }
+                        .keyboardShortcut(.defaultAction)
+                }
+
             case .checkingPairings, .preparingChrome:
                 ProgressView()
 
@@ -110,7 +121,6 @@ struct UploadFlowView: View {
         }
         .padding()
         .frame(width: 420)
-        .onAppear(perform: checkPairings)
         .onDisappear {
             // Backstop for every dismissal path (Cancel button, Done
             // button, window closed directly) — `session.stop()` is
