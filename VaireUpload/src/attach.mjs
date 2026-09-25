@@ -340,6 +340,14 @@ export async function setDatePickerDate(page, dateISO) {
 
   const dateInput = page.locator('input.rz-daterangepicker-single-input');
   await dateInput.click();
+  // Confirmed live (2026-09-25): the click above opens the range-picker's
+  // calendar popup underneath the input. Typing into the input while that
+  // popup stays open leaves Radzen's internal range state half-set (as if a
+  // range start had been picked from the calendar but never an end), which
+  // surfaces later as "Duration must be set for date range" on Save even
+  // though the input itself shows the correct single date. Escape closes
+  // the popup without touching the input's typed value.
+  await page.keyboard.press('Escape');
   await dateInput.fill(expected);
   await page.keyboard.press('Tab');
 
@@ -480,8 +488,29 @@ export async function runFillEntry(page, entry) {
   // Confirm the fields actually hold what we set before clicking Save — a
   // silently-rejected fill (e.g. a disabled field) should surface as an
   // error here, not show up as a confusing failure after Save.
+  //
+  // Suspected live (2026-09-25): Minutes sometimes doesn't hold, Hours
+  // always does. Hours' Tab likely triggers an async Radzen/Blazor duration
+  // recompute that can still be in flight when Minutes gets filled right
+  // after, and/or reruns after Minutes is set and clobbers it back — a
+  // single immediate read here would catch the correct value before that
+  // async settle finishes. Poll briefly instead, and re-fill Minutes once if
+  // it drifts from the requested value, same pattern as the date field's
+  // poll-after-Tab above.
   const finalHours = await page.locator('#NumericHours').inputValue();
-  const finalMinutes = await page.locator('#NumericMinutes').inputValue();
+  let finalMinutes = await page.locator('#NumericMinutes').inputValue();
+  if (finalMinutes !== String(entry.minutes)) {
+    const deadline = Date.now() + 1000;
+    while (Date.now() < deadline && finalMinutes !== String(entry.minutes)) {
+      await page.waitForTimeout(100);
+      finalMinutes = await page.locator('#NumericMinutes').inputValue();
+    }
+    if (finalMinutes !== String(entry.minutes)) {
+      await page.locator('#NumericMinutes').fill(String(entry.minutes));
+      await page.keyboard.press('Tab');
+      finalMinutes = await page.locator('#NumericMinutes').inputValue();
+    }
+  }
   if (finalHours !== String(entry.hours) || finalMinutes !== String(entry.minutes)) {
     throw new Error(`Hours/Minutes did not hold the requested values (wanted ${entry.hours}/${entry.minutes}, form shows ${finalHours}/${finalMinutes}).`);
   }
