@@ -348,19 +348,16 @@ export async function setDatePickerDate(page, dateISO) {
   // though the input itself shows the correct single date. Escape closes
   // the popup without touching the input's typed value.
   await page.keyboard.press('Escape');
-  // Also confirmed live (2026-09-25): the error recurred even with the
-  // Escape above, and separately Hours/Minutes' `.fill()` was shown to
-  // leave the DOM input reading correctly while Radzen's bound value
-  // behind it stayed stale — the same gap likely applies here: `.fill()`
-  // sets the DOM value directly without necessarily telling the
-  // range-picker component "this is one single confirmed date," so its
-  // internal range-vs-single state can stay ambiguous. Select-all via
-  // keyboard and real keystrokes, same as the numeric fields, so the
-  // component observes the same input events a real user typing would.
-  await page.keyboard.press('Home');
-  await page.keyboard.press('Shift+End');
-  await page.keyboard.press('Backspace');
-  await dateInput.pressSequentially(expected);
+  // Confirmed live (2026-09-25): switching this to keyboard select+type
+  // (matching the Hours/Minutes fix) broke it worse — the field ended up
+  // empty. Escape on this range-picker likely clears/blurs the input
+  // itself, not just the popup, so Home/Shift+End/Backspace ran against an
+  // already-empty or already-unfocused field. `.fill()` is what actually
+  // fixed the original "Duration must be set for date range" error (via
+  // the Escape above alone) — revert to it here; the Hours/Minutes
+  // fill-vs-bound-state gap was confirmed separately for those fields and
+  // was never actually confirmed for this one.
+  await dateInput.fill(expected);
   await page.keyboard.press('Tab');
 
   // Confirmed live the input's value updates asynchronously right after
