@@ -55,6 +55,11 @@ struct WeekView: View {
     @State private var finishDayTarget: Date = .now
     @State private var showingFinishWeek = false
     @State private var uploadRequest: UploadRequest?
+    @State private var quickAddDay: Date?
+    @State private var quickAddProjectId: UUID?
+    @State private var quickAddNoteDraft: String = ""
+    @State private var quickAddHoursDraft: Int = 0
+    @State private var quickAddMinutesDraft: Int = 0
 
     private let targetHours: Double = 8
     private let defaultPixelsPerHour: CGFloat = 30
@@ -203,6 +208,7 @@ struct WeekView: View {
         }
         .padding()
         .frame(minWidth: 590, minHeight: 320)
+        .onDeleteCommand { confirmDeleteSelected() }
         .onAppear(perform: reload)
         .onReceive(NotificationCenter.default.publisher(for: .vaireDataChanged)) { _ in
             reload()
@@ -359,6 +365,19 @@ struct WeekView: View {
                 }
             }
             .frame(minHeight: gridHeight, alignment: .top)
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2) {
+                beginQuickAdd(for: day.date)
+            }
+            .contextMenu {
+                Button(Strings.addTimeLog) { beginQuickAdd(for: day.date) }
+            }
+            .popover(isPresented: Binding(
+                get: { quickAddDay == day.date },
+                set: { if !$0 { quickAddDay = nil } }
+            )) {
+                quickAddEditor(for: day.date)
+            }
 
             Spacer(minLength: 8)
         }
@@ -369,6 +388,69 @@ struct WeekView: View {
         .dropDestination(for: BlockTransfer.self) { items, _ in
             guard let transfer = items.first else { return false }
             return moveBlock(transfer.blockId, to: day.date)
+        }
+    }
+
+    /// Same insert path as the Finish Day wizard's manual fallback —
+    /// `DayFinisher.apply` with `.manual` kind — so a quick-added entry
+    /// behaves identically to one added there (isManual: true, `.manual`
+    /// source, safe from reimport overwrite).
+    private func beginQuickAdd(for day: Date) {
+        quickAddProjectId = allProjectsSorted.first?.id
+        quickAddNoteDraft = ""
+        quickAddHoursDraft = 0
+        quickAddMinutesDraft = 0
+        quickAddDay = day
+    }
+
+    private func quickAddEditor(for day: Date) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(Strings.addTimeLog).font(.caption).bold()
+
+            Picker(Strings.gitImportProjectLabel, selection: $quickAddProjectId) {
+                ForEach(allProjectsSorted) { project in
+                    Text(project.name).tag(Optional(project.id))
+                }
+            }
+
+            Text(Strings.activityDescriptionLabel).font(.caption)
+            TextField(Strings.whatDidYouDoPlaceholder, text: $quickAddNoteDraft, axis: .vertical)
+                .lineLimit(2...4)
+                .frame(minWidth: 220)
+
+            Text(Strings.timeLabel).font(.caption)
+            HoursMinutesField(hours: $quickAddHoursDraft, minutes: $quickAddMinutesDraft)
+
+            HStack {
+                Spacer()
+                Button(Strings.cancel) { quickAddDay = nil }
+                Button(Strings.save) { saveQuickAdd(for: day) }
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(quickAddProjectId == nil || (quickAddHoursDraft == 0 && quickAddMinutesDraft == 0))
+            }
+        }
+        .padding()
+        .frame(width: 280)
+        .onExitCommand { quickAddDay = nil }
+    }
+
+    private func saveQuickAdd(for day: Date) {
+        guard let quickAddProjectId else { return }
+        let suggestion = FinishSuggestion(
+            kind: .manual,
+            projectId: quickAddProjectId,
+            start: Calendar.current.startOfDay(for: day),
+            durationMinutes: quickAddHoursDraft * 60 + quickAddMinutesDraft,
+            note: quickAddNoteDraft
+        )
+        do {
+            _ = try DayFinisher.apply(db: AppEnvironment.db, suggestion: suggestion)
+            DataChangeNotifier.post()
+            WidgetCenter.shared.reloadAllTimelines()
+            quickAddDay = nil
+            reload()
+        } catch {
+            errorMessage = Strings.actionFailed(action: Strings.actionAddTimeLog, message: error.localizedDescription)
         }
     }
 
@@ -520,6 +602,7 @@ struct WeekView: View {
             }
         }
         .padding()
+        .onExitCommand { editingBlock = nil }
     }
 
     private func deleteEditingBlock(_ block: Block) {

@@ -112,6 +112,8 @@ public enum Strings {
     public static var deleteBlockConfirmMessage: String { pick(cs: "Tuto akci lze vzít zpět tlačítkem Zpět.", en: "You can undo this with the Undo button.") }
     public static var actionMove: String { pick(cs: "Přesun", en: "Move") }
     public static var actionDelete: String { pick(cs: "Smazání", en: "Delete") }
+    public static var actionAddTimeLog: String { pick(cs: "Přidání záznamu", en: "Adding entry") }
+    public static var addTimeLog: String { pick(cs: "Přidat záznam…", en: "Add time log…") }
 
     // MARK: - Git import review sheet
 
