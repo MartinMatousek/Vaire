@@ -470,11 +470,52 @@ export async function runFillEntry(page, entry) {
     }
   }
 
-  await page.locator('#NumericHours').fill(String(entry.hours));
-  await page.keyboard.press('Tab');
-  await page.locator('#NumericMinutes').fill(String(entry.minutes));
-  await page.keyboard.press('Tab');
+  // Confirmed live (2026-09-25): a value meant for #NumericHours or
+  // #NumericMinutes has landed in #Description instead (seen once as the
+  // description text itself appearing inside the Hours field). The form
+  // re-renders after the task dropdown settles, and clicking a locator by
+  // id right after that can resolve before the field is actually focusable,
+  // or focus can land on whatever the re-render put in that screen
+  // position — a plain `.click()` with no check afterward doesn't catch
+  // either case. Explicitly wait for the field to be visible/enabled,
+  // click it, then confirm it's really the focused element (via
+  // document.activeElement) before typing a single character — fail loudly
+  // instead of silently typing into the wrong field.
+  //
+  // Separately (also confirmed live 2026-09-25): `.fill()` + Tab on these
+  // Radzen numeric fields can leave the DOM input showing the requested
+  // value while the Blazor-bound value behind it silently reverts (Minutes
+  // dropping back to a lower value has been seen even after `.fill()`'s own
+  // inputValue() check reads back correctly) — the two aren't the same
+  // thing, and only the bound value gets submitted on Save. Typing via real
+  // keystrokes (select-all, type, then blur) drives the same input events
+  // an actual user typing would, which Blazor's SignalR binding reliably
+  // observes.
+  async function typeIntoField(locator, fieldId, value) {
+    await locator.waitFor({ state: 'visible', timeout: 10000 });
+    await locator.click();
+    const isFocused = await page.evaluate((id) => document.activeElement?.id === id, fieldId);
+    if (!isFocused) {
+      throw new Error(`Clicking #${fieldId} did not focus it (focus landed elsewhere) — refusing to type "${value}" into the wrong field.`);
+    }
+    await locator.press('Meta+A');
+    await locator.pressSequentially(value);
+    await page.keyboard.press('Tab');
+    const finalValue = (await locator.inputValue()).trim();
+    if (finalValue !== value) {
+      throw new Error(`#${fieldId} shows "${finalValue}" after typing "${value}", expected them to match.`);
+    }
+  }
 
+  await typeIntoField(page.locator('#NumericHours'), 'NumericHours', String(entry.hours));
+  await typeIntoField(page.locator('#NumericMinutes'), 'NumericMinutes', String(entry.minutes));
+
+  await page.locator('#Description').waitFor({ state: 'visible', timeout: 10000 });
+  await page.locator('#Description').click();
+  const descriptionFocused = await page.evaluate(() => document.activeElement?.id === 'Description');
+  if (!descriptionFocused) {
+    throw new Error('Clicking #Description did not focus it (focus landed elsewhere) — refusing to type the description into the wrong field.');
+  }
   await page.locator('#Description').fill(entry.description);
 
   if (entry.remoteWork) {
@@ -485,35 +526,19 @@ export async function runFillEntry(page, entry) {
     }
   }
 
-  // Confirm the fields actually hold what we set before clicking Save — a
-  // silently-rejected fill (e.g. a disabled field) should surface as an
-  // error here, not show up as a confusing failure after Save.
-  //
-  // Suspected live (2026-09-25): Minutes sometimes doesn't hold, Hours
-  // always does. Hours' Tab likely triggers an async Radzen/Blazor duration
-  // recompute that can still be in flight when Minutes gets filled right
-  // after, and/or reruns after Minutes is set and clobbers it back — a
-  // single immediate read here would catch the correct value before that
-  // async settle finishes. Poll briefly instead, and re-fill Minutes once if
-  // it drifts from the requested value, same pattern as the date field's
-  // poll-after-Tab above.
-  const finalHours = await page.locator('#NumericHours').inputValue();
-  let finalMinutes = await page.locator('#NumericMinutes').inputValue();
-  if (finalMinutes !== String(entry.minutes)) {
-    const deadline = Date.now() + 1000;
-    while (Date.now() < deadline && finalMinutes !== String(entry.minutes)) {
-      await page.waitForTimeout(100);
-      finalMinutes = await page.locator('#NumericMinutes').inputValue();
-    }
-    if (finalMinutes !== String(entry.minutes)) {
-      await page.locator('#NumericMinutes').fill(String(entry.minutes));
-      await page.keyboard.press('Tab');
-      finalMinutes = await page.locator('#NumericMinutes').inputValue();
-    }
-  }
-  if (finalHours !== String(entry.hours) || finalMinutes !== String(entry.minutes)) {
-    throw new Error(`Hours/Minutes did not hold the requested values (wanted ${entry.hours}/${entry.minutes}, form shows ${finalHours}/${finalMinutes}).`);
-  }
+  // Re-check right before Save, not just right after typing — a value can
+  // still drift between fill-time and Save-click (the Hours/Minutes drift
+  // this codebase has seen live isn't necessarily instantaneous). Retype
+  // via the same real-keystroke path if either has drifted, then fail hard
+  // if it still doesn't hold — a silently-wrong submission is worse than an
+  // explicit error here.
+  const reconfirmField = async (locator, fieldId, value) => {
+    const current = (await locator.inputValue()).trim();
+    if (current === value) return;
+    await typeIntoField(locator, fieldId, value);
+  };
+  await reconfirmField(page.locator('#NumericHours'), 'NumericHours', String(entry.hours));
+  await reconfirmField(page.locator('#NumericMinutes'), 'NumericMinutes', String(entry.minutes));
 
   // The Save button has no stable id (Radzen auto-generates a fresh one
   // per page load), so select by its exact visible text instead.
