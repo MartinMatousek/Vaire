@@ -43,12 +43,16 @@ echo "==> Releasing v${NEW_VERSION} (was ${CURRENT_VERSION})"
 sed -i '' -E "s/(MARKETING_VERSION: )\"${CURRENT_VERSION}\"/\1\"${NEW_VERSION}\"/" project.yml
 sed -i '' -E "s/(CFBundleShortVersionString: )\"${CURRENT_VERSION}\"/\1\"${NEW_VERSION}\"/" project.yml
 
-git add project.yml
-git commit -m "chore: bump version to ${NEW_VERSION}"
-git push
-
 echo "==> xcodegen"
 xcodegen generate
+
+# Info.plist is xcodegen-generated but checked in — regenerate it before the
+# version-bump commit (not after) so the commit captures it and the tree is
+# clean for the next release run, instead of leaving a one-version-behind
+# diff every time.
+git add project.yml VaireWidget/Info.plist
+git commit -m "chore: bump version to ${NEW_VERSION}"
+git push
 
 SCRATCH=$(mktemp -d)
 ARCHIVE_PATH="${SCRATCH}/Vaire.xcarchive"
