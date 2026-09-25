@@ -493,12 +493,28 @@ export async function runFillEntry(page, entry) {
   // observes.
   async function typeIntoField(locator, fieldId, value) {
     await locator.waitFor({ state: 'visible', timeout: 10000 });
-    await locator.click();
-    const isFocused = await page.evaluate((id) => document.activeElement?.id === id, fieldId);
+    // Confirmed live (2026-09-25): the click that's supposed to focus a
+    // field right after the form re-renders (e.g. right after the task
+    // dropdown settles) can occasionally land before the re-render
+    // finishes, missing focus. A single retry recovers it in practice —
+    // only throw (refusing to type into the wrong field) if it still isn't
+    // focused on the second attempt.
+    let isFocused = false;
+    for (let attempt = 1; attempt <= 2 && !isFocused; attempt++) {
+      // Confirmed live (2026-09-25): Meta+A to select existing text before
+      // typing didn't reliably select it in these Radzen numeric spinners —
+      // a field already showing "1" then typed "0" became "10" instead of
+      // replacing it. Triple-click is the standard, widget-agnostic way to
+      // select an input's full text and is more reliable here than a
+      // select-all keyboard shortcut a custom spinner component may not
+      // wire up the same way a plain text input does.
+      await locator.click({ clickCount: 3 });
+      isFocused = await page.evaluate((id) => document.activeElement?.id === id, fieldId);
+      if (!isFocused && attempt < 2) await page.waitForTimeout(200);
+    }
     if (!isFocused) {
       throw new Error(`Clicking #${fieldId} did not focus it (focus landed elsewhere) — refusing to type "${value}" into the wrong field.`);
     }
-    await locator.press('Meta+A');
     await locator.pressSequentially(value);
     await page.keyboard.press('Tab');
     const finalValue = (await locator.inputValue()).trim();
