@@ -317,13 +317,22 @@ struct UploadFlowView: View {
         dateFormatter.timeZone = .current // match Calendar.current's day boundary used everywhere else
         let dateISO = dateFormatter.string(from: block.start)
         let totalMinutes = Int((block.duration / 60).rounded())
+        // The timesheet's own Minutes field only accepts 0/15/30/45 (see
+        // fillEntry.mjs's validation) — a block whose duration isn't
+        // already a multiple of 15 (e.g. one never routed through
+        // DayFinisher.apply's rounding) produced an invalid minute value
+        // here that the timesheet then silently snapped/truncated on its
+        // own, dropping real logged time. Round up the same way
+        // DayFinisher does before every DB write, so what's sent always
+        // matches a valid step.
+        let rounded = DurationRounding.roundedUp(totalMinutes: totalMinutes)
 
         let payload: [String: Any] = [
             "projectLabel": timesheetProject,
             "taskLabel": taskLabel,
             "dateISO": dateISO,
-            "hours": totalMinutes / 60,
-            "minutes": totalMinutes % 60,
+            "hours": rounded.hours,
+            "minutes": rounded.minutes,
             "description": note,
             "remoteWork": false,
         ]
