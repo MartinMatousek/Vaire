@@ -521,18 +521,29 @@ export async function runFillEntry(page, entry) {
   await saveButton.waitFor({ state: 'visible', timeout: 5000 });
   await saveButton.click();
 
-  // Wait for the form to clear/close, confirming the save round-trip
-  // actually completed before this script exits — an unconfirmed click
-  // would look identical to success from the caller's side.
-  await page.locator('#Description').waitFor({ state: 'hidden', timeout: 15000 }).catch(async () => {
-    // Some timesheet flows keep the form open and just clear its fields
-    // instead of hiding it — fall back to checking the Description field
-    // emptied out as evidence the save happened.
-    const remaining = await page.locator('#Description').inputValue().catch(() => '');
-    if (remaining === entry.description) {
-      throw new Error('Save click did not appear to complete — form still shows the filled description.');
-    }
-  });
+  // Confirm the save round-trip actually completed before this script exits
+  // — an unconfirmed click would look identical to success from the
+  // caller's side.
+  //
+  // Confirmed live (2026-09-25): this timesheet's form does neither of the
+  // things the old check assumed — it hides on save, or it clears its own
+  // fields. Instead it stays open with every field (including Description)
+  // still showing exactly what was typed, even though the entry saved
+  // correctly. That made the old check fail on every successful save. The
+  // only real evidence of a save is the entry itself showing up in the
+  // day's logged-entries list, so poll that instead via the same reader
+  // `findExistingLoggedEntries` uses for dedup.
+  const deadline = Date.now() + 15000;
+  let saved = false;
+  while (Date.now() < deadline && !saved) {
+    const loggedByDate = await findExistingLoggedEntries(page);
+    const loggedToday = loggedByDate[entry.dateISO] || [];
+    saved = loggedToday.some((item) => item.note.includes(entry.description));
+    if (!saved) await page.waitForTimeout(300);
+  }
+  if (!saved) {
+    throw new Error('Save click did not appear to complete — entry not found in the day\'s logged list afterward.');
+  }
 }
 
 export async function findExistingLoggedEntries(page) {
