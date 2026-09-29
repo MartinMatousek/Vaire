@@ -18,6 +18,17 @@ private struct UploadRequest: Identifiable {
     let blocks: [Block]
 }
 
+/// Same `.sheet(item:)` rationale as `UploadRequest` above: `day` used to
+/// travel as a sibling `@State` (`finishDayTarget`) alongside a `Bool`
+/// (`showingFinishDay`), which could present `FinishDayView` with a stale
+/// captured day on first presentation — confirmed live as the source of a
+/// day showing as already at target (e.g. "8h logged, 0 missing") when it
+/// actually had 0 blocks logged.
+private struct FinishDayRequest: Identifiable {
+    let id = UUID()
+    let day: Date
+}
+
 /// One day-column's share of a still-running session — the tracking plus
 /// the segment of its total elapsed time to render in this column. See
 /// `LiveSessionSplitter`.
@@ -51,8 +62,7 @@ struct WeekView: View {
     @State private var showingTimeSaved = false
     @State private var showingDeleteConfirmation = false
     @State private var showingGitImport = false
-    @State private var showingFinishDay = false
-    @State private var finishDayTarget: Date = .now
+    @State private var finishDayRequest: FinishDayRequest?
     @State private var showingFinishWeek = false
     @State private var uploadRequest: UploadRequest?
     @State private var quickAddDay: Date?
@@ -229,9 +239,9 @@ struct WeekView: View {
         } message: {
             Text(Strings.deleteBlockConfirmMessage)
         }
-        .sheet(isPresented: $showingFinishDay) {
+        .sheet(item: $finishDayRequest) { request in
             FinishDayView(
-                day: finishDayTarget,
+                day: request.day,
                 projects: allProjectsSorted,
                 targetHours: targetHours,
                 onChanged: reload,
@@ -241,7 +251,7 @@ struct WeekView: View {
                     // SwiftUI on macOS (only one sheet transition at a
                     // time per view) — let the dismiss finish first.
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        startUpload(forDay: finishDayTarget)
+                        startUpload(forDay: request.day)
                     }
                 }
             )
@@ -323,8 +333,7 @@ struct WeekView: View {
 
             HStack(spacing: 6) {
                 Button(Strings.finishDayShort) {
-                    finishDayTarget = day.date
-                    showingFinishDay = true
+                    finishDayRequest = FinishDayRequest(day: day.date)
                 }
                 .buttonStyle(.link)
                 .font(.caption2)
@@ -690,8 +699,7 @@ struct WeekView: View {
 
         let status = try? DayFinisher.status(db: AppEnvironment.db, day: day, targetHours: targetHours)
         if status?.isComplete != true {
-            finishDayTarget = day
-            showingFinishDay = true
+            finishDayRequest = FinishDayRequest(day: day)
             return
         }
 
