@@ -24,3 +24,7 @@ Vaire.xcodeproj/
 
 # VaireUpload (Node/Playwright)
 VaireUpload/node_modules/
+
+# Build output
+build/
+VaireKit/build/
