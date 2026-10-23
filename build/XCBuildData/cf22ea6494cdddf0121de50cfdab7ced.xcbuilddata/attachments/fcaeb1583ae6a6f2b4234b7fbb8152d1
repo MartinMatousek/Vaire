@@ -1,0 +1,309 @@
+{
+  "" : {
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp-primary.dia",
+    "emit-module-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp-primary-emit-module.dia",
+    "pch" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp-primary.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/AppDelegate.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppDelegate.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppDelegate.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppDelegate.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppDelegate.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppDelegate.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppDelegate.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppDelegate.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppDelegate~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/AppEnvironment.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppEnvironment.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppEnvironment.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppEnvironment.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppEnvironment.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppEnvironment.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppEnvironment.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppEnvironment.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/AppEnvironment~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/BlockTransfer.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/BlockTransfer.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/BlockTransfer.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/BlockTransfer.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/BlockTransfer.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/BlockTransfer.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/BlockTransfer.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/BlockTransfer.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/BlockTransfer~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/ContentView.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ContentView.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ContentView.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ContentView.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ContentView.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ContentView.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ContentView.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ContentView~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/DailyReviewScheduler.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/DailyReviewScheduler.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/DailyReviewScheduler.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/DailyReviewScheduler.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/DailyReviewScheduler.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/DailyReviewScheduler.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/DailyReviewScheduler.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/DailyReviewScheduler.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/DailyReviewScheduler~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/EditBlockWindowController.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/EditBlockWindowController.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/EditBlockWindowController.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/EditBlockWindowController.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/EditBlockWindowController.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/EditBlockWindowController.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/EditBlockWindowController.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/EditBlockWindowController.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/EditBlockWindowController~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/FinishDayView.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishDayView.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishDayView.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishDayView.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishDayView.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishDayView.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishDayView.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishDayView.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishDayView~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/FinishWeekView.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishWeekView.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishWeekView.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishWeekView.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishWeekView.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishWeekView.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishWeekView.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishWeekView.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FinishWeekView~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/FloatingWindow.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FloatingWindow.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FloatingWindow.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FloatingWindow.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FloatingWindow.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FloatingWindow.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FloatingWindow.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FloatingWindow.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/FloatingWindow~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/GitImportSheet.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GitImportSheet.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GitImportSheet.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GitImportSheet.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GitImportSheet.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GitImportSheet.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GitImportSheet.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GitImportSheet.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GitImportSheet~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/HoursMinutesField.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/HoursMinutesField.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/HoursMinutesField.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/HoursMinutesField.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/HoursMinutesField.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/HoursMinutesField.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/HoursMinutesField.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/HoursMinutesField.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/HoursMinutesField~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/MenuBarIconView.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/MenuBarIconView.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/MenuBarIconView.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/MenuBarIconView.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/MenuBarIconView.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/MenuBarIconView.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/MenuBarIconView.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/MenuBarIconView.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/MenuBarIconView~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/OnePasswordCLI.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordCLI.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordCLI.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordCLI.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordCLI.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordCLI.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordCLI.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordCLI.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordCLI~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/OnePasswordItemPickerView.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordItemPickerView.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordItemPickerView.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordItemPickerView.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordItemPickerView.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordItemPickerView.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordItemPickerView.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordItemPickerView.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/OnePasswordItemPickerView~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/SettingsView.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsView.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsView.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsView.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsView.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsView.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsView.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsView.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsView~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/SettingsWindowController.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsWindowController.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsWindowController.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsWindowController.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsWindowController.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsWindowController.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsWindowController.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsWindowController.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/SettingsWindowController~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/StartSessionEditorView.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionEditorView.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionEditorView.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionEditorView.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionEditorView.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionEditorView.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionEditorView.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionEditorView.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionEditorView~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/StartSessionWindowController.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionWindowController.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionWindowController.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionWindowController.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionWindowController.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionWindowController.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionWindowController.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionWindowController.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StartSessionWindowController~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/StatusBarController.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StatusBarController.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StatusBarController.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StatusBarController.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StatusBarController.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StatusBarController.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StatusBarController.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StatusBarController.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StatusBarController~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/StoppedBlockEditorView.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StoppedBlockEditorView.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StoppedBlockEditorView.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StoppedBlockEditorView.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StoppedBlockEditorView.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StoppedBlockEditorView.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StoppedBlockEditorView.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StoppedBlockEditorView.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/StoppedBlockEditorView~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/ThreadSafeBox.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ThreadSafeBox.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ThreadSafeBox.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ThreadSafeBox.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ThreadSafeBox.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ThreadSafeBox.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ThreadSafeBox.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ThreadSafeBox.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/ThreadSafeBox~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/TimeSavedView.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimeSavedView.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimeSavedView.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimeSavedView.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimeSavedView.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimeSavedView.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimeSavedView.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimeSavedView.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimeSavedView~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/TimesheetScraper.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetScraper.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetScraper.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetScraper.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetScraper.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetScraper.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetScraper.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetScraper.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetScraper~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/TimesheetUploadSession.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetUploadSession.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetUploadSession.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetUploadSession.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetUploadSession.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetUploadSession.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetUploadSession.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetUploadSession.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/TimesheetUploadSession~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/UploadFlowView.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/UploadFlowView.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/UploadFlowView.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/UploadFlowView.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/UploadFlowView.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/UploadFlowView.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/UploadFlowView.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/UploadFlowView.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/UploadFlowView~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/VaireApp.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/VaireApp~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/WeekUndoManagerKey.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekUndoManagerKey.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekUndoManagerKey.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekUndoManagerKey.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekUndoManagerKey.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekUndoManagerKey.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekUndoManagerKey.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekUndoManagerKey.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekUndoManagerKey~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/WeekView.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekView.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekView.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekView.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekView.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekView.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekView.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekView.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekView~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireApp/WeekWindowController.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekWindowController.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekWindowController.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekWindowController.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekWindowController.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekWindowController.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekWindowController.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekWindowController.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/WeekWindowController~partial.swiftmodule"
+  },
+  "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/martinmatousek/projects/Vaire/build/Vaire.build/Debug/VaireApp.build/Objects-normal/x86_64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}

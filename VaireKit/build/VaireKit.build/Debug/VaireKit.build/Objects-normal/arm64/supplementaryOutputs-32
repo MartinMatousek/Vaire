@@ -1,0 +1,23 @@
+{
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Store/AppDatabase.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/AppDatabase.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/AppDatabase.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/AppDatabase.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/AppDatabase.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/AppDatabase.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Store/AppLanguage.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/AppLanguage.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/AppLanguage.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/AppLanguage.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/AppLanguage.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/AppLanguage.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Store/BlockEditor.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/BlockEditor.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/BlockEditor.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/BlockEditor.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/BlockEditor.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/BlockEditor.swiftdeps"
+  }
+}

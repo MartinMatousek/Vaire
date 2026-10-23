@@ -186,6 +186,11 @@ public enum Strings {
 
     public static var uploadDay: String { pick(cs: "Nahrát den…", en: "Upload day…") }
     public static var uploadDayShort: String { pick(cs: "Nahrát", en: "Upload") }
+    public static var uploadShortWeekTitle: String { pick(cs: "Některé dny nemají plný počet hodin", en: "Some days are under target") }
+    public static var uploadAnyway: String { pick(cs: "Nahrát přesto", en: "Upload anyway") }
+    public static func uploadShortWeekMessage(days: Int) -> String {
+        pick(cs: "Počet dní pod cílem: \(days). Nahraje se jen to, co je zalogováno.", en: "\(days) day(s) are below target. Only what is logged will be uploaded.")
+    }
     public static var uploadWeek: String { pick(cs: "Nahrát týden…", en: "Upload week…") }
     public static var uploadNeedsRepairing: String { pick(cs: "Tyto projekty je potřeba přeparovat s timesheet, než bude možné nahrát čas:", en: "These projects need re-pairing with the timesheet before time can be uploaded:") }
     public static var uploadOpenSettings: String { pick(cs: "Otevřít nastavení", en: "Open Settings") }

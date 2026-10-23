@@ -1,0 +1,23 @@
+{
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Model/AgentSessionTracking.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/AgentSessionTracking.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/AgentSessionTracking.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/AgentSessionTracking.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/AgentSessionTracking.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/AgentSessionTracking.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Model/Block.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/Block.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/Block.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/Block.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/Block.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/Block.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Model/DeclinedSession.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/DeclinedSession.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/DeclinedSession.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/DeclinedSession.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/DeclinedSession.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/DeclinedSession.swiftdeps"
+  }
+}

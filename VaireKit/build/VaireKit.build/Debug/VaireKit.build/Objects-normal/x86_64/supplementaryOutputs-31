@@ -1,0 +1,30 @@
+{
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Ingest/MeetingImporter.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/MeetingImporter.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/MeetingImporter.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/MeetingImporter.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/MeetingImporter.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/MeetingImporter.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Ingest/SessionTurn.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/SessionTurn.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/SessionTurn.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/SessionTurn.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/SessionTurn.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/SessionTurn.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Ingest/TimesheetCatalog.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/TimesheetCatalog.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/TimesheetCatalog.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/TimesheetCatalog.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/TimesheetCatalog.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/TimesheetCatalog.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Ingest/WeekFinisher.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/WeekFinisher.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/WeekFinisher.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/WeekFinisher.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/WeekFinisher.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/WeekFinisher.swiftdeps"
+  }
+}

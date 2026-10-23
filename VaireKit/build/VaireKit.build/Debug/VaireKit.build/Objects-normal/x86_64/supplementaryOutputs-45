@@ -1,0 +1,23 @@
+{
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Store/EditRequestResult.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/EditRequestResult.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/EditRequestResult.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/EditRequestResult.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/EditRequestResult.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/EditRequestResult.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Store/LiveSessionSplitter.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/LiveSessionSplitter.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/LiveSessionSplitter.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/LiveSessionSplitter.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/LiveSessionSplitter.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/LiveSessionSplitter.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Store/ManDayCalculator.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/ManDayCalculator.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/ManDayCalculator.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/ManDayCalculator.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/ManDayCalculator.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/x86_64/ManDayCalculator.swiftdeps"
+  }
+}

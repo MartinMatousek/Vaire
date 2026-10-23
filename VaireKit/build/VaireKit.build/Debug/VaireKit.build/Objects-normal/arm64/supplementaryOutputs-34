@@ -1,0 +1,23 @@
+{
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Store/BranchTaskMapper.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/BranchTaskMapper.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/BranchTaskMapper.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/BranchTaskMapper.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/BranchTaskMapper.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/BranchTaskMapper.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Store/CalendarSetting.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/CalendarSetting.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/CalendarSetting.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/CalendarSetting.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/CalendarSetting.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/CalendarSetting.swiftdeps"
+  },
+  "/Users/martinmatousek/projects/Vaire/VaireKit/Sources/VaireKit/Store/DailySummary.swift" : {
+    "const-values" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/DailySummary.swiftconstvalues",
+    "dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/DailySummary.d",
+    "diagnostics" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/DailySummary.dia",
+    "object" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/DailySummary.o",
+    "swift-dependencies" : "/Users/martinmatousek/projects/Vaire/VaireKit/build/VaireKit.build/Debug/VaireKit.build/Objects-normal/arm64/DailySummary.swiftdeps"
+  }
+}

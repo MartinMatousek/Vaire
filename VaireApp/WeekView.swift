@@ -65,6 +65,8 @@ struct WeekView: View {
     @State private var finishDayRequest: FinishDayRequest?
     @State private var showingFinishWeek = false
     @State private var uploadRequest: UploadRequest?
+    @State private var pendingShortWeekUpload: UploadRequest?
+    @State private var shortDayCount = 0
     @State private var quickAddDay: Date?
     @State private var quickAddProjectId: UUID?
     @State private var quickAddNoteDraft: String = ""
@@ -238,6 +240,23 @@ struct WeekView: View {
             Button(Strings.cancel, role: .cancel) {}
         } message: {
             Text(Strings.deleteBlockConfirmMessage)
+        }
+        .confirmationDialog(
+            Strings.uploadShortWeekTitle,
+            isPresented: Binding(get: { pendingShortWeekUpload != nil }, set: { if !$0 { pendingShortWeekUpload = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button(Strings.uploadAnyway) {
+                uploadRequest = pendingShortWeekUpload
+                pendingShortWeekUpload = nil
+            }
+            Button(Strings.finishWeek) {
+                pendingShortWeekUpload = nil
+                showingFinishWeek = true
+            }
+            Button(Strings.cancel, role: .cancel) { pendingShortWeekUpload = nil }
+        } message: {
+            Text(Strings.uploadShortWeekMessage(days: shortDayCount))
         }
         .sheet(item: $finishDayRequest) { request in
             FinishDayView(
@@ -717,20 +736,12 @@ struct WeekView: View {
         uploadRequest = UploadRequest(blocks: blocks)
     }
 
-    /// Same gating as `startUpload(forDay:)`, scoped to the whole displayed
-    /// week: any day `WeekFinisher.daysNeedingReview` still flags (already
-    /// skips weekdays at target and empty weekend days) sends the user to
-    /// Finish week first — e.g. logging a whole week's work on Friday means
-    /// every prior day still needs filling before upload.
+    /// Unlike `startUpload(forDay:)`, short days only warn: real weeks are
+    /// rarely exactly `targetHours` per day, and the user must still be able
+    /// to upload what is logged.
     private func startUpload(forWeek weekStart: Date) {
         let calendar = Calendar.current
         let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart) ?? weekStart
-
-        let needsReview = (try? WeekFinisher.daysNeedingReview(db: AppEnvironment.db, weekStart: weekStart, targetHours: targetHours)) ?? []
-        if !needsReview.isEmpty {
-            showingFinishWeek = true
-            return
-        }
 
         let blocks = (try? AppEnvironment.db.dbQueue.read { conn in
             try Block
@@ -738,7 +749,14 @@ struct WeekView: View {
                 .order(Column("start"))
                 .fetchAll(conn)
         }) ?? []
-        uploadRequest = UploadRequest(blocks: blocks)
+        let request = UploadRequest(blocks: blocks)
+        let needsReview = (try? WeekFinisher.daysNeedingReview(db: AppEnvironment.db, weekStart: weekStart, targetHours: targetHours)) ?? []
+        if needsReview.isEmpty {
+            uploadRequest = request
+        } else {
+            shortDayCount = needsReview.count
+            pendingShortWeekUpload = request
+        }
     }
 
     private func reload() {

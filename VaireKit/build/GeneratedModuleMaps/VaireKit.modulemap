@@ -1,0 +1,4 @@
+module VaireKit {
+header "VaireKit-Swift.h"
+export *
+}

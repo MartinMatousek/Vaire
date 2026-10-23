@@ -1,0 +1,19 @@
+Target dependency graph (8 targets)
+Target 'VaireApp' in project 'Vaire'
+➜ Explicit dependency on target 'VaireWidgetExtension' in project 'Vaire'
+➜ Explicit dependency on target 'VaireKit' in project 'VaireKit'
+Target 'VaireWidgetExtension' in project 'Vaire'
+➜ Explicit dependency on target 'VaireKit' in project 'VaireKit'
+Target 'VaireKit' in project 'VaireKit'
+➜ Explicit dependency on target 'VaireKit' in project 'VaireKit'
+➜ Explicit dependency on target 'GRDB' in project 'GRDB'
+Target 'VaireKit' in project 'VaireKit'
+➜ Explicit dependency on target 'GRDB' in project 'GRDB'
+Target 'GRDB' in project 'GRDB'
+➜ Explicit dependency on target 'GRDB' in project 'GRDB'
+➜ Explicit dependency on target 'GRDB_GRDB' in project 'GRDB'
+Target 'GRDB' in project 'GRDB'
+➜ Explicit dependency on target 'GRDB_GRDB' in project 'GRDB'
+➜ Explicit dependency on target 'CSQLite' in project 'GRDB'
+Target 'CSQLite' in project 'GRDB' (no dependencies)
+Target 'GRDB_GRDB' in project 'GRDB' (no dependencies)
