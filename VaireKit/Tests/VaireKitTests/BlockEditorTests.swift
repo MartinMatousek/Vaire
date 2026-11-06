@@ -171,3 +171,47 @@ private func makeProject(_ db: AppDatabase) throws -> Project {
     let cleared = try BlockEditor.setEstimate(db: db, blockId: block.id, hours: nil)
     #expect(cleared.estimatedHoursWithoutAI == nil)
 }
+
+@Test func addManualPlacesAtNineOnEmptyDayWithEstimate() throws {
+    let db = try AppDatabase.inMemory()
+    let project = try makeProject(db)
+    var cal = Calendar(identifier: .gregorian)
+    cal.timeZone = TimeZone(identifier: "UTC")!
+    let day = Date(timeIntervalSince1970: 1_700_000_000)
+
+    let block = try BlockEditor.addManual(db: db, projectId: project.id, day: day, minutes: 90, note: "n", estimatedHoursWithoutAI: 3, calendar: cal)
+
+    #expect(block.start == cal.startOfDay(for: day).addingTimeInterval(9 * 3600))
+    #expect(block.duration == 90 * 60)
+    #expect(block.source == .manual)
+    #expect(block.isManual)
+    #expect(block.estimatedHoursWithoutAI == 3)
+    #expect(block.note == "n")
+}
+
+@Test func addManualStacksAfterExistingBlockAndStaysInsideDay() throws {
+    let db = try AppDatabase.inMemory()
+    let project = try makeProject(db)
+    var cal = Calendar(identifier: .gregorian)
+    cal.timeZone = TimeZone(identifier: "UTC")!
+    let day = Date(timeIntervalSince1970: 1_700_000_000)
+    let dayStart = cal.startOfDay(for: day)
+
+    let first = try BlockEditor.addManual(db: db, projectId: project.id, day: day, minutes: 60, note: nil, estimatedHoursWithoutAI: nil, calendar: cal)
+    let second = try BlockEditor.addManual(db: db, projectId: project.id, day: day, minutes: 30, note: nil, estimatedHoursWithoutAI: nil, calendar: cal)
+    #expect(second.start == first.end)
+
+    let late = Block(projectId: project.id, start: dayStart.addingTimeInterval(22 * 3600), end: dayStart.addingTimeInterval(23.5 * 3600), source: .manual)
+    try db.dbQueue.write { try late.insert($0) }
+    let spill = try BlockEditor.addManual(db: db, projectId: project.id, day: day, minutes: 120, note: nil, estimatedHoursWithoutAI: nil, calendar: cal)
+    #expect(spill.end <= dayStart.addingTimeInterval(86400))
+    #expect(spill.duration == 120 * 60)
+}
+
+@Test func addManualRejectsNonPositiveMinutes() throws {
+    let db = try AppDatabase.inMemory()
+    let project = try makeProject(db)
+    #expect(throws: BlockEditorError.self) {
+        try BlockEditor.addManual(db: db, projectId: project.id, day: Date(), minutes: 0, note: nil, estimatedHoursWithoutAI: nil)
+    }
+}

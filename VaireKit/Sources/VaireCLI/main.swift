@@ -14,7 +14,7 @@ enum CLIError: Error, CustomStringConvertible {
 func run() throws {
     let arguments = CommandLine.arguments.dropFirst()
     guard let command = arguments.first else {
-        throw CLIError.usage("usage: vaire <start-session|stop-session|is-tracking|adjust-block|find-active|continue-session|set-estimate|has-estimate|adjust-estimate|delete-block|is-hooks-enabled|get-language|set-language> ...")
+        throw CLIError.usage("usage: vaire <start-session|stop-session|is-tracking|adjust-block|find-active|continue-session|set-estimate|has-estimate|adjust-estimate|delete-block|add-block|is-hooks-enabled|get-language|set-language> ...")
     }
 
     let db = try AppDatabase(path: SharedStorage.databasePath())
@@ -41,6 +41,8 @@ func run() throws {
         try runHasEstimate(db: db, args: rest)
     case "adjust-estimate":
         try runAdjustEstimate(db: db, args: rest)
+    case "add-block":
+        try runAddBlock(db: db, args: rest)
     case "delete-block":
         try runDeleteBlock(db: db, args: rest)
     case "is-hooks-enabled":
@@ -215,4 +217,32 @@ do {
 } catch {
     FileHandle.standardError.write("error: \(error)\n".data(using: .utf8)!)
     exit(1)
+}
+
+func runAddBlock(db: AppDatabase, args: [String]) throws {
+    guard args.count >= 3, let minutes = Double(args[2]) else {
+        throw CLIError.usage("usage: add-block <cwd> <YYYY-MM-DD> <minutes> [note] [estimate_hours]")
+    }
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = "yyyy-MM-dd"
+    guard let day = formatter.date(from: args[1]) else {
+        throw CLIError.usage("invalid day: \(args[1]), expected YYYY-MM-DD")
+    }
+    let note = args.count > 3 && !args[3].isEmpty ? args[3] : nil
+    let estimate = args.count > 4 ? Double(args[4]) : nil
+
+    let project = try Project.findOrCreate(byPath: args[0], db: db)
+    let block = try BlockEditor.addManual(
+        db: db,
+        projectId: project.id,
+        day: day,
+        minutes: minutes,
+        note: note,
+        estimatedHoursWithoutAI: estimate
+    )
+    print("project=\(project.name)")
+    print("block_id=\(block.id.uuidString)")
+    print("duration_human=\(DurationFormatter.hoursMinutes(block.duration / 3600))")
+    DataChangeNotifier.post()
 }

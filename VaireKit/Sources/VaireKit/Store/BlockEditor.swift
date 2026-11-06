@@ -151,4 +151,49 @@ public enum BlockEditor {
             return block
         }
     }
+
+    /// Adds a finished manual block on `day` without an explicit start time.
+    /// The block is placed after the latest block already on that day (or at
+    /// 09:00 if the day is empty) and pulled back so it never spills past
+    /// midnight. Used by the CLI so other tools can log time by day and length.
+    @discardableResult
+    public static func addManual(
+        db: AppDatabase,
+        projectId: UUID,
+        day: Date,
+        minutes: Double,
+        note: String?,
+        estimatedHoursWithoutAI: Double?,
+        calendar: Calendar = .current
+    ) throws -> Block {
+        guard minutes > 0, minutes < 24 * 60 else { throw BlockEditorError.invalidTimeRange }
+        let dayStart = calendar.startOfDay(for: day)
+        guard let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) else {
+            throw BlockEditorError.invalidTimeRange
+        }
+        let duration = minutes * 60
+        let nine = dayStart.addingTimeInterval(9 * 3600)
+
+        return try db.dbQueue.write { conn in
+            let latestEnd = try Block
+                .filter(Column("start") >= dayStart && Column("start") < dayEnd)
+                .order(Column("end").desc)
+                .fetchOne(conn)?.end
+            var start = max(nine, latestEnd ?? nine)
+            if start.addingTimeInterval(duration) > dayEnd {
+                start = max(dayStart, dayEnd.addingTimeInterval(-duration))
+            }
+            let block = Block(
+                projectId: projectId,
+                start: start,
+                end: start.addingTimeInterval(duration),
+                source: .manual,
+                note: (note?.isEmpty ?? true) ? nil : note,
+                isManual: true,
+                estimatedHoursWithoutAI: estimatedHoursWithoutAI
+            )
+            try block.insert(conn)
+            return block
+        }
+    }
 }
